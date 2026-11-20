@@ -1,0 +1,273 @@
+{
+  "_note": "French lines for Melo. Machine-translated: please have a native-speaking teacher review. Missing keys fall back to English.",
+  "greeting": [
+    "Bonjour {name} ! Je suis Melo. Aujourd'hui, on joue avec la musique !",
+    "Coucou {name} ! Melo est là. Prêt pour un jeu musical ?"
+  ],
+  "theme.animals": [
+    "Aujourd'hui, nos sons sont des animaux : de gros éléphants et de petits oiseaux !"
+  ],
+  "theme.rain": [
+    "Aujourd'hui, on fait de la musique comme la pluie : plic, ploc, splash !"
+  ],
+  "theme.space": [
+    "Aujourd'hui, on s'envole vers les étoiles avec la musique !"
+  ],
+  "theme.jungle": [
+    "Aujourd'hui, on explore la jungle de la musique !"
+  ],
+  "intro.high_low.higher": [
+    "Écoute deux sons. Lequel est le plus aigu, comme un petit oiseau ? Touche-le !"
+  ],
+  "intro.high_low.lower": [
+    "Écoute deux sons. Lequel est le plus grave, comme un gros éléphant ? Touche-le !"
+  ],
+  "intro.loud_soft.louder": [
+    "Écoute bien. Quel son est le plus fort, comme le rugissement d'un lion ?"
+  ],
+  "intro.loud_soft.softer": [
+    "Écoute bien. Quel son est le plus doux, comme un chaton endormi ?"
+  ],
+  "intro.instrument_guess": [
+    "Écoute ! Quel instrument joue ?"
+  ],
+  "intro.rhythm_tap": [
+    "Écoute mon tambour. Maintenant, tape le même rythme !"
+  ],
+  "intro.find_note": [
+    "Écoute cette note. Peux-tu trouver le même son sur ton clavier ?"
+  ],
+  "intro.same_different": [
+    "Écoute deux petites mélodies. Sont-elles pareilles ou différentes ?"
+  ],
+  "intro.echo_melody": [
+    "Écoute d'abord cette petite mélodie. Ensuite, rejoue-la !"
+  ],
+  "intro.play_song": [
+    "Jouons {song} ! Suis les touches qui brillent."
+  ],
+  "intro.free_play": [
+    "C'est toi le compositeur ! Joue les touches que tu veux et invente ta chanson."
+  ],
+  "success": [
+    "Waouh ! C'était magnifique !",
+    "Bravo, tu as réussi !",
+    "Très bien écouté !",
+    "Oui ! Parfait !"
+  ],
+  "partial": [
+    "Bel essai ! Presque tout était juste.",
+    "Presque ! Encore un tout petit peu."
+  ],
+  "miss": [
+    "Bel essai ! Écoutons encore une fois.",
+    "Ce n'est pas grave ! C'est en jouant qu'on apprend.",
+    "Hmm, presque. Écoutons ensemble encore une fois."
+  ],
+  "hint.higher": [
+    "Essaie une touche un peu plus aiguë, du côté de l'oiseau !"
+  ],
+  "hint.lower": [
+    "Essaie une touche un peu plus grave, du côté de l'éléphant !"
+  ],
+  "hint.faster": [
+    "La prochaine fois, un peu plus lentement, comme une tortue."
+  ],
+  "hint.slower": [
+    "La prochaine fois, un peu plus vite, comme un lapin."
+  ],
+  "uncertain": [
+    "Hmm, je n'ai pas bien entendu. Rejouons la même note !"
+  ],
+  "skipped": [
+    "Ce n'est pas grave ! Faisons quelque chose d'amusant."
+  ],
+  "harder": [
+    "Tu te débrouilles très bien ! Voici un nouveau petit défi."
+  ],
+  "easier": [
+    "On va rendre celui-ci un peu plus facile."
+  ],
+  "break_offer": [
+    "On fait une petite pause, ou un jeu facile ?"
+  ],
+  "game_switch": [
+    "Faisons un petit jeu musical !"
+  ],
+  "song_school.intro": [
+    "Apprenons {song} ensemble, {name} ! D'abord tu écoutes, puis tu joues. Un petit morceau à la fois."
+  ],
+  "song_school.phrase_done": [
+    "Tu connais cette partie ! Passons à la suivante."
+  ],
+  "song_school.try_again": [
+    "Écoutons encore une fois."
+  ],
+  "song_school.whole_done": [
+    "Waouh ! Tu as joué {song} en entier ! Ça, c'est de la vraie musique !"
+  ],
+  "level_up": [
+    "Hourra ! Un nouveau niveau s'ouvre pour toi : {level} !"
+  ],
+  "wrap_up": [
+    "Quel beau moment de musique ! Tu as gagné {stars} étoiles aujourd'hui. À bientôt !"
+  ],
+  "tired": [
+    "D'accord, c'est l'heure de se reposer. Tu as fait de la très belle musique aujourd'hui !"
+  ],
+  "check_mic": [
+    "Je n'entends pas très bien. Un adulte peut vérifier le micro, ou on peut jouer sur l'écran."
+  ],
+  "chat.fallback": [
+    "Très bonne question ! Découvrons-le en musique. On joue ?"
+  ],
+  "chat.note": [
+    "Une note, c'est un son musical. Certaines sont aiguës comme un oiseau, d'autres graves comme un éléphant !"
+  ],
+  "chat.rhythm": [
+    "Le rythme, c'est le battement de la musique, comme ton cœur : boum, boum, boum !"
+  ],
+  "chat.hello": [
+    "Bonjour, mon ami musicien ! On joue quoi ?"
+  ],
+  "chat.tired": [
+    "C'est bien de se reposer. Tu peux appuyer sur le bouton lune pour arrêter quand tu veux."
+  ],
+  "chat.song": [
+    "J'adore les chansons ! Jouons-en une ensemble pendant la leçon."
+  ],
+  "hint.note_up": [
+    "Tu as joué {played}. Essaie {expected}, un peu à droite !"
+  ],
+  "hint.note_down": [
+    "Tu as joué {played}. Essaie {expected}, un peu à gauche !"
+  ],
+  "hint.note_missing": [
+    "Continuons ! La note suivante est {expected}."
+  ],
+  "song_school.welcome_back": [
+    "Te revoilà, {name} ! Tu connais déjà {count} parties de {song}. Apprenons la suivante !"
+  ],
+  "intro.fast_slow.faster": [
+    "Écoute la mélodie deux fois. Laquelle est la plus rapide, comme un lapin qui court ?"
+  ],
+  "intro.fast_slow.slower": [
+    "Écoute la mélodie deux fois. Laquelle est la plus lente, comme une tortue endormie ?"
+  ],
+  "basics.swars": [
+    "Bonjour {name} ! Entraînons-nous sur les notes : Sa Re Ga Ma Pa Dha Ni !"
+  ],
+  "basics.rhythm": [
+    "Bonjour {name} ! Travaillons le rythme. Écoute la pulsation, puis tape-la."
+  ],
+  "basics.high_low": [
+    "Bonjour {name} ! Aigu comme un oiseau, grave comme un éléphant. On s'entraîne !"
+  ],
+  "basics.loud_soft": [
+    "Bonjour {name} ! Fort comme un lion, doux comme un chaton. On s'entraîne !"
+  ],
+  "basics.fast_slow": [
+    "Bonjour {name} ! Rapide comme un lapin, lent comme une tortue. On s'entraîne !"
+  ],
+  "basics.instruments": [
+    "Bonjour {name} ! Écoutons des instruments et devinons qui joue !"
+  ],
+  "basics.ear": [
+    "Bonjour {name} ! Entraînons notre oreille musicale. Écoute très attentivement !"
+  ],
+  "retry": [
+    "Réessayons le même, ensemble. Cette fois, je t'aide.",
+    "Encore une fois le même. Regarde et écoute, je t'aide."
+  ],
+  "stretch": [
+    "Tu te débrouilles si bien ! Voici quelque chose du niveau suivant. Voyons !"
+  ],
+  "teach.high_low.higher": [
+    "Le son {n} était le plus aigu. Écoute encore !"
+  ],
+  "teach.high_low.lower": [
+    "Le son {n} était le plus grave. Écoute encore !"
+  ],
+  "teach.loud_soft.louder": [
+    "Le son {n} était le plus fort. Écoute encore !"
+  ],
+  "teach.loud_soft.softer": [
+    "Le son {n} était le plus doux. Écoute encore !"
+  ],
+  "teach.fast_slow.faster": [
+    "La mélodie {n} était la plus rapide. Écoute encore !"
+  ],
+  "teach.fast_slow.slower": [
+    "La mélodie {n} était la plus lente. Écoute encore !"
+  ],
+  "teach.same_different.same": [
+    "Les deux mélodies étaient pareilles. Écoute encore !"
+  ],
+  "teach.same_different.different": [
+    "Une note était différente. Essaie de l'entendre !"
+  ],
+  "teach.instrument_guess": [
+    "Écoute sa voix encore une fois."
+  ],
+  "detail.find_first": [
+    "Tu as trouvé {note} du premier coup !"
+  ],
+  "detail.find_later": [
+    "Tu as trouvé {note} ! La prochaine fois, du premier coup."
+  ],
+  "detail.rhythm_all": [
+    "Tu as tapé tous les temps !"
+  ],
+  "detail.rhythm_some": [
+    "Tu as eu {matched} temps sur {expected}."
+  ],
+  "detail.notes_all": [
+    "Toutes les notes étaient justes !"
+  ],
+  "detail.name": [
+    "Bravo, {name} !",
+    "{name}, c'était très joli !"
+  ],
+  "coach.hesitation": [
+    "Tu t'es arrêté pour chercher {note}. Travaillons juste ce petit passage."
+  ],
+  "coach.hold_long": [
+    "Tiens {note} plus longtemps. Compte jusqu'à {beats} avant de continuer !"
+  ],
+  "coach.rushing": [
+    "C'était rapide ! Maintenant doucement, avec la pulsation."
+  ],
+  "coach.dragging": [
+    "Cette fois, suivons bien la pulsation."
+  ],
+  "coach.uneven": [
+    "Fais toutes les notes de la même longueur, comme des pas : un, deux, un, deux."
+  ],
+  "coach.steady": [
+    "Ta pulsation était très régulière, comme une horloge !"
+  ],
+  "coach.louder": [
+    "J'entendais à peine ton clavier. Joue un peu plus fort, ou rapproche-le."
+  ],
+  "coach.cam_hands": [
+    "Je ne vois pas tes mains. Un adulte peut tourner la caméra vers les touches."
+  ],
+  "coach.cam_curve": [
+    "Arrondis tes doigts, comme si tu tenais une petite balle."
+  ],
+  "coach.cam_fingers": [
+    "Utilise plus de doigts : un doigt pour chaque touche, comme de petits pas."
+  ],
+  "drill.intro": [
+    "Juste ces notes : {notes}. Doucement !"
+  ],
+  "recall.stars": [
+    "La dernière fois, tu as gagné {stars} étoiles !"
+  ],
+  "recall.song": [
+    "Tu apprends {song}. On la rejouera bientôt !"
+  ],
+  "lang.new_phrase": [
+    "Voici quelque chose de nouveau à dire !"
+  ]
+}

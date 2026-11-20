@@ -1,0 +1,17 @@
+services:
+  melo:
+    build: .
+    image: melo-music-teacher:1.0.0
+    ports:
+      - "127.0.0.1:8000:8000"   # change to "8000:8000" to allow other devices on your network
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      KM_DATA_DIR: /data
+      KM_MCP_ALLOWED_HOSTS: "localhost:8000,127.0.0.1:8000"
+    volumes:
+      - melo-data:/data
+    restart: unless-stopped
+volumes:
+  melo-data:

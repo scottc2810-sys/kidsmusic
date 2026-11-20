@@ -1,0 +1,97 @@
+# Review & Optimisation Report
+
+Workflow: **Architect** (docs/ARCHITECTURE.md) → **Engineer** (implementation) → **Reviewer** (findings below, each verified by a test or a live browser run) → **Optimizer** (performance and operations).
+
+## Verification
+
+| Check | Result |
+|---|---|
+| Backend tests (`pytest`) | 48 passed: scoring, engine rules, audio DSP, API flows, auth/IDOR/CSRF, consent enforcement, encryption at rest, teacher safety, learning-graph memory, MCP over real JSON-RPC |
+| Frontend (`tsc -b`, `vitest`) | strict typecheck clean; 6 pitch-tracker tests pass |
+| Production build | 246 kB JS (80 kB gzip); MediaPipe split into a lazily loaded chunk |
+| Live run (Chrome, production mode) | register → add child → lesson (choice, instrument, rhythm) → feedback/stars → break offer after 3 misses → progress & memory graph → Claude Code token page |
+| MCP | HTTP `/mcp/` and stdio launcher both verified with a real MCP client |
+| Windows setup script | `scripts/setup.ps1` ran end-to-end |
+| 10-minute recording | analysed in 2.8 s (868 notes, song identified, accuracy 100% on a clean take) |
+| Code-review graph (2026-11-04) | `code-review-graph` build: 597 nodes, 12 communities, coupling, size and dead-code findings in `docs/PROGRESS.md` |
+| Claude Code brain (2026-11-04) | `claude_code` provider: 7 stubbed-subprocess tests (sealed flags, stdin prompt, name redaction, API-key scrub, timeout/error/not-logged-in fallbacks, consent). Live: plan and chat about 4.4 s each via `claude -p` |
+| Sound and mic fixes (2026-11-04) | No-sound report fixed. Web Audio now unlocks on the first tap anywhere and resumes before every note. Speech is primed inside the tap (the greeting now follows a ~4 s AI call), avoids Chrome's cancel→speak drop, waits for voices, falls back to the default voice, and keeps a reference to in-flight utterances. The mic: browser permission is checked and requested when a parent enables it, with clear blocked/missing/busy messages; Settings has a 🔊 Sound check and a 🎤 Mic check ("Melo can hear you"). 5 vitest tests |
+| Level unlock bug (2026-11-04) | A real child had 0 rhythm attempts after 3 lessons, so Level 2 was unreachable. The unlock rule, the "one new concept at a time" gate and skill coverage were fixed. Engine simulation (20 children per profile) before → after: an 80%-correct child reaches Level 2 in 7 → 3 lessons, and every 70%-correct child now reaches it (16/20 before). 4 regression tests |
+| Song school + brain test (2026-11-04) | `routers/songs.py` (phrase-by-phrase learning with sargam/letter note hints and welcome-back), `POST /api/teacher/test`, 5 API tests, live check against the real Claude Code CLI |
+| Avatar and voice (2026-11-04) | Melo redrawn and animated (blink, gaze, beak synced to speech, cheer/encourage). Indian voice ranking, per-sentence prosody, voice picker. Phrase variety 1–2 → 5–6 with no immediate repeats. 3 vitest tests |
+| Play-along guidance (2026-11-04) | `NoteGuide` note path (name, word, length, beats, hold), count-in and beat mode in the song school, guide in lesson songs/echo only when the keys are already revealed (ear-training levels stay hidden), compose screen with steps, ideas and real-timing playback (`tuneBeats`, 2 vitest tests). Hindi strings kept gender-neutral |
+| Music Basics (2026-11-04) | Topic practice sessions reuse the server-scored lesson engine (only the topic's activities, no new-concept gating, instant offline plan). `fast_slow` is Basics-only (`topic_only`), so regular lessons are unchanged. Alankars are excluded from regular lesson songs. Live check in Hindi for swars, rhythm, fast/slow and an alankar. Hindi strings kept neutral |
+| Progressive Basics (2026-11-05) | New `custom_exercises` table (created automatically, cascades with the child). AI and MCP exercises: swars are limited to the tier (schema enum, then re-validated), 4–32 notes, beats snapped to ½/1/1½/2/3, the title goes through the child-safety filter (a test caught it using the parent filter at first), the words are computed server-side, and the name is filled in locally. Rate-limited, with no DB write lock during the AI call. MCP `add_exercise` needs a write token |
+| Local deploy smoke test (2026-11-04) | health, SPA, register → child → 6 scored activities → end → memory graph → MCP `initialize`, all OK |
+
+| v1.1.0 (2026-11-16) | 97 backend tests (25 new: placement, re-teach, stretch, coaching alignment and tips, spot practice over the API, learning path, ears consent, parent-set level, language packs keys and placeholders) and 32 frontend tests (16 new: sung voice in tune within 15 cents via the YIN tracker, vowel colour, consonant onset, swar pronunciation, note names per language, English fallback, hand-posture geometry). Built `Melo.exe` started against an empty data folder: health, SPA, bundled hand-tracking wasm and model, register → Spanish child → lesson greeting → learning path. Installer compiled with Inno Setup 6.7.3. Not verified: audio by ear, real microphone and camera sessions, the installer's install step, macOS and Linux builds |
+
+| v1.2.0 language learning (2026-11-16) | 109 backend and 33 frontend tests. New: content completeness for 11 languages, word-piece splitting (Devanagari conjuncts, Hangul), placement / step-down, word memory and tier unlock, activity ladder per skill, re-teach and comfort, generous speech judging with silence = uncertain, trace and spelling scoring, full API loop (40 answers reach stage 3+), consent for speaking, reset clears language data. Live: server restarted, `/api/learn/languages` returns 11 languages, tables created in the existing database. Not verified: screens in a browser, pronunciation by ear, speech recognition with a child |
+
+| v1.3.0 conversations + side by side (2026-11-17) | 115 backend tests (6 new: phrase completeness and unambiguous pictures, word / character tiles and punctuation-free judging, topic-only practice and difficulty ladder, re-teach inside the topic, weak phrases chosen more, compare endpoint limits and Hinglish meanings, practice endpoint consent and scoring). Browser check on a throwaway copy: compare grid, writing 你好, Spanish *Directions* lesson, no console errors |
+
+## Reviewer findings (fixed)
+
+| # | Severity | Finding | Fix |
+|---|---|---|---|
+| R1 | High | The app lifespan re-initialised the DB engine, overriding the configured URL (tests shared one DB, and locks appeared) | Lifespan initialises lazily; tests isolate a DB per test |
+| R2 | High | Song identification normalised by target length, so a short song matching a fragment beat the true longer song (Twinkle with mistakes was identified as Old MacDonald) | Rank songs by raw Smith-Waterman score, report coverage as confidence; search the 4 most plausible transpositions |
+| R3 | High | Session start held a SQLite write transaction during the Claude call (up to the timeout) and could block other writers | Commit before every AI call (session plan and recording feedback) |
+| R4 | High | "One new concept per session" meant a brand-new child played the same activity all lesson (seen live) | New concepts are introduced one at a time: the next only after 2 scored tries of the previous (tested) |
+| R5 | Medium | The activity was hidden until TTS finished, so the child stared at "loading" for up to 7 s (seen live) | Activity renders immediately and stays locked while Melo speaks; the demo starts on unlock |
+| R6 | Medium | CSS class collision (`.big-choice.lesson` vs page `.lesson`) squashed the main Lesson button (seen live) | Renamed the colour classes |
+| R7 | Medium | Contradictory feedback after a miss ("lovely try… Nice! go slower") (seen live) | Tempo hints no longer start with praise words; fixed "Good trying!" |
+| R8 | Medium | Mic input would hear Melo's own demo notes and voice as the child playing | Mic ignores frames while the synth is busy (+250 ms tail) or TTS is speaking |
+| R9 | Medium | Secure-cookie default in production would break login on plain-HTTP LAN installs | Cookie `Secure` is set automatically from the request scheme; `KM_COOKIE_SECURE` forces it |
+| R10 | Medium | SQLite returns naive datetimes, so the browser showed times in the wrong timezone | API schemas attach UTC |
+| R11 | Medium | Upload handler was `async` but did blocking decode/DB work on the event loop | Sync handler (threadpool) + Content-Length guard before multipart parsing |
+| R12 | Low | Gendered Hindi verbs ("गया", "रहा हूँ") for a gender-neutral teacher and children of any gender | Rewrote lines to neutral forms; quick replies too |
+| R13 | Low | The generated stdio MCP command could read a different DB than the web server | Command pins `KM_DATA_DIR` |
+| R14 | Low | Parent-facing suggestions showed internal ids (`dynamics`, `loud_soft`) | Human-readable skill and activity names |
+
+## Security review
+
+* scrypt password hashing, timing-equalised login, rate limits on login, register and chat.
+* httpOnly `SameSite=Strict` session cookie + required `X-Requested-With` header on state-changing API calls.
+* Every child, recording and session lookup is scoped to the signed-in parent (cross-parent access tested → 404). The same applies to MCP tokens.
+* MCP tokens: `melo_` + 256-bit random, only the SHA-256 hash is stored, revocable, read-only by default, and checked both at the ASGI layer and in each tool. DNS-rebinding protection is on for `/mcp/`.
+* Recordings are Fernet-encrypted at rest; storage names are server-generated and validated (no path traversal). Audio is never sent to the AI or exposed via MCP.
+* CSP, `frame-ancestors 'none'`, `nosniff`, `Referrer-Policy`, `Permissions-Policy` (camera/mic self only), no-store on API responses.
+* Consent is enforced server-side: real mode and mic answers need microphone consent, uploads need recording consent, and every change is audited.
+* AI output: JSON-schema constrained, allowed-value validation (for example, the focus skill must come from the engine's list), a child-safety filter (shaming, comparisons, links, personal data → curated fallback), and the child's name is redacted from outgoing text.
+
+## Optimizer changes
+
+* Vectorised FFT-based YIN, batched to bound memory: 10 min of audio in ~3 s. Alignment capped at 400 notes.
+* No SDK retries on child-facing AI calls (`max_retries=0`, 12 s timeout) with an instant offline fallback, so worst-case wait is bounded.
+* GZip for responses over 1 kB; immutable caching for content-hashed `/assets/*`; no-cache for `index.html`.
+* SQLite WAL, `synchronous=NORMAL`, busy timeout, composite index on attempts `(child_id, activity_type, outcome)`.
+* MediaPipe (136 kB + WASM) is loaded only when the camera is used; hand tracking runs at ~15 fps to save battery.
+* Learning graph: incremental upserts on the hot path, full rebuild only on demand (faithfulness tested).
+
+## Known limitations / next steps
+
+1. **Schema migrations:** tables are created with `create_all`. Add Alembic before the first schema change on a live install.
+2. **Single process:** the rate limiter, background analysis and SQLite assume one worker. Moving to Postgres and a job queue is the path to multi-instance.
+3. **Parent gate** is a soft gate (a multiplication question); the browser back button can leave child mode.
+4. **Camera:** the key estimate uses fingertip x-position inside a calibrated box. It is a hint that confirms or questions mic notes, never a judgement on its own.
+5. **Speech:** browser TTS/STT voices vary by OS (Hindi voices may be missing on some Linux desktops); the text bubble is always shown.
+6. **Phase 4** (guitar/violin): `instrument` is first-class and scoring works on note events, so this needs a new input adapter and lessons, not a rewrite. Melo can now *play* violin, sitar, guitar, santoor, xylophone, kalimba and tabla (synthesised); a real violin, flute or harmonium played into the microphone is already heard by the monophonic pitch tracker. Chords (guitar strumming) and tabla bols would need new recognisers.
+7. A first-run download of the MediaPipe WASM/model needs internet; everything else works offline.
+8. **Emotional teacher (2026-11-17):** the emotion rules live in one place on each side (`teacher/emotion.py`, `frontend/src/emotion.ts`, tested on both). Voice emotion is done with the browser's rate / pitch / volume only, so its range depends on the installed voice: neural voices (Edge "Natural") sound far better than the older Windows voices. A truly expressive voice needs a neural TTS service with SSML styles (for example Azure `cheerful` / `empathetic`), which needs an account, so it is not on by default.
+9. **New language content** (Sanskrit, Gujarati, Bengali, Punjabi, Tamil, Telugu, Kannada, German, Japanese) was written by the model: it needs a native speaker's review before real classroom use. Sanskrit is spoken through a Hindi voice (no engine has a Sanskrit voice or recogniser).
+10. **Refactor candidate:** `playNote` in `synth.ts` is now 275 lines (one `case` per instrument). A table of per-instrument voice functions would make adding instruments cheaper.
+11. **AI brain choice:** any signed-in parent of this install can choose the brain and its URL (fine for one family on one computer; on a shared server limit it to an admin). Only http(s) URLs; an online API key is stored in `brain.json` (0600 where supported) and never returned.
+12. **Local models** are slower and drift more: every answer is schema-checked, child-facing calls capped at 8 s with a late plan applied afterwards; Ollama answers one request at a time.
+13. **Progress tracker scores** describe task performance in Melo, not the child; they are not norms or diagnoses. AI assessments are labelled, limited to ±25 of the measured score, and can be rejected.
+14. **Parent chat changes** are proposals validated server-side and applied only by the parent. AI-made phrases and tunes are not reviewed by a native speaker or teacher.
+15. **Stored chats** (parent and child) stay in the local database (200 turns per child and channel, older ones only in the summary); they are deleted with the child.
+16. **Refactor candidates:** `SongRunner` (438 lines), `TeacherService` (grown with the new brains), `playNote` (275 lines), `assessment._measure_all`.
+17. **Pronunciation score** (MFCC + DTW against native recordings, relative to other words) is an estimate: microphones, rooms and the gap between child and adult voices affect it. It is shown as stars with that caveat and only upgrades "not heard" / "missed" answers, never downgrades. It was checked with generated voices, not yet with real children.
+18. **Native recordings** keep their CC BY-SA attribution (speaker, licence, source page) and the speaker is credited under each word. Family recordings stay on the computer and are excluded from builds.
+19. **OpenSLR sentences (2026-11-18):** Google's crowdsourced native-speaker sets (CC BY-SA 4.0) for Kannada, Gujarati, Marathi, Tamil, Telugu, Bengali, UK / Irish / Nigerian English and Latin-American Spanish (`app/lang/openslr.py`). Only the needed clips are fetched with HTTP range requests (a few MB per language, not the 1 GB zips); clips are trimmed / resampled and keep CC BY-SA with credit, so they are bundled. The text was written for adults (directions, news, phone assistants): pool sentences reach a child only through challenge packs, where the AI teacher checks each one, or offline only when every word is already known. Speakers are anonymous (gender from the file id or zip name; Bengali has none).
+20. **Fixed (2026-11-18):** `growth._words` and `native_audio._norm` split on `\W`, which cut Indic words at their vowel signs. Two effects: the offline "only known words" safety check compared letter fragments, and exact matching merged different words (Kannada ಹೌದು "yes" matched ಹಿಂದೂ "Hindu", ಶಾಲೆ "school" matched ಶಿಲೆ "rock"). Both now keep combining marks; the false matches were removed from the downloaded recordings (regression test `test_indic_words_keep_their_vowel_signs`).
+21. **Not yet used:** Mozilla Common Voice (CC0, every Melo language) needs a Mozilla Data Collective account and API key and per-dataset terms, a decision for the owner. FLEURS (CC BY 4.0) was checked and left out: long news sentences, one 1.2 GB archive per language.
+22. **Common Voice (2026-11-18):** downloads with the owner's Mozilla Data Collective key (`KM_MDC_API_KEY`, `.env` only, never bundled). Its terms forbid re-sharing the dataset, so Common Voice clips stay on the computer that downloaded them (`noshare`, excluded from builds); families who want them need their own account. Archives cannot be read partially: the whole .tar.gz is streamed and discarded except the chosen clips (clips met before the clip list are spooled to disk and deleted). Contributor ids are cut to 10 characters, only to tell voices apart.
+23. **School, friends, feelings phrases (2026-11-18):** 22 phrases × 20 languages written by the model, not yet reviewed by native speakers. Teacher greetings are gendered in French ("maîtresse"), German ("Frau Lehrerin") and Arabic ("ustaadh"); Spanish uses the neutral "profe". "I am hurt / scared / sad" are there so a child can tell an adult; the app does not act on them (no alerts), which is right for a practice phrase but worth stating.
+24. **Side by side with many languages:** up to all 20 columns. Speech uses the device voices, so languages without a voice on that device show 🔇; "hear all" plays every column in turn (20 languages take about a minute per row).

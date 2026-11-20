@@ -1,0 +1,12 @@
+fastapi>=0.115,<1.0
+uvicorn[standard]>=0.30,<1.0
+sqlalchemy>=2.0,<3.0
+pydantic>=2.7,<3.0
+pydantic-settings>=2.3,<3.0
+pyjwt>=2.8,<3.0
+cryptography>=42
+numpy>=1.26,<3.0
+python-multipart>=0.0.9
+anthropic>=0.70
+mcp>=2.3,<3.0
+miniaudio>=1.59,<2.0  # MP3 -> WAV for native recordings (MIT)

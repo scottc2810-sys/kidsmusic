@@ -1,0 +1,66 @@
+# Builds the one-click installers for Windows, macOS and Linux and attaches them to a release.
+# Runs when a version tag (v1.2.0) is pushed, or by hand from the Actions tab.
+name: Release installers
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - uses: actions/setup-node@v4
+        with: { node-version: "22" }
+      - run: pip install -r backend/requirements-dev.txt -c backend/requirements.lock
+      - run: cd backend && python -m pytest -q
+      - run: cd frontend && npm ci --no-audit --no-fund && npx tsc -b && npx vitest run
+
+  build:
+    needs: test
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-latest, ubuntu-22.04]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - uses: actions/setup-node@v4
+        with: { node-version: "22" }
+      - name: Build (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          choco install innosetup --no-progress -y
+          ./packaging/windows/build.ps1
+      - name: Build (macOS / Linux)
+        if: runner.os != 'Windows'
+        run: |
+          if [ "$RUNNER_OS" = "Linux" ]; then sudo apt-get update && sudo apt-get install -y python3-tk libfuse2; fi
+          chmod +x packaging/build.sh && ./packaging/build.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: melo-${{ runner.os }}
+          path: |
+            dist/Melo-Setup-*.exe
+            dist/Melo-windows.zip
+            dist/Melo-*.dmg
+            dist/Melo-*.AppImage
+            dist/Melo-linux.tar.gz
+          if-no-files-found: error
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: build
+    runs-on: ubuntu-latest
+    permissions: { contents: write }
+    steps:
+      - uses: actions/download-artifact@v4
+        with: { path: out, merge-multiple: true }
+      - uses: softprops/action-gh-release@v2
+        with: { files: out/* }

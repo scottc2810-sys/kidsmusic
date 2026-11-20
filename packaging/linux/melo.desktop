@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Melo
+Comment=AI music teacher for children
+Exec=Melo
+Icon=melo
+Terminal=false
+Categories=Education;Music;

@@ -1,0 +1,19 @@
+# systemd unit (Linux). Copy to /etc/systemd/system/melo.service, adjust paths/user, then:
+#   sudo systemctl daemon-reload && sudo systemctl enable --now melo
+[Unit]
+Description=Melo AI music teacher
+After=network.target
+
+[Service]
+User=melo
+WorkingDirectory=/opt/melo
+ExecStart=/opt/melo/scripts/run.sh
+Restart=on-failure
+RestartSec=3
+NoNewPrivileges=true
+ProtectSystem=strict
+ReadWritePaths=/opt/melo/data
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,13 @@
+# Build output, deps and runtime data: not source code
+frontend/dist/**
+frontend/node_modules/**
+backend/.venv/**
+data/**
+.e2e-data/**
+**/__pycache__/**
+**/.pytest_cache/**
+frontend/.impeccable/**
+# vendored, minified MediaPipe runtime; installer build output
+frontend/public/mediapipe/**
+build/**
+dist/**

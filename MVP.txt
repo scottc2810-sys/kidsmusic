@@ -1,0 +1,237 @@
+
+# AI Music Teacher for Kids
+## Simple MVP Product Specification
+
+### 1. Product Overview
+
+Build an AI-powered music teacher that helps children aged 3 and above learn music through playful, interactive lessons.
+
+The teacher should adapt to the child's progress, teach through a screen or real musical instruments, and provide friendly feedback using voice, animations, and simple musical games.
+
+**Product goal:** Make learning music feel like playing with a patient, encouraging teacher rather than attending a formal music class.
+
+### 2. Target Users
+
+- Children aged 3–8 years.
+- Parents who want to introduce music at home.
+- Children learning through a screen, keyboard, guitar, violin, or other instruments.
+- Families who prefer Hindi, English, or Hinglish instruction.
+
+### 3. Core Features
+
+#### A. Interactive Music Teacher
+
+The AI teacher should:
+
+- Speak naturally and use short, simple sentences.
+- Demonstrate musical notes, rhythms, and melodies.
+- Ask the child to repeat sounds, tap rhythms, or play notes.
+- Use animated characters, musical games, and rewards.
+- Give encouragement and gentle corrections.
+- Adapt lessons to the child's attention span and skill level.
+
+Example:
+
+"Chalo, aaj hum ek musical game khelenge! Listen carefully. Can you find the same sound on your keyboard?"
+
+#### B. Multiple Learning Modes
+
+| Mode | Experience |
+|---|---|
+| Screen mode | Learn through animated notes, sounds, and virtual instruments. |
+| Real instrument mode | Play a physical instrument while the camera and microphone observe progress. |
+| Listening mode | Recognize notes, rhythms, and melodies through headphones or speakers. |
+| Practice mode | Repeat previously learned songs and musical exercises. |
+
+Start with keyboard and virtual piano. Add guitar and violin after validating the core learning experience.
+
+#### C. Camera and Audio Learning
+
+With parental permission, the system can:
+
+- Observe the child's hands and instrument.
+- Identify which keys or strings are being played when visually distinguishable.
+- Listen to musical notes, rhythm, and timing.
+- Compare the child's performance with the lesson.
+- Provide immediate feedback when a mistake is detected.
+
+The system should distinguish between an actual playing error and an uncertain observation.
+
+For example:
+
+"That was a lovely try! Let's play the same note one more time."
+
+#### D. Recording and Practice Review
+
+Allow parents to upload or record practice sessions of up to 10 minutes.
+
+The AI should:
+
+1. Identify the instrument and the lesson being practiced.
+2. Analyze notes, rhythm, timing, and relevant technique.
+3. Identify the child's strongest areas.
+4. Find recurring mistakes.
+5. Create a short, personalized improvement lesson.
+6. Track improvement across sessions.
+
+Do not require the child to complete a 10-minute recording. Short practice sessions should be the default.
+
+#### E. Adaptive Difficulty
+
+The teacher should adjust difficulty based on actual performance.
+
+- If the child struggles, simplify the exercise.
+- If the child succeeds repeatedly, introduce a slightly harder challenge.
+- If the child loses interest, switch to a short musical game.
+- If the child becomes frustrated, offer a break or an easier activity.
+
+Progress should be based on demonstrated musical ability, not the number of minutes spent practicing.
+
+### 4. Learning Curriculum
+
+#### Level 1: Discover Music
+
+- Explore high and low sounds.
+- Recognize loud and soft sounds.
+- Tap simple rhythms.
+- Identify different instruments.
+- Play one or two notes.
+
+#### Level 2: Play and Repeat
+
+- Match musical notes.
+- Follow simple rhythmic patterns.
+- Play short musical phrases.
+- Learn basic finger placement.
+- Recognize repeated musical patterns.
+
+#### Level 3: Create Music
+
+- Play simple melodies.
+- Combine notes and rhythms.
+- Learn familiar children's songs.
+- Experiment with creating original melodies.
+- Begin basic musical expression.
+
+#### Level 4: Play Independently
+
+- Play short songs with less assistance.
+- Recognize and correct simple mistakes.
+- Follow a musical sequence.
+- Choose songs and activities independently.
+
+The curriculum should remain flexible. A child may progress quickly in rhythm but need more time with instrument technique.
+
+### 5. Child-Friendly Teaching Psychology
+
+The teacher should follow these principles:
+
+- Keep lessons short, generally 3–5 minutes for a young child.
+- Teach one new concept at a time.
+- Use repetition without making practice feel boring.
+- Give immediate, specific, positive feedback.
+- Allow the child to choose between simple activities.
+- Encourage exploration and creativity.
+- Never compare the child with other children.
+- Never shame, punish, or criticize the child for mistakes.
+- Never pressure the child to continue when they want to stop.
+
+Use rewards for effort, exploration, and progress rather than perfection.
+
+### 6. Parent Dashboard
+
+Parents should be able to:
+
+- Create and manage a child's profile.
+- Select the preferred teaching language.
+- Select the instrument and learning mode.
+- Set session duration and practice reminders.
+- View completed lessons and learning progress.
+- Review recordings and AI-generated feedback.
+- Delete recordings and learning data.
+- Manage camera and microphone permissions.
+
+Parents should be able to disable recording and use screen-only lessons.
+
+### 7. Technology Stack
+
+| Component | MVP Technology |
+|---|---|
+| Development | Claude Code |
+| Frontend | React, TypeScript, Vite |
+| Backend | Python, FastAPI |
+| AI teacher | Claude API |
+| Voice interaction | Speech-to-text and text-to-speech |
+| Audio analysis | librosa, audio feature extraction |
+| Camera processing | MediaPipe |
+| Database | SQLite initially |
+| Recording storage | Local storage or encrypted cloud storage |
+
+Claude should manage teaching decisions, explanations, and lesson adaptation. Specialized audio and computer-vision components should handle musical analysis and instrument recognition.
+
+### 8. Claude Code Implementation
+
+Use Claude Code to build the application, backend, lesson engine, and integrations.
+
+The MVP should include:
+
+- A simple web application.
+- A conversational AI music teacher.
+- A basic virtual piano.
+- A microphone-based note and rhythm analyzer.
+- A camera-based instrument observation module.
+- A lesson progression engine.
+- A parent dashboard.
+
+The application should work locally during development.
+
+Claude Code subscription access does not automatically mean that a deployed application can use Claude's API without separate API access or applicable usage limits. Keep the AI provider configurable.
+
+### 9. MVP Development Phases
+
+**Phase 1: Virtual Piano**
+
+Build the virtual piano, voice teacher, basic lessons, and adaptive difficulty.
+
+**Phase 2: Real Instrument Support**
+
+Add microphone-based musical analysis and camera-based observation for physical keyboards.
+
+**Phase 3: Practice Recordings**
+
+Add recordings up to 10 minutes, automated analysis, and personalized practice feedback.
+
+**Phase 4: Additional Instruments**
+
+Extend the system to guitar and violin with instrument-specific lessons and performance analysis.
+
+### 10. MVP Success Criteria
+
+The MVP is successful when:
+
+- A child can complete a simple lesson with minimal adult assistance.
+- The teacher can recognize basic musical notes and rhythms.
+- The system can adjust lesson difficulty based on performance.
+- Parents can review learning progress.
+- A practice recording produces useful, understandable feedback.
+- The application works with both screen-based and real-instrument learning.
+
+### 11. Safety and Privacy
+
+Because the product is intended for very young children:
+
+- Require parental consent before enabling the camera, microphone, or recordings.
+- Do not use the camera or microphone without explicit permission.
+- Process recordings locally where possible.
+- Do not use children's recordings to train AI models.
+- Do not expose recordings or personal information to other users.
+- Provide clear controls for stopping a lesson or deleting data.
+- Keep the teacher's language age-appropriate and non-manipulative.
+
+### Final MVP Scope
+
+Start with one instrument, one virtual piano, three learning levels, Hindi/English/Hinglish voice interaction, and a basic adaptive lesson engine.
+
+Once children can reliably learn and play simple melodies, add real-instrument recognition, 10-minute recording analysis, guitar, and violin.
+
+The priority is not to build a music expert that knows every instrument. It is to build a patient teacher that helps a young child enjoy music, recognize progress, and learn one small skill at a time.

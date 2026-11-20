@@ -1,0 +1,273 @@
+{
+  "_note": "Mandarin (Simplified) lines for Melo. Machine-translated: please have a native-speaking teacher review. Missing keys fall back to English.",
+  "greeting": [
+    "你好，{name}！我是美乐。今天我们一起玩音乐吧！",
+    "嗨，{name}！美乐来啦。准备好玩音乐游戏了吗？"
+  ],
+  "theme.animals": [
+    "今天我们的声音是小动物：大大的大象和小小的小鸟！"
+  ],
+  "theme.rain": [
+    "今天我们像下雨一样做音乐：滴、答、哗啦！"
+  ],
+  "theme.space": [
+    "今天我们跟着音乐飞向星星！"
+  ],
+  "theme.jungle": [
+    "今天我们去音乐森林探险！"
+  ],
+  "intro.high_low.higher": [
+    "听两个声音。哪一个更高，像小鸟一样？点一点它！"
+  ],
+  "intro.high_low.lower": [
+    "听两个声音。哪一个更低，像大象一样？点一点它！"
+  ],
+  "intro.loud_soft.louder": [
+    "仔细听。哪个声音更响，像狮子吼？"
+  ],
+  "intro.loud_soft.softer": [
+    "仔细听。哪个声音更轻，像睡着的小猫？"
+  ],
+  "intro.instrument_guess": [
+    "听！是哪种乐器在演奏？"
+  ],
+  "intro.rhythm_tap": [
+    "听我的鼓声。现在你来拍一样的节奏！"
+  ],
+  "intro.find_note": [
+    "听这个音。你能在琴键上找到一样的声音吗？"
+  ],
+  "intro.same_different": [
+    "听两段小旋律。它们一样，还是不一样？"
+  ],
+  "intro.echo_melody": [
+    "先听这段小旋律。然后你来弹一遍！"
+  ],
+  "intro.play_song": [
+    "我们来弹《{song}》！跟着发光的琴键弹。"
+  ],
+  "intro.free_play": [
+    "现在你是作曲家！喜欢哪个键就弹哪个，编一首自己的歌。"
+  ],
+  "success": [
+    "哇！太棒了！",
+    "真好，你做到了！",
+    "你听得真仔细！",
+    "对啦！完全正确！"
+  ],
+  "partial": [
+    "弹得真不错！大部分都对了。",
+    "就差一点点！再来一点点。"
+  ],
+  "miss": [
+    "试得很好！我们再听一遍。",
+    "没关系！多练习就会了。",
+    "嗯，差一点。我们一起再听一次。"
+  ],
+  "hint.higher": [
+    "试试高一点的键，往小鸟那边！"
+  ],
+  "hint.lower": [
+    "试试低一点的键，往大象那边！"
+  ],
+  "hint.faster": [
+    "下次慢一点点，像小乌龟一样。"
+  ],
+  "hint.slower": [
+    "下次快一点点，像小兔子一样。"
+  ],
+  "uncertain": [
+    "嗯，我没听清楚。我们把这个音再弹一次吧！"
+  ],
+  "skipped": [
+    "没关系！我们来做点好玩的。"
+  ],
+  "harder": [
+    "你做得真好！来一个新的小挑战。"
+  ],
+  "easier": [
+    "我们把这个变简单一点。"
+  ],
+  "break_offer": [
+    "要不要休息一下，或者玩一个简单的游戏？"
+  ],
+  "game_switch": [
+    "我们来玩一个音乐小游戏吧！"
+  ],
+  "song_school.intro": [
+    "{name}，我们一起学《{song}》吧！先听，然后你来弹。一小段一小段地学。"
+  ],
+  "song_school.phrase_done": [
+    "这一段你学会了！来学下一段。"
+  ],
+  "song_school.try_again": [
+    "我们再听一遍。"
+  ],
+  "song_school.whole_done": [
+    "哇！你把《{song}》整首都弹出来了！这就是真正的音乐！"
+  ],
+  "level_up": [
+    "太好了！新的一级为你打开了：{level}！"
+  ],
+  "wrap_up": [
+    "今天的音乐时间真开心！你今天得了{stars}颗星星。下次见！"
+  ],
+  "tired": [
+    "好的，该休息啦。你今天的音乐真好听！"
+  ],
+  "check_mic": [
+    "我听不太清楚。请大人检查一下麦克风，或者我们在屏幕上弹。"
+  ],
+  "chat.fallback": [
+    "这个问题真好！我们用音乐来找答案。要不要玩个游戏？"
+  ],
+  "chat.note": [
+    "一个音就是一个音乐的声音。有的音高高的像小鸟，有的低低的像大象！"
+  ],
+  "chat.rhythm": [
+    "节奏就是音乐的心跳，像你的心脏：咚、咚、咚！"
+  ],
+  "chat.hello": [
+    "你好，我的音乐小伙伴！我们弹什么呢？"
+  ],
+  "chat.tired": [
+    "休息一下没关系。你随时可以按月亮按钮停下来。"
+  ],
+  "chat.song": [
+    "我最喜欢歌曲了！我们上课时一起弹一首吧。"
+  ],
+  "hint.note_up": [
+    "你弹的是{played}。试试{expected}，往右一点点！"
+  ],
+  "hint.note_down": [
+    "你弹的是{played}。试试{expected}，往左一点点！"
+  ],
+  "hint.note_missing": [
+    "继续弹！下一个音是{expected}。"
+  ],
+  "song_school.welcome_back": [
+    "欢迎回来，{name}！《{song}》你已经会{count}段了。我们来学下一段！"
+  ],
+  "intro.fast_slow.faster": [
+    "把旋律听两遍。哪一遍更快，像奔跑的小兔子？"
+  ],
+  "intro.fast_slow.slower": [
+    "把旋律听两遍。哪一遍更慢，像想睡觉的小乌龟？"
+  ],
+  "basics.swars": [
+    "你好，{name}！我们来练习音阶：Sa Re Ga Ma Pa Dha Ni！"
+  ],
+  "basics.rhythm": [
+    "你好，{name}！我们来练习节奏。先听拍子，再拍出来！"
+  ],
+  "basics.high_low": [
+    "你好，{name}！高得像小鸟，低得像大象。我们来练习！"
+  ],
+  "basics.loud_soft": [
+    "你好，{name}！响得像狮子，轻得像小猫。我们来练习！"
+  ],
+  "basics.fast_slow": [
+    "你好，{name}！快得像兔子，慢得像乌龟。我们来练习！"
+  ],
+  "basics.instruments": [
+    "你好，{name}！我们来听乐器，猜猜是谁在演奏！"
+  ],
+  "basics.ear": [
+    "你好，{name}！我们来练习音乐小耳朵。要非常仔细地听哦！"
+  ],
+  "retry": [
+    "这个我们一起再试一次。这次我来帮你。",
+    "同一个再来一遍。看着、听着，我帮你。"
+  ],
+  "stretch": [
+    "你做得太好了！这是下一级的内容。来试试看！"
+  ],
+  "teach.high_low.higher": [
+    "第{n}个声音更高。再听一遍！"
+  ],
+  "teach.high_low.lower": [
+    "第{n}个声音更低。再听一遍！"
+  ],
+  "teach.loud_soft.louder": [
+    "第{n}个声音更响。再听一遍！"
+  ],
+  "teach.loud_soft.softer": [
+    "第{n}个声音更轻。再听一遍！"
+  ],
+  "teach.fast_slow.faster": [
+    "第{n}遍更快。再听一遍！"
+  ],
+  "teach.fast_slow.slower": [
+    "第{n}遍更慢。再听一遍！"
+  ],
+  "teach.same_different.same": [
+    "这两段旋律是一样的。再听一遍！"
+  ],
+  "teach.same_different.different": [
+    "有一个音不一样。仔细听听看！"
+  ],
+  "teach.instrument_guess": [
+    "再听一次它的声音。"
+  ],
+  "detail.find_first": [
+    "你第一次就找到了{note}！"
+  ],
+  "detail.find_later": [
+    "你找到了{note}！下次争取第一次就找到。"
+  ],
+  "detail.rhythm_all": [
+    "每一拍你都拍对了！"
+  ],
+  "detail.rhythm_some": [
+    "{expected}拍里你拍对了{matched}拍。"
+  ],
+  "detail.notes_all": [
+    "每个音都对了！"
+  ],
+  "detail.name": [
+    "真棒，{name}！",
+    "{name}，弹得真好听！"
+  ],
+  "coach.hesitation": [
+    "你停下来找{note}了。我们只练这一小段。"
+  ],
+  "coach.hold_long": [
+    "{note}要按久一点。数到{beats}再往下弹！"
+  ],
+  "coach.rushing": [
+    "弹得好快！现在慢慢来，跟着拍子。"
+  ],
+  "coach.dragging": [
+    "这次我们跟上拍子。"
+  ],
+  "coach.uneven": [
+    "让每个音一样长，像走路的脚步：一、二、一、二。"
+  ],
+  "coach.steady": [
+    "你的拍子真稳，像钟表一样！"
+  ],
+  "coach.louder": [
+    "我几乎听不到你的琴声。弹响一点，或者把琴拿近一点。"
+  ],
+  "coach.cam_hands": [
+    "我看不到你的手。请大人把摄像头对准琴键。"
+  ],
+  "coach.cam_curve": [
+    "手指弯弯的，像握着一个小球。"
+  ],
+  "coach.cam_fingers": [
+    "多用几个手指：一个手指管一个键，像小脚步一样。"
+  ],
+  "drill.intro": [
+    "只弹这几个音：{notes}。慢慢来！"
+  ],
+  "recall.stars": [
+    "上次你得了{stars}颗星星！"
+  ],
+  "recall.song": [
+    "你正在学《{song}》。我们很快再弹它！"
+  ],
+  "lang.new_phrase": [
+    "这是一句新的话！"
+  ]
+}

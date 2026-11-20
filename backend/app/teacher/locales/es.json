@@ -1,0 +1,273 @@
+{
+  "_note": "Spanish lines for Melo. Machine-translated: please have a native-speaking teacher review. Missing keys fall back to English.",
+  "greeting": [
+    "¡Hola, {name}! Soy Melo. ¡Hoy vamos a jugar con la música!",
+    "¡Hola, {name}! Aquí está Melo. ¿Listo para un juego musical?"
+  ],
+  "theme.animals": [
+    "Hoy nuestros sonidos son animales: ¡elefantes grandes y pajaritos pequeños!"
+  ],
+  "theme.rain": [
+    "Hoy hacemos música como la lluvia: ¡plic, ploc, splash!"
+  ],
+  "theme.space": [
+    "¡Hoy volamos a las estrellas con la música!"
+  ],
+  "theme.jungle": [
+    "¡Hoy exploramos la selva de la música!"
+  ],
+  "intro.high_low.higher": [
+    "Escucha dos sonidos. ¿Cuál es más agudo, como un pajarito? ¡Tócalo!"
+  ],
+  "intro.high_low.lower": [
+    "Escucha dos sonidos. ¿Cuál es más grave, como un elefante grande? ¡Tócalo!"
+  ],
+  "intro.loud_soft.louder": [
+    "Escucha con atención. ¿Qué sonido es más fuerte, como el rugido de un león?"
+  ],
+  "intro.loud_soft.softer": [
+    "Escucha con atención. ¿Qué sonido es más suave, como un gatito dormido?"
+  ],
+  "intro.instrument_guess": [
+    "¡Escucha! ¿Qué instrumento está sonando?"
+  ],
+  "intro.rhythm_tap": [
+    "Escucha mi tambor. ¡Ahora toca tú el mismo ritmo!"
+  ],
+  "intro.find_note": [
+    "Escucha esta nota. ¿Puedes encontrar el mismo sonido en tu teclado?"
+  ],
+  "intro.same_different": [
+    "Escucha dos melodías cortitas. ¿Son iguales o diferentes?"
+  ],
+  "intro.echo_melody": [
+    "Primero escucha esta melodía. ¡Luego tócala tú!"
+  ],
+  "intro.play_song": [
+    "¡Vamos a tocar {song}! Sigue las teclas que brillan."
+  ],
+  "intro.free_play": [
+    "¡Ahora tú eres el compositor! Toca las teclas que quieras y crea tu propia canción."
+  ],
+  "success": [
+    "¡Guau! ¡Qué bonito!",
+    "¡Bravo, lo lograste!",
+    "¡Muy bien escuchado!",
+    "¡Sí! ¡Perfecto!"
+  ],
+  "partial": [
+    "¡Muy buen intento! Casi todo estuvo bien.",
+    "¡Casi! Solo un poquito más."
+  ],
+  "miss": [
+    "¡Buen intento! Vamos a escuchar otra vez.",
+    "¡No pasa nada! Practicando se aprende.",
+    "Mmm, casi. Escuchemos juntos de nuevo."
+  ],
+  "hint.higher": [
+    "¡Prueba una tecla un poco más aguda, hacia el lado del pajarito!"
+  ],
+  "hint.lower": [
+    "¡Prueba una tecla un poco más grave, hacia el lado del elefante!"
+  ],
+  "hint.faster": [
+    "La próxima vez, un poco más despacio, como una tortuga."
+  ],
+  "hint.slower": [
+    "La próxima vez, un poco más rápido, como un conejito."
+  ],
+  "uncertain": [
+    "Mmm, no pude oírlo bien. ¡Toquemos la misma nota otra vez!"
+  ],
+  "skipped": [
+    "¡No pasa nada! Hagamos algo divertido."
+  ],
+  "harder": [
+    "¡Lo haces muy bien! Aquí tienes un pequeño reto nuevo."
+  ],
+  "easier": [
+    "Vamos a hacerlo un poquito más fácil."
+  ],
+  "break_offer": [
+    "¿Descansamos un ratito o jugamos a algo fácil?"
+  ],
+  "game_switch": [
+    "¡Juguemos a un juego musical rápido!"
+  ],
+  "song_school.intro": [
+    "¡Vamos a aprender {song} juntos, {name}! Primero escucha, luego tocas tú. Un trocito cada vez."
+  ],
+  "song_school.phrase_done": [
+    "¡Ya te sabes esta parte! Vamos con la siguiente."
+  ],
+  "song_school.try_again": [
+    "Escuchemos una vez más."
+  ],
+  "song_school.whole_done": [
+    "¡Guau! ¡Tocaste {song} entera! ¡Eso es música de verdad!"
+  ],
+  "level_up": [
+    "¡Hurra! Se abrió un nivel nuevo para ti: ¡{level}!"
+  ],
+  "wrap_up": [
+    "¡Qué rato de música tan divertido! Hoy ganaste {stars} estrellas. ¡Hasta pronto!"
+  ],
+  "tired": [
+    "Muy bien, hora de descansar. ¡Hoy hiciste muy buena música!"
+  ],
+  "check_mic": [
+    "No oigo muy bien. Un adulto puede revisar el micrófono, o podemos jugar en la pantalla."
+  ],
+  "chat.fallback": [
+    "¡Qué buena pregunta! Vamos a descubrirlo con música. ¿Jugamos?"
+  ],
+  "chat.note": [
+    "Una nota es un sonido musical. ¡Algunas son agudas como un pájaro y otras graves como un elefante!"
+  ],
+  "chat.rhythm": [
+    "El ritmo es el latido de la música, como tu corazón: ¡pum, pum, pum!"
+  ],
+  "chat.hello": [
+    "¡Hola, amigo de la música! ¿Qué tocamos?"
+  ],
+  "chat.tired": [
+    "Está bien descansar. Puedes pulsar el botón de la luna para parar cuando quieras."
+  ],
+  "chat.song": [
+    "¡Me encantan las canciones! Toquemos una juntos en la clase."
+  ],
+  "hint.note_up": [
+    "Tocaste {played}. ¡Prueba {expected}, un poquito a la derecha!"
+  ],
+  "hint.note_down": [
+    "Tocaste {played}. ¡Prueba {expected}, un poquito a la izquierda!"
+  ],
+  "hint.note_missing": [
+    "¡Sigamos! La siguiente nota es {expected}."
+  ],
+  "song_school.welcome_back": [
+    "¡Hola otra vez, {name}! Ya te sabes {count} partes de {song}. ¡Vamos a aprender la siguiente!"
+  ],
+  "intro.fast_slow.faster": [
+    "Escucha la melodía dos veces. ¿Cuál es más rápida, como un conejo corriendo?"
+  ],
+  "intro.fast_slow.slower": [
+    "Escucha la melodía dos veces. ¿Cuál es más lenta, como una tortuga dormilona?"
+  ],
+  "basics.swars": [
+    "¡Hola, {name}! Vamos a practicar las notas: ¡Sa Re Ga Ma Pa Dha Ni!"
+  ],
+  "basics.rhythm": [
+    "¡Hola, {name}! Vamos a practicar el ritmo. Escucha el pulso y luego tócalo."
+  ],
+  "basics.high_low": [
+    "¡Hola, {name}! Agudo como un pájaro, grave como un elefante. ¡A practicar!"
+  ],
+  "basics.loud_soft": [
+    "¡Hola, {name}! Fuerte como un león, suave como un gatito. ¡A practicar!"
+  ],
+  "basics.fast_slow": [
+    "¡Hola, {name}! Rápido como un conejo, lento como una tortuga. ¡A practicar!"
+  ],
+  "basics.instruments": [
+    "¡Hola, {name}! Escuchemos instrumentos y adivinemos quién toca."
+  ],
+  "basics.ear": [
+    "¡Hola, {name}! Vamos a entrenar el oído musical. ¡Escucha con mucha atención!"
+  ],
+  "retry": [
+    "Probemos otra vez la misma, juntos. Esta vez te ayudo.",
+    "Una vez más la misma. Mira y escucha, yo te ayudo."
+  ],
+  "stretch": [
+    "¡Lo haces muy bien! Aquí va algo del siguiente nivel. ¡A ver!"
+  ],
+  "teach.high_low.higher": [
+    "El sonido {n} era el más agudo. ¡Escucha otra vez!"
+  ],
+  "teach.high_low.lower": [
+    "El sonido {n} era el más grave. ¡Escucha otra vez!"
+  ],
+  "teach.loud_soft.louder": [
+    "El sonido {n} era el más fuerte. ¡Escucha otra vez!"
+  ],
+  "teach.loud_soft.softer": [
+    "El sonido {n} era el más suave. ¡Escucha otra vez!"
+  ],
+  "teach.fast_slow.faster": [
+    "La melodía {n} era la más rápida. ¡Escucha otra vez!"
+  ],
+  "teach.fast_slow.slower": [
+    "La melodía {n} era la más lenta. ¡Escucha otra vez!"
+  ],
+  "teach.same_different.same": [
+    "Las dos melodías eran iguales. ¡Escucha otra vez!"
+  ],
+  "teach.same_different.different": [
+    "Una nota era diferente. ¡A ver si la oyes!"
+  ],
+  "teach.instrument_guess": [
+    "Escucha su voz una vez más."
+  ],
+  "detail.find_first": [
+    "¡Encontraste {note} a la primera!"
+  ],
+  "detail.find_later": [
+    "¡Encontraste {note}! La próxima vez, a la primera."
+  ],
+  "detail.rhythm_all": [
+    "¡Tocaste todos los pulsos!"
+  ],
+  "detail.rhythm_some": [
+    "Acertaste {matched} de {expected} pulsos."
+  ],
+  "detail.notes_all": [
+    "¡Todas las notas estuvieron bien!"
+  ],
+  "detail.name": [
+    "¡Muy bien, {name}!",
+    "¡{name}, qué bonito!"
+  ],
+  "coach.hesitation": [
+    "Te paraste a buscar {note}. Practiquemos solo ese trocito."
+  ],
+  "coach.hold_long": [
+    "Mantén {note} más tiempo. ¡Cuenta hasta {beats} antes de seguir!"
+  ],
+  "coach.rushing": [
+    "¡Qué rápido! Ahora despacito, con el pulso."
+  ],
+  "coach.dragging": [
+    "Esta vez vamos al paso del pulso."
+  ],
+  "coach.uneven": [
+    "Haz todas las notas igual de largas, como pasos al caminar: uno, dos, uno, dos."
+  ],
+  "coach.steady": [
+    "¡Tu pulso fue muy parejo, como un reloj!"
+  ],
+  "coach.louder": [
+    "Casi no oí tu teclado. Toca un poco más fuerte, o acércalo."
+  ],
+  "coach.cam_hands": [
+    "No veo tus manos. Un adulto puede apuntar la cámara a las teclas."
+  ],
+  "coach.cam_curve": [
+    "Dobla los dedos, como si sujetaras una pelotita."
+  ],
+  "coach.cam_fingers": [
+    "Usa más dedos: un dedo para cada tecla, como pasitos."
+  ],
+  "drill.intro": [
+    "Solo estas notas: {notes}. ¡Despacito!"
+  ],
+  "recall.stars": [
+    "¡La última vez ganaste {stars} estrellas!"
+  ],
+  "recall.song": [
+    "Estás aprendiendo {song}. ¡Pronto la tocamos otra vez!"
+  ],
+  "lang.new_phrase": [
+    "¡Aquí tienes algo nuevo que decir!"
+  ]
+}
