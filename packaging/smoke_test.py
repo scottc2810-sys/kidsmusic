@@ -64,6 +64,7 @@ class Client:
 
 
 def main() -> int:
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")  # Windows consoles default to a code page without ✓
     exe = os.path.abspath(sys.argv[1])
     port = free_port()
     data = tempfile.mkdtemp(prefix="melo-smoke-")
