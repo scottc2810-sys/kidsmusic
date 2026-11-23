@@ -332,8 +332,11 @@ def measured_areas(db: Session, child: Child, evs: list[Ev] | None = None) -> li
         evs, _ = load_events(db, child.id)
     areas = []
     music = [e for e in evs if e.domain == "music"]
+    from . import results
+
     areas.append({"id": "music", "title": "Music", "emoji": "🎹",
-                  "axes": [_axis(a, label, em, skill_score(_f(music, skill=sk)), sk) for a, label, em, sk in MUSIC_AXES]})
+                  "axes": [_axis(a, label, em, skill_score(_f(music, skill=sk)), sk) for a, label, em, sk in MUSIC_AXES]
+                  + results.music_extra(db, child, evs)})
     from .lang.content import TARGETS, WORDS
     from .lang.phrases import PHRASE_WORDS
 
@@ -347,8 +350,10 @@ def measured_areas(db: Session, child: Child, evs: list[Ev] | None = None) -> li
         convo = skill_score(_f(L, kinds=("reply_pick",)) + _f(L, spec=("question",)) + [e for e in L if (e.item or "").startswith("p_")])
         axes = [_axis(s, label, em, skill_score(_f(L, skill=s)), s) for s, label, em in LANG_AXES[:4]]
         axes += [_axis("vocabulary", "Vocabulary", "🔤", vocab), _axis("conversation", "Conversation", "💬", convo)]
+        axes += results.lang_extra(db, child, code, evs, convo)
         areas.append({"id": f"lang:{code}", "title": TARGETS[code].name, "emoji": TARGETS[code].flag, "axes": axes,
                       "facts": {"words_known": known, "items_total": total}})
+    areas += results.subject_areas(db, child)  # maths, science, vedas & wisdom, finance
     areas.append({"id": "habits", "title": "Learning habits", "emoji": "🌱", "axes": [
         _axis("accuracy", "Accuracy", "🎯", accuracy(evs, 60)), _axis("consistency", "Consistency", "📏", consistency(evs)),
         _axis("retention", "Remembering", "🧠", retention(evs)), _axis("independence", "Independence", "🦸", independence(evs)),
@@ -771,7 +776,13 @@ def tracker(db: Session, child: Child, *, with_catalogue: bool = True) -> dict:
         area["developing"] = [a["label"] for a in sorted(scored, key=lambda a: a["final"]) if a["final"] < 61][:3]
         area["not_assessed"] = [a["label"] for a in area["axes"] if a["final"] is None]
         area["score"] = round(statistics.fmean(a["final"] for a in scored), 1) if len(scored) >= 3 else None
-    out = {"weights": {"measured": MEASURED_WEIGHT, "assessed": ASSESSED_WEIGHT}, "bands": [{"max": t, "label": n} for t, n in BANDS],
+        if area["id"] != "habits":
+            from . import results
+
+            results.summarize(area)  # learned 45 % + applied in real life 35 % + remembered 20 %
+    from . import results
+
+    out = {"overall": results.overall(areas), "weights": {"measured": MEASURED_WEIGHT, "assessed": ASSESSED_WEIGHT}, "bands": [{"max": t, "label": n} for t, n in BANDS],
            "areas": areas, "quality": quality, "updated_at": utcnow().isoformat(), "compared_with": (past or {}).get("day"),
            "recommendations": recommendations(areas),
            "limitations": ["Scores describe what the child did in Melo's activities, not the child. They are not clinical, school-board or age norms.",
@@ -957,8 +968,11 @@ def _since_last(db: Session, child: Child) -> tuple[timedelta, int]:
     last = db.scalars(select(Assessment).where(Assessment.child_id == child.id, Assessment.source.in_(["ai", "system"]))
                       .order_by(Assessment.created_at.desc())).first()
     since = _utc(last.created_at) if last else datetime(2000, 1, 1, tzinfo=timezone.utc)
+    from .models import SubjectRound
+
     n = db.query(Attempt).filter(Attempt.child_id == child.id, Attempt.answered_at >= since).count() + \
-        db.query(LangAttempt).filter(LangAttempt.child_id == child.id, LangAttempt.answered_at >= since).count()
+        db.query(LangAttempt).filter(LangAttempt.child_id == child.id, LangAttempt.answered_at >= since).count() + \
+        5 * db.query(SubjectRound).filter(SubjectRound.child_id == child.id, SubjectRound.at >= since).count()  # a round = 5 answers
     return utcnow() - since, n
 
 
@@ -969,7 +983,7 @@ def ai_due(db: Session, child: Child, at_end: bool = False) -> bool:
     return gap >= AI_MIN_INTERVAL and n >= (MIN_EVIDENCE if at_end else AI_EVERY_ANSWERS)
 
 
-def request_ai_assessment(child_id: str, reason: str) -> bool:
+def request_ai_assessment(child_id: str, reason: str, force: bool = False) -> bool:
     """Start an AI assessment in the background (one per child at a time). Returns False if one is running."""
     with _lock:
         if child_id in _running:
@@ -983,7 +997,7 @@ def request_ai_assessment(child_id: str, reason: str) -> bool:
             with session_factory()() as db:
                 child = db.get(Child, child_id)
                 if child is not None:
-                    run_ai_assessment(db, child, reason)
+                    run_ai_assessment(db, child, reason, force=force)
                     db.commit()
         except Exception:  # an assessment is a bonus: never disturb the child
             log.exception("AI assessment failed")
@@ -1009,7 +1023,7 @@ def _compact(t: dict, limit: int = 5000) -> dict:
     return payload
 
 
-def run_ai_assessment(db: Session, child: Child, reason: str) -> list[Assessment]:
+def run_ai_assessment(db: Session, child: Child, reason: str, force: bool = False) -> list[Assessment]:
     """The AI teacher looks at the measured picture and the child's memory and gives its 20 %: a score per axis
     with confidence, an observation, a pace suggestion and the focus for next time. Fully validated."""
     from . import memory
@@ -1024,9 +1038,20 @@ def run_ai_assessment(db: Session, child: Child, reason: str) -> list[Assessment
                  "environment_quality": "n/a (aggregated results)", "rubric_version": RUBRIC_VERSION, "reason": reason}
     if not teacher.uses_ai(child):
         return []  # no brain for this child: the tracker stays 100 % measured, nothing to record
-    if not ai_due(db, child, at_end=True):
+    if force:  # a concept was just completed: review now, even if a review ran a few minutes ago
+        gap, n = _since_last(db, child)
+        if n < 1 or gap < timedelta(seconds=60):
+            return []
+    elif not ai_due(db, child, at_end=True):
         return []  # nothing new since the last review, or one ran a moment ago
+    from . import results
+
     payload = _compact(t)
+    # what the child has carried through to mastery, and the learned / applied / remembered summary per area:
+    # without it the AI only saw averages, and a concept finished today was judged by older, weaker attempts
+    payload["completed_concepts"] = results.completed_concepts(db, child)
+    payload["area_summary"] = [{k: a.get(k) for k in ("id", "score", "learned", "applied", "remembered")} for a in t["areas"]]
+    payload["milestone"] = reason if force else None
     axes = {(a["area"], x["axis"]): x for a in payload["areas"] for x in a["axes"]}
     data = teacher.assess_progress(child, payload, memory.brief(db, child), [f"{a}/{x}" for a, x in axes])
     if not data:

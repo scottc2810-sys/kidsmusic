@@ -144,6 +144,7 @@ const json = (body: unknown) => JSON.stringify(body);
 export type { InstrumentInfo } from "./teaching/instrument";
 import type { Prefs } from "./teaching/persona";
 export type { Prefs } from "./teaching/persona";
+export type SubjectName = "maths" | "science" | "vedas" | "finance";
 export interface TopicProgress { difficulty: number; rounds: number; attempts: number; correct: number; stars: number }
 import type { InstrumentInfo } from "./teaching/instrument";
 export interface InstrumentKind { id: string; label: string; emoji: string; layout: string; keys: number; first: string; stand_in: boolean }
@@ -167,6 +168,12 @@ export interface TrackerAxis {
 export interface TrackerArea {
   id: string; title: string; emoji: string; axes: TrackerAxis[]; strengths: string[]; developing: string[]; not_assessed: string[];
   score: number | null; facts?: Record<string, number>;
+  /** learned / used in real life / remembered (0-100), and the weighted score */
+  learned?: number | null; applied?: number | null; remembered?: number | null;
+}
+export interface TrackerOverall {
+  score: number | null; learned: number | null; applied: number | null; remembered: number | null; weights: Record<string, number>;
+  areas: { id: string; title: string; emoji: string; score: number | null; learned: number | null; applied: number | null; remembered: number | null }[];
 }
 export interface TrackerParam { group: string; name: string; definition: string; measure: string | null; score: number | null; n: number; band: string | null; info: string | null; how: string }
 export interface TrackerAssessment {
@@ -174,7 +181,7 @@ export interface TrackerAssessment {
   quality: Record<string, string | number | null | string[]>;
 }
 export interface Tracker {
-  weights: { measured: number; assessed: number }; bands: { max: number; label: string }[]; areas: TrackerArea[];
+  weights: { measured: number; assessed: number }; bands: { max: number; label: string }[]; areas: TrackerArea[]; overall?: TrackerOverall;
   quality: { rushed_excluded: number; disengaged_excluded: number; events: number }; updated_at: string; compared_with: string | null;
   recommendations: { area: string; axis: string; skill: string | null; priority: number; reason: string }[];
   limitations: string[]; parameters?: TrackerParam[]; coverage?: { total: number; measured: number; with_evidence: number }; assessments?: TrackerAssessment[];
@@ -264,10 +271,12 @@ export const api = {
   prefs: (childId: string) => request<Prefs>(`/api/children/${childId}/prefs`),
   savePrefs: (childId: string, body: { grade: number | null; teachers: Prefs["teachers"] }) =>
     request<Prefs>(`/api/children/${childId}/prefs`, { method: "PUT", body: json(body) }),
-  subjectProgress: (childId: string, subject: "maths" | "science") =>
+  subjectProgress: (childId: string, subject: SubjectName) =>
     request<{ prefs: Prefs; topics: Record<string, TopicProgress> }>(`/api/children/${childId}/subjects/${subject}`),
-  subjectRound: (childId: string, subject: "maths" | "science", topic: string, body: { correct: number; total: number; difficulty: number }) =>
-    request<TopicProgress & { earned: number; level_change: number }>(`/api/children/${childId}/subjects/${subject}/${topic}/round`, { method: "POST", body: json(body) }),
+  subjectRound: (childId: string, subject: SubjectName, topic: string, body: { correct: number; total: number; difficulty: number; strand?: string; apply_correct?: number; apply_total?: number; title?: string; examples?: string[] }) =>
+    request<TopicProgress & { earned: number; level_change: number; mastered?: boolean; challenge_started?: boolean }>(`/api/children/${childId}/subjects/${subject}/${topic}/round`, { method: "POST", body: json(body) }),
+  subjectChallenges: (childId: string, subject: SubjectName, topic: string) =>
+    request<{ levels: { level: number; items: unknown[] }[]; growing: boolean }>(`/api/children/${childId}/subjects/${subject}/${topic}/challenges`),
   nativeCoverage: () => request<NativeCoverage>("/api/learn/native-coverage"),
   /** Ask Melo for the next, harder challenge pack of sentences in a language (found on Tatoeba / written by the AI). */
   learnGrow: (childId: string, lang: string) => request<{ started: boolean; message: string }>(`/api/children/${childId}/learn/${lang}/grow`, { method: "POST" }),

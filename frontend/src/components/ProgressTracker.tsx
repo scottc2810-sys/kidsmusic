@@ -6,6 +6,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { api, type TeacherPlan, type Tracker, type TrackerArea, type TrackerAxis, type TrackerParam } from "../api";
 import { SpiderChart } from "./SpiderChart";
+import { ResultsSummary } from "./ResultsSummary";
 
 const SOURCE_TAG: Record<string, string> = { ai: "🤖 AI teacher", teacher: "🧑‍🏫 Teacher", parent: "👪 Parent", child: "🧒 Child", system: "⚙️ System" };
 
@@ -54,6 +55,8 @@ export function ProgressTracker({ childId, name }: { childId: string; name: stri
   const teacherNote = t.assessments?.find((a) => a.axis === "teacher_note" && a.status === "active");
 
   return (
+    <>
+    <ResultsSummary t={t} />
     <section className="card tracker">
       <div className="row spread wrap">
         <div>
@@ -206,5 +209,6 @@ export function ProgressTracker({ childId, name }: { childId: string; name: stri
       </details>
       {msg && <p className="small notice" aria-live="polite">{msg}</p>}
     </section>
+    </>
   );
 }

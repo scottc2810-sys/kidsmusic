@@ -7,6 +7,7 @@ import { api, type Tracker } from "../api";
 import { speak } from "../audio/speech";
 import { Melo } from "../components/Melo";
 import { SpiderChart } from "../components/SpiderChart";
+import { ResultsSummary, STAR_TIP } from "../components/ResultsSummary";
 import { L, type Text } from "../i18n";
 import { KidShell, useChild } from "./KidHome";
 
@@ -35,12 +36,16 @@ export function StarMap() {
       <div className="lesson wide">
         <h1>✨ {L(TITLE, lang)}</h1>
         <Melo mood={best.length ? "proud" : "happy"} size={110} say={line} />
+        {t && <ResultsSummary t={t} lang={lang} kid />}
         <div className="star-maps">
           {areas.map((a) => (
             <div key={a.id} className="star-map-card">
               <SpiderChart kid size={260} showBefore={false} title={`${a.emoji} ${a.title}`}
                 axes={a.axes.map((x) => ({ id: x.id, label: x.label, emoji: x.emoji, value: x.final, band: x.band }))} />
-              <ul className="kid-stars">{a.axes.map((x) => <li key={x.id}><span>{x.emoji}</span><span aria-label={x.band ?? "not yet"}>{stars(x.final)}</span></li>)}</ul>
+              <ul className="kid-stars">{a.axes.map((x) => {
+                const tip = `${x.label}: ${x.band ?? "not yet"}${x.final != null ? ` (${Math.round(x.final)}/100)` : ""}. ${L(STAR_TIP, lang)}`;
+                return <li key={x.id} tabIndex={0} title={tip} data-tip={tip}><span aria-hidden>{x.emoji}</span><span className="kid-star-label">{x.label}</span><span aria-label={x.band ?? "not yet"}>{stars(x.final)}</span></li>;
+              })}</ul>
             </div>
           ))}
         </div>

@@ -63,6 +63,12 @@ def new_exercise(topic: str, request: Request, body: ExerciseIn | None = None, c
     unfinished = [r for r in rows if r.topic == topic and f"x_{r.id}" not in done]
     if unfinished and not (body and body.force):
         return {**_public(unfinished[0], done, child.name), "reused": True}
+    row = make_exercise(db, child, topic, rows)
+    return {**_public(row, done, child.name), "reused": False}
+
+
+def make_exercise(db: Session, child: Child, topic: str, rows: list[CustomExercise]) -> CustomExercise:
+    """A new exercise one small step harder (AI brain when allowed, the offline generator otherwise)."""
     info = basics.tiers_for(db, child)[topic]
     tier = info["tier"]
     titles = [r.title for r in rows]
@@ -81,4 +87,42 @@ def new_exercise(topic: str, request: Request, body: ExerciseIn | None = None, c
         ex = basics.offline_exercise(tier, random.Random(), len(rows) + 1)
     row = basics.save(db, child, topic, tier, ex, source)
     db.commit()
-    return {**_public(row, done, child.name), "reused": False}
+    return row
+
+
+_auto_running: set[str] = set()
+
+
+def auto_next_exercises(child_id: str) -> None:
+    """Never run out: when every exercise of a topic is finished, make the next one (in the background)."""
+    import threading
+
+    if child_id in _auto_running:
+        return
+    _auto_running.add(child_id)
+
+    def work() -> None:
+        try:
+            from ..db import session_factory
+
+            with session_factory()() as db:
+                child = db.get(Child, child_id)
+                if child is None:
+                    return
+                done = _completed_ids(db, child.id)
+                rows = _exercise_rows(db, child)
+                for topic in basics.EXERCISE_TOPICS:
+                    if not [r for r in rows if r.topic == topic and f"x_{r.id}" not in done]:
+                        row = make_exercise(db, child, topic, rows)
+                        memory._event(db, child.id, "auto_exercise", f"Melo made the next {topic} exercise: {row.title} (level {row.tier})",
+                                      memory.nid_child(child.id))
+                        db.commit()
+                        rows.append(row)
+        except Exception:  # a bonus, never disturbs the child
+            import logging
+
+            logging.getLogger("melo.basics").exception("auto exercise failed")
+        finally:
+            _auto_running.discard(child_id)
+
+    threading.Thread(target=work, name="melo-auto-exercise", daemon=True).start()

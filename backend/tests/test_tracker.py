@@ -129,7 +129,7 @@ def test_ai_assessment_is_validated_clipped_and_can_change_the_pace(client, monk
     _settle()
     db, child = _child(cid)
     t = assessment.tracker(db, child, with_catalogue=False)
-    pitch = max((x for x in t["areas"][0]["axes"] if x["measured"] is not None), key=lambda x: x["n"])  # the axis with most evidence
+    pitch = max((x for x in t["areas"][0]["axes"] if x["measured"] is not None and x["skill"]), key=lambda x: x["n"])  # the skill axis with most evidence
     name = pitch["id"]
     st = db.query(SkillState).filter_by(child_id=cid, skill=name).first()
     d_before = st.difficulty

@@ -32,7 +32,7 @@ from ..models import Child, LangItemState, LangSkillState
 
 log = logging.getLogger("melo.growth")
 PACK_SIZE = 6
-MASTERED = 0.75
+MASTERED = 0.6  # share of the current content known well before the next, harder pack is made
 _running: set[tuple[str, str]] = set()
 _lock = threading.Lock()
 
@@ -66,8 +66,8 @@ def status(db: Session, child: Child, lang: str) -> dict:
     base_share = known(base)
     ps = packs(child.id, lang)
     last_share = known(ps[-1]["items"]) if ps else None
-    skills_ok = all(skills.get(s) and skills[s].difficulty >= 4 for s in ("listen", "read", "write")) and \
-        (not child.consent_microphone or (skills.get("speak") and skills["speak"].difficulty >= 4))
+    # ready when listening and reading are solid (stage 3+); writing and speaking grow alongside the new content
+    skills_ok = all(skills.get(s) and skills[s].difficulty >= 3 for s in ("listen", "read"))
     content_ok = (last_share if ps else base_share) >= MASTERED
     return {"base_known": round(base_share, 3), "packs": len(ps), "last_pack_known": None if last_share is None else round(last_share, 3),
             "skills_ready": bool(skills_ok), "due": bool(skills_ok and content_ok), "mastered_base": base_share >= MASTERED and bool(skills_ok),

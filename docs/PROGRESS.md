@@ -9,9 +9,9 @@ Melo is an AI music teacher for children aged 3–8, built with FastAPI, SQLite 
 | Area | Status |
 |---|---|
 | MVP scope (MVP.txt phases 1–3) | ✅ Built |
-| Backend tests (`pytest`) | ✅ 192 passed |
+| Backend tests (`pytest`) | ✅ 200 passed |
 | Frontend typecheck (`tsc -b`) | ✅ Clean |
-| Frontend tests (`vitest`) | ✅ 99 passed |
+| Frontend tests (`vitest`) | ✅ 180 passed |
 | Sound and microphone | ✅ Audio unlocks on the first tap. Settings has a 🔊 Sound check and a 🎤 Mic check, and browser mic permission is requested when the parent turns it on. ⏳ Needs a by-ear check in a real browser |
 | Production build | ✅ 391 kB JS (131 kB gzip) + lazily loaded 136 kB MediaPipe chunk |
 | Local deployment | ✅ Running at http://127.0.0.1:8000 (`KM_ENV=production`) |
@@ -421,4 +421,10 @@ Tests: 174 backend (`test_school_friends_and_feelings_for_real_conversations`, `
 | 🧪 **Shape Lab** | Make (join dots: Melo names the shape and explains sides, corners, right angles, area, perimeter, symmetry), Mix (squares + half-square triangles: two triangles make a square, area adds up), Puzzles (make a rectangle with area 6, 4 lines of symmetry…). |
 | 🔬 **Science (classes 1–5)** | 16 topics: living/non-living, plant parts & needs, animal food & homes, life cycles, senses, food groups, water cycle, states of matter, weather, solar system & day/night, push/pull, magnets, light & shadow, circuits. Drawn diagrams (plant, water cycle, planets, butterfly, particles…), label / sort / order / why questions. |
 | 🧑‍🏫 **Teacher personas** | Parent page "Teachers": per subject (maths, science, music, languages) a persona (Melo, Professor Pi, Captain Science, Dadi, Coach Zoom, Maestro), device voice, speed, pitch, preview; and the child's school class. Applied in every section. |
+| ➕ **More maths, science and Vedic tricks (2026-11-23)** | Maths now 43 topics in 6 strands (new: before/after/between, make 10, doubles & halves, rounding, Roman numerals, equivalent fractions, adding fractions, decimals, factors & multiples, story sums +/− and ×/÷, two-step problems, 3D shapes, weight & capacity, days & months). Vedic & quick tricks now 21 (new: round-and-adjust, shopkeeper's subtraction, ×4/×8 by doubling, ×9, ÷5, halve-and-double, ×25, teens × teens, Urdhva Tiryak, Antyayor Dashake'pi, squares near 50, Vedic ÷9, divisibility, digit-sum check). Science now 31 topics (new: bones & muscles, teeth, digestion, heart & lungs, hygiene, seeds, habitats, float/sink, air, soil, moon phases, sound, simple machines, heat, recycling) with new diagrams. **Every maths answer has a worked solution, step by step with Next** (column carries and borrows, also across zeros, break-apart multiplication, each trick applied to that problem); it opens by itself after a wrong answer. Extra simple concept cards for the first topics. |
+| 🧠 **AI results fixed** | The AI review only saw per-axis averages, never completed concepts, was skipped if a review ran < 5 min earlier, never ran during song practice, and never saw maths/science. Now: completed concepts and learned/applied/remembered summaries are sent, the prompt says a completed concept counts as demonstrated, milestones (whole song, language stage, mastered topic) trigger a review at once, song practice is reviewed every 12 answers, subject rounds count as evidence. |
+| ♾️ **Never-ending pool** | Languages: new sentence packs at the child's pace (listening/reading stage 3, 60 % known) instead of all skills at 4 + 75 %. Music: finishing a whole song auto-creates the next harder exercise. Maths/science/vedas/finance: mastering level 5 makes the AI brain write level 6, then 7… per child and topic (validated: answer among choices, child-safe text, sums re-computed). |
+| 🪙 **Money & finance** | 16 topics in 5 strands (basics, saving & spending, earning & business, smart & safe, growing money), mostly real-life decisions, numbers with worked steps. |
+| 🕉️ **Vedas & wisdom** | 17 topics: the four Vedas, 23 shlokas (Devanagari, IAST, source, meaning, life lesson, recite), Gita concepts (2.47, 2.48, 6.5, 2.14, 6.17, 17.15, 3.21, 4.38), life skills from childhood to old age, Vedic links to music, geometry, Sanskrit, astronomy and money. Shloka of the day in every subject. Personas Guruji and Money Mitra. |
+| 🏆 **Results per subject + combined** | Every area scored on 🧠 learned 45 %, 🌍 uses it in real life 35 %, 🔁 remembers 20 % (plus ✅ concepts completed), and an overall "All subjects" result; icons and star rows explain themselves on hover / focus. |
 

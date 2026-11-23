@@ -229,6 +229,10 @@ def song_phrase(body: PhraseIn, session: LessonSession = Depends(owned_session),
     db.flush()
     memory.record_attempt(db, child, session, attempt, upd.events)
     db.commit()
+    from .. import assessment
+
+    if assessment.ai_due(db, child):  # song practice is reviewed every 12 answers too (it was not before)
+        assessment.request_ai_assessment(child.id, "regular review during song practice")
 
     teacher = get_teacher()
     rng = _rng(session, len(session.attempts) * 17)
@@ -236,6 +240,12 @@ def song_phrase(body: PhraseIn, session: LessonSession = Depends(owned_session),
     passed = result.outcome in ("success", "partial")
     if whole and result.outcome == "success":
         parts = [teacher.say("song_school.whole_done", lang, rng, song=song["title"])]
+        # a concept completed: the AI teacher reviews now, and the next, harder exercise is made automatically
+        from . import basics as basics_router
+        from .. import assessment
+
+        assessment.request_ai_assessment(child.id, f"completed the whole song '{song['title']}'", force=True)
+        basics_router.auto_next_exercises(child.id)
     elif passed:
         parts = [teacher.say(result.outcome, lang, rng), teacher.say("song_school.phrase_done", lang, rng)]
     elif result.outcome == "miss":

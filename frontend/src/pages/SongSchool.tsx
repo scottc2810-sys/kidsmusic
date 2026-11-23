@@ -10,6 +10,7 @@ import { isSpeaking, primeSpeech, speak, stopSpeaking } from "../audio/speech";
 import { playNote, playSequence, sleep, unlockAudio } from "../audio/synth";
 import { Melo, type MeloMood } from "../components/Melo";
 import { ConceptCards } from "../components/ConceptCards";
+import { ShlokaOfTheDay } from "../components/ShlokaCard";
 import { InstrumentView } from "../components/InstrumentView";
 import { NoteGuide } from "../components/NoteGuide";
 import { rangeFor } from "../components/Piano";
@@ -40,6 +41,7 @@ export function SongList() {
     <KidShell child={child}>
       <div className="lesson song-school">
         <Melo mood="happy" size={120} say={t("pickSong", lang)} />
+        <ShlokaOfTheDay subject="music" lang={lang} />
         <div className="song-grid">
           {songs.map((s) => {
             const learned = s.progress.completed;

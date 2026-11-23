@@ -760,3 +760,30 @@ legend { font-weight: 700; padding: 0 6px; }
 .viz-steps { text-align: start; font-size: 1.3rem; font-weight: 700; margin: 0; padding-left: 1.5em; }
 .lab-board { width: 100%; max-width: 420px; height: auto; touch-action: manipulation; background: var(--surface); border-radius: var(--radius); border: 1px solid var(--line); }
 .chip.sel { border-color: var(--brand); background: var(--brand-soft); }
+.worked { width: 100%; max-width: 620px; text-align: start; margin: 0; padding: 12px 12px 12px 2.2em; background: var(--brand-soft); border-radius: var(--radius); display: grid; gap: 6px; font-weight: 700; }
+.worked li { color: var(--muted); }
+.worked li.now { color: var(--ink); animation: next-pop 0.3s ease-out; }
+
+/* --- shlokas --------------------------------------------------------------------------------------- */
+.shloka { margin: 0; display: grid; gap: 6px; justify-items: center; text-align: center; padding: 14px; border-radius: var(--radius);
+  background: linear-gradient(180deg, #fff7e6, #ffeccc); color: #4a2c00; border: 1px solid #f0c97a; max-width: 640px; }
+.shloka-dev { margin: 0; font: 700 clamp(1.15rem, 3.6vw, 1.5rem)/1.6 "Noto Sans Devanagari", "Nirmala UI", "Mangal", serif; }
+.shloka-iast { margin: 0; font-style: italic; font-size: 0.95rem; }
+.shloka .muted { color: #7a5a20; }
+.shloka-day { width: 100%; max-width: 720px; }
+.shloka-day summary { cursor: pointer; font-weight: 800; }
+/* --- hover / focus explanations for icons (results, stars, real-life badges) ---------------------- */
+.tip-badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 999px; font-weight: 800; font-size: 0.9rem; position: relative; cursor: help; }
+.tip-badge.real { background: #e3f7ec; color: #11633f; }
+[data-tip] { position: relative; }
+[data-tip]:hover::after, [data-tip]:focus-visible::after { content: attr(data-tip); position: absolute; left: 50%; bottom: calc(100% + 8px); transform: translateX(-50%);
+  width: max-content; max-width: 260px; padding: 8px 10px; border-radius: 10px; background: var(--ink); color: var(--bg); font: 600 0.85rem/1.35 var(--font);
+  text-align: left; white-space: normal; z-index: 20; box-shadow: 0 6px 18px var(--shadow); pointer-events: none; }
+.results-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 10px; width: 100%; }
+.result-tile { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 12px; display: grid; gap: 6px; }
+.result-tile.overall { border: 2px solid var(--brand); background: var(--brand-soft); }
+.result-tile h3 { margin: 0; font-size: 1.05rem; }
+.result-row { display: flex; align-items: center; gap: 8px; font-weight: 700; }
+.result-row .meter { flex: 1; height: 8px; border-radius: 999px; background: var(--line); overflow: hidden; }
+.result-row .meter i { display: block; height: 100%; background: var(--brand); border-radius: 999px; }
+.result-big { font-size: 1.8rem; font-weight: 900; }

@@ -11,8 +11,9 @@ import { ParentShell, Toast } from "./ParentShell";
 const SUBJECTS: { id: Subject; icon: string; name: string }[] = [
   { id: "maths", icon: "🔢", name: "Maths" }, { id: "science", icon: "🔬", name: "Science" },
   { id: "music", icon: "🎹", name: "Music" }, { id: "languages", icon: "🗣️", name: "Languages" },
+  { id: "vedas", icon: "🕉️", name: "Vedas & wisdom" }, { id: "finance", icon: "🪙", name: "Money & finance" },
 ];
-const SUGGEST: Record<Subject, TeacherChoice["persona"]> = { maths: "professor_pi", science: "captain_science", music: "maestro", languages: "dadi" };
+const SUGGEST: Record<Subject, TeacherChoice["persona"]> = { maths: "professor_pi", science: "captain_science", music: "maestro", languages: "dadi", vedas: "guruji", finance: "money_mitra" };
 
 export function TeachersPage() {
   const { id = "" } = useParams();

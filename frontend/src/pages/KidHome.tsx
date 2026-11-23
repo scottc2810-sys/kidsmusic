@@ -76,6 +76,8 @@ export function KidHome() {
           <button className="big-choice bc-orange" onClick={() => go(`/play/${id}/learn`)}><span>🗣️</span>{t("languages", lang)}</button>
           <button className="big-choice bc-blue" onClick={() => go(`/play/${id}/maths`)}><span>🔢</span>{L({ en: "Maths", hi: "गणित", hinglish: "Maths" }, lang)}</button>
           <button className="big-choice bc-green" onClick={() => go(`/play/${id}/science`)}><span>🔬</span>{L({ en: "Science", hi: "विज्ञान", hinglish: "Science" }, lang)}</button>
+          <button className="big-choice bc-orange" onClick={() => go(`/play/${id}/vedas`)}><span>🕉️</span>{L({ en: "Vedas & wisdom", hi: "वेद और ज्ञान", hinglish: "Ved aur gyaan" }, lang)}</button>
+          <button className="big-choice bc-yellow" onClick={() => go(`/play/${id}/finance`)}><span>🪙</span>{L({ en: "Money", hi: "पैसा", hinglish: "Paisa" }, lang)}</button>
           <button className="big-choice bc-green" onClick={() => go(`/play/${id}/piano`)}><span>🎨</span>{t("freePiano", lang)}</button>
           <button className="big-choice bc-purple" onClick={() => go(`/play/${id}/talk`)}><span>💬</span>{t("talk", lang)}</button>
           <button className="big-choice bc-yellow" onClick={() => go(`/play/${id}/stars`)}><span>✨</span>{L({ en: "My stars", hi: "मेरे सितारे", hinglish: "Mere stars" }, lang)}</button>

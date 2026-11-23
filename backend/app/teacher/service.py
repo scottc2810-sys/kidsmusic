@@ -516,7 +516,12 @@ class TeacherService:
             "Give YOUR teacher assessment for the axes where you have a reason (max 12): score 0-100 describing demonstrated performance on "
             "the tasks (never the child's intelligence, emotions or any diagnosis), confidence 0-1 (low when n is small), a one-sentence "
             "observation for the parent, and pace: 'faster' if ready for harder tasks, 'slower' if the tasks are too hard now, else 'same'. "
-            "Stay close to the measured score unless the memory gives a clear reason. Then focus: the 1-2 axes to work on next, and "
+            "Stay close to the measured score unless the memory gives a clear reason. completed_concepts lists what the child has "
+            "carried through to mastery (whole songs, mastered topics): an axis covering a completed concept must reflect that it was "
+            "demonstrated, even if older attempts pull the average down. The 'real_life' axes measure whether the child can APPLY "
+            "the learning to everyday situations: weigh them as heavily as knowing; knowing without applying is not yet mastery. "
+            "If milestone is set, the child just completed something: say so in the teacher_note. "
+            "Then focus: the 1-2 axes to work on next, and "
             "teacher_note: 2 short, kind, specific sentences for the parent with one thing to do at home."
         )
         row = _obj({"axis": {"type": "string", "enum": axes}, "score": {"type": "number"}, "confidence": {"type": "number"},

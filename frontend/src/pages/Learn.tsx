@@ -15,6 +15,7 @@ import { Confetti, Melo, type MeloMood } from "../components/Melo";
 import { isEmotion, MOOD, type Emotion } from "../emotion";
 import { L, t, topicTitle, type StrKey, type Text } from "../i18n";
 import { KidShell, useChild } from "./KidHome";
+import { ShlokaOfTheDay } from "../components/ShlokaCard";
 import { useTeacher } from "../teaching/persona";
 
 const SKILL_ICON: Record<LearnSkill, string> = { listen: "👂", speak: "🗣️", read: "📖", write: "✍️" };
@@ -53,6 +54,7 @@ export function LanguageList() {
     <KidShell child={child}>
       <div className="lesson learn wide">
         <Melo mood="happy" size={110} say={t("pickLanguage", lang)} />
+        <ShlokaOfTheDay subject="languages" lang={lang} />
         <button className="btn big" onClick={() => nav(`/play/${id}/learn-compare`)}>🔀 {t("compare", lang)}</button>
         <div className="lang-grid">
           {[...langs].sort((a, b) => Number(b.started) - Number(a.started)).map((s) => (

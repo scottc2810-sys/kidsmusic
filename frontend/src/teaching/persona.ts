@@ -7,8 +7,8 @@ import { setTeacherVoice } from "../audio/speech";
 import { L, type Text } from "../i18n";
 import type { Language } from "../languages";
 
-export type Subject = "maths" | "science" | "music" | "languages";
-export type PersonaId = "melo" | "professor_pi" | "captain_science" | "dadi" | "coach_zoom" | "maestro";
+export type Subject = "maths" | "science" | "music" | "languages" | "vedas" | "finance";
+export type PersonaId = "melo" | "professor_pi" | "captain_science" | "dadi" | "coach_zoom" | "maestro" | "guruji" | "money_mitra";
 export interface TeacherChoice { persona: PersonaId; voice?: string | null; rate: number; pitch: number }
 export interface Prefs { grade: number; grade_auto: boolean; teachers: Partial<Record<Subject, TeacherChoice>> }
 
@@ -42,8 +42,16 @@ export const PERSONAS: Persona[] = [
     hello: { en: "Bravo, {name}! Shall we make some music?", hi: "वाह {name}! चलो संगीत बनाएँ?", hinglish: "Wah {name}! Chalo music banayein?" },
     praise: [{ en: "Bravissimo!", hi: "वाह, क्या बात है!", hinglish: "Wah, kya baat hai!" }],
     encourage: [{ en: "Listen once more, the music will guide you.", hi: "एक बार और सुनो, संगीत रास्ता दिखाएगा।", hinglish: "Ek baar aur suno, music raasta dikhayega." }] },
+  { id: "guruji", name: "Guruji", emoji: "🧘", about: "A calm, wise teacher of the Vedas, the Gita and life skills. Speaks slowly with stories.", rate: 0.88, pitch: 0.95,
+    hello: { en: "Namaste {name}. Come, let us learn something that will help you all your life.", hi: "नमस्ते {name}। आओ, कुछ ऐसा सीखें जो जीवन भर काम आए।", hinglish: "Namaste {name}. Aao, kuch aisa seekhein jo zindagi bhar kaam aaye." },
+    praise: [{ en: "Sādhu! Well understood.", hi: "साधु! बहुत अच्छे से समझा।", hinglish: "Saadhu! Bahut achhe se samjha." }],
+    encourage: [{ en: "Patience, my child. Let us think about it together.", hi: "धैर्य रखो, बच्चे। साथ में सोचते हैं।", hinglish: "Dhairya rakho, bachche. Saath mein sochte hain." }] },
+  { id: "money_mitra", name: "Money Mitra", emoji: "🪙", about: "A friendly money coach who loves smart choices and saving goals.", rate: 1.0, pitch: 1.02,
+    hello: { en: "Hi {name}! Ready to be smart with money today?", hi: "हाय {name}! आज पैसे में समझदार बनने को तैयार?", hinglish: "Hi {name}! Aaj paise mein smart banne ko ready?" },
+    praise: [{ en: "Smart choice! Your future self says thank you.", hi: "समझदार फ़ैसला! तुम्हारा भविष्य धन्यवाद कहता है।", hinglish: "Smart choice! Tumhara future thank you bolta hai." }],
+    encourage: [{ en: "Let's count it out step by step.", hi: "चलो एक-एक क़दम गिनते हैं।", hinglish: "Chalo step by step ginte hain." }] },
 ];
-export const DEFAULT_PERSONA: Record<Subject, PersonaId> = { maths: "melo", science: "melo", music: "melo", languages: "melo" };
+export const DEFAULT_PERSONA: Record<Subject, PersonaId> = { maths: "melo", science: "melo", music: "melo", languages: "melo", vedas: "melo", finance: "melo" };
 export const personaById = (id: string | undefined) => PERSONAS.find((p) => p.id === id) ?? PERSONAS[0];
 
 let prefsCache: Record<string, Prefs> = {};

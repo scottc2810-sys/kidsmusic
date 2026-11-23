@@ -1,12 +1,15 @@
 // Pictures that make an idea visible: objects to count, a number line with hops, tens rods and ones cubes,
 // arrays, fair shares, fraction pizzas, a clock, coins, bar charts, a balance, shapes, angles, area grids,
 // rulers. Concrete -> pictorial -> abstract, the way children understand maths.
+import { ShlokaView } from "../components/ShlokaCard";
+import type { Language } from "../languages";
 import { Diagram } from "./Diagrams";
+import { SHLOKAS } from "./shlokas";
 import type { Visual } from "./maths";
 
 const INK = "var(--ink)", BRAND = "var(--brand)", SOFT = "var(--brand-soft)", LINE = "var(--line)", GLOW = "var(--glow)";
 
-export function VisualView({ v }: { v: Visual }) {
+export function VisualView({ v, lang = "en" }: { v: Visual; lang?: Language }) {
   switch (v.type) {
     case "objects": return <Objects v={v} />;
     case "numberline": return <NumberLine v={v} />;
@@ -31,6 +34,8 @@ export function VisualView({ v }: { v: Visual }) {
     case "column": return <Column a={v.a} b={v.b} op={v.op} />;
     case "steps": return <ol className="viz-steps">{v.lines.map((l, i) => <li key={i}>{l}</li>)}</ol>;
     case "diagram": return <Diagram name={v.name} show={v.show} />;
+    case "solid": return <Solid kind={v.kind} />;
+    case "shloka": return SHLOKAS[v.id] ? <ShlokaView sh={SHLOKAS[v.id]} lang={lang} /> : null;
   }
 }
 
@@ -198,4 +203,20 @@ function Column({ a, b, op }: { a: number; b: number; op: string }) {
   const w = Math.max(String(a).length, String(b).length) + 1;
   const pad = (n: number) => String(n).padStart(w, " ");
   return <pre className="viz-column" aria-label={`${a} ${op} ${b}`}>{`  ${pad(a)}\n${op} ${pad(b)}\n${"─".repeat(w + 2)}`}</pre>;
+}
+
+/** 3D shapes drawn the way a teacher sketches them on the board (hidden edges dashed). */
+function Solid({ kind }: { kind: string }) {
+  const g = { fill: "#ffd9a0", stroke: INK, strokeWidth: 3, strokeLinejoin: "round" as const };
+  const dash = { fill: "none", stroke: INK, strokeWidth: 2, strokeDasharray: "6 5" };
+  let el: JSX.Element;
+  if (kind === "cube" || kind === "cuboid") {
+    const w = kind === "cube" ? 80 : 120, h = 80, d = 35;
+    el = <><path d={`M30 ${50 + d} h${w} v${h} h-${w} z`} {...g} /><path d={`M30 ${50 + d} l${d} -${d} h${w} l-${d} ${d} z`} {...g} fill="#ffe8c2" />
+      <path d={`M${30 + w} ${50 + d} l${d} -${d} v${h} l-${d} ${d} z`} {...g} fill="#f5c27a" /><path d={`M${30 + d} 50 v${h} h${w} M${30 + d} ${50 + h} l-${d} ${d}`} {...dash} /></>;
+  } else if (kind === "sphere") el = <><circle cx={100} cy={100} r={65} {...g} /><ellipse cx={100} cy={100} rx={65} ry={18} {...dash} /></>;
+  else if (kind === "cylinder") el = <><path d="M45 45 v110 a55 16 0 0 0 110 0 v-110" {...g} /><ellipse cx={100} cy={45} rx={55} ry={16} {...g} fill="#ffe8c2" /><path d="M45 155 a55 16 0 0 1 110 0" {...dash} /></>;
+  else if (kind === "cone") el = <><path d="M100 25 L40 155 a60 18 0 0 0 120 0 Z" {...g} /><path d="M40 155 a60 18 0 0 1 120 0" {...dash} /></>;
+  else el = <><path d="M100 25 L35 150 L120 170 Z" {...g} /><path d="M100 25 L120 170 L170 140 Z" {...g} fill="#f5c27a" /><path d="M35 150 L90 125 L170 140 M100 25 L90 125" {...dash} /></>;
+  return <svg viewBox="0 0 200 200" className="viz-svg small" role="img" aria-label={kind}>{el}</svg>;
 }

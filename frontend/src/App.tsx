@@ -77,6 +77,10 @@ export function App() {
         <Route path="/play/:id/maths/:topic" element={<RequireAuth><SubjectTopic subject="maths" /></RequireAuth>} />
         <Route path="/play/:id/science" element={<RequireAuth><SubjectHome subject="science" /></RequireAuth>} />
         <Route path="/play/:id/science/:topic" element={<RequireAuth><SubjectTopic subject="science" /></RequireAuth>} />
+        <Route path="/play/:id/vedas" element={<RequireAuth><SubjectHome subject="vedas" /></RequireAuth>} />
+        <Route path="/play/:id/vedas/:topic" element={<RequireAuth><SubjectTopic subject="vedas" /></RequireAuth>} />
+        <Route path="/play/:id/finance" element={<RequireAuth><SubjectHome subject="finance" /></RequireAuth>} />
+        <Route path="/play/:id/finance/:topic" element={<RequireAuth><SubjectTopic subject="finance" /></RequireAuth>} />
         <Route path="/play/:id/talk" element={<RequireAuth><TalkToMelo /></RequireAuth>} />
         <Route path="*" element={<Navigate to="/parent" replace />} />
       </Routes>

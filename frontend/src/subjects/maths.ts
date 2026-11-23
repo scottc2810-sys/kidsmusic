@@ -16,7 +16,7 @@ export function shuffle<T>(rng: Rng, xs: T[]): T[] {
   for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rng() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
   return a;
 }
-const T = (en: string, hi?: string, hinglish?: string): Text => ({ en, ...(hi ? { hi } : {}), ...(hinglish ? { hinglish } : {}) });
+export const T = (en: string, hi?: string, hinglish?: string): Text => ({ en, ...(hi ? { hi } : {}), ...(hinglish ? { hinglish } : {}) });
 
 export type Visual =
   | { type: "objects"; emoji: string; count: number; groups?: number[] }
@@ -38,15 +38,21 @@ export type Visual =
   | { type: "compare"; a: number; b: number }
   | { type: "column"; a: number; b: number; op: "+" | "−" | "×" }
   | { type: "steps"; lines: string[] }
-  | { type: "diagram"; name: string; show: "names" | "numbers" };
+  | { type: "diagram"; name: string; show: "names" | "numbers" }
+  | { type: "shloka"; id: string }
+  | { type: "solid"; kind: "cube" | "cuboid" | "sphere" | "cylinder" | "cone" | "pyramid" };
 
 export interface Exercise {
   prompt: Text; visual?: Visual; choices: string[]; answer: string; why: Text;
   /** Numbers are typed on a number pad when the child is old enough; pictures and words are always picked. */
   numeric?: boolean;
+  /** The worked solution, one small step at a time (shown with Next after answering). */
+  steps?: Text[];
+  /** A real-life application question (counts for the "uses it in real life" result). */
+  apply?: boolean;
 }
 export interface Card { title: Text; say: Text; visual?: Visual }
-export type Strand = "numbers" | "algebra" | "geometry" | "measure" | "vedic";
+export type Strand = "numbers" | "algebra" | "geometry" | "measure" | "problems" | "vedic";
 export interface Topic {
   id: string; strand: Strand; icon: string; title: Text; grades: [number, number];
   cards: Card[]; make: (d: number, rng: Rng) => Exercise;
@@ -57,6 +63,7 @@ export const STRANDS: { id: Strand; icon: string; title: Text; about: Text }[] =
   { id: "algebra", icon: "🧩", title: T("Patterns & algebra", "पैटर्न और बीजगणित", "Patterns aur algebra"), about: T("What comes next, missing numbers, balancing") },
   { id: "geometry", icon: "📐", title: T("Shapes & geometry", "आकृतियाँ और ज्यामिति", "Shapes aur geometry"), about: T("Shapes, symmetry, angles, area and perimeter") },
   { id: "measure", icon: "⏰", title: T("Measuring & data", "मापना और आँकड़े", "Measuring aur data"), about: T("Time, money, length, charts") },
+  { id: "problems", icon: "📖", title: T("Story sums & thinking", "कहानी वाले सवाल", "Story sums aur sochna"), about: T("Read a little story, find what to do, solve it") },
   { id: "vedic", icon: "⚡", title: T("Vedic & quick tricks", "वैदिक और तेज़ तरकीबें", "Vedic aur quick tricks"), about: T("Fast mental maths, and why each trick works") },
 ];
 

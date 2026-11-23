@@ -259,3 +259,35 @@ class SubjectProgress(Base):
     correct: Mapped[int] = mapped_column(Integer, default=0)
     stars: Mapped[int] = mapped_column(Integer, default=0)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
+
+
+class SubjectRound(Base):
+    """One finished round of a maths / science / vedas / finance topic: the evidence for the progress tracker
+    (what was learned, whether it was remembered later, and whether the child could APPLY it to real life)."""
+    __tablename__ = "subject_rounds"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    child_id: Mapped[str] = mapped_column(ForeignKey("children.id", ondelete="CASCADE"), index=True)
+    subject: Mapped[str] = mapped_column(String(12))
+    topic: Mapped[str] = mapped_column(String(40))
+    strand: Mapped[str] = mapped_column(String(20), default="")
+    difficulty: Mapped[int] = mapped_column(Integer, default=1)  # 6+ = beyond the built-in levels (AI challenges)
+    correct: Mapped[int] = mapped_column(Integer, default=0)
+    total: Mapped[int] = mapped_column(Integer, default=0)
+    apply_correct: Mapped[int] = mapped_column(Integer, default=0)  # real-life application questions right
+    apply_total: Mapped[int] = mapped_column(Integer, default=0)
+    at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, index=True)
+
+
+class ChallengeSet(Base):
+    """Harder questions the AI brain wrote for one child and one topic once the built-in levels were mastered:
+    the never-ending pool. level 6 = the first set beyond the built-in 5 levels, then 7, 8 ..."""
+    __tablename__ = "challenge_sets"
+    __table_args__ = (UniqueConstraint("child_id", "subject", "topic", "level"),)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    child_id: Mapped[str] = mapped_column(ForeignKey("children.id", ondelete="CASCADE"), index=True)
+    subject: Mapped[str] = mapped_column(String(12))
+    topic: Mapped[str] = mapped_column(String(40))
+    level: Mapped[int] = mapped_column(Integer)
+    items: Mapped[list] = mapped_column(JSON, default=list)  # [{prompt, choices, answer, why, steps, apply}]
+    source: Mapped[str] = mapped_column(String(20), default="ai")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)

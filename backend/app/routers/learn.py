@@ -52,7 +52,7 @@ def item_state_new(items: dict, act) -> bool:
 
 def _maybe_grow(db: Session, child: Child, lang: str, after: dict) -> None:
     """Mastered what is there? Prepare the next, harder challenge pack in the background."""
-    if after.get("stage", 0) < 4:
+    if after.get("stage", 0) < 3:
         return
     from ..lang import growth
 
@@ -327,6 +327,7 @@ def answer(attempt_id: str, body: AnswerIn, child: Child = Depends(owned_child),
             parts.append(teacher.say("lang.reveal", ui))
     if "stage_up" in events:
         parts.append(teacher.say("lang.stage_up", ui, n=after["stage"]))
+        assessment.request_ai_assessment(child.id, f"{lang}: reached stage {after['stage']}", force=True)  # a milestone: review now
     elif after["tier"] > before["tier"]:
         events.append("new_words")
         parts.append(teacher.say("lang.new_words", ui))

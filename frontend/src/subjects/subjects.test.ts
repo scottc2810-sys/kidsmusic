@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { analyze, CHALLENGES, symmetryLines } from "./geometry";
-import { MATHS_TOPICS, STRANDS } from "./maths";
-import { SCI_STRANDS, SCIENCE_TOPICS } from "./science";
+import { ALL_MATHS as MATHS_TOPICS, ALL_SCIENCE as SCIENCE_TOPICS } from "./index";
+import { STRANDS } from "./maths";
+import { SCI_STRANDS } from "./science";
+import { toRoman } from "./maths_more";
 
 /** A small seeded random generator so failures can be reproduced. */
 function seeded(seed: number) {
@@ -22,6 +24,8 @@ describe("every maths and science exercise is answerable and explained", () => {
           expect(e.choices.length, where).toBeGreaterThanOrEqual(2);
           expect(e.why.en.length, where).toBeGreaterThan(10);
           if (e.numeric) expect(Number.isFinite(Number(e.answer)), where).toBe(true);
+          for (const st of e.steps ?? []) expect(st.en.includes("undefined") || st.en.includes("NaN"), where + " step: " + st.en).toBe(false);
+          expect(e.why.en.includes("undefined") || e.why.en.includes("NaN"), where).toBe(false);
         }
       }
     });
@@ -30,6 +34,30 @@ describe("every maths and science exercise is answerable and explained", () => {
     for (const t of MATHS_TOPICS) expect(STRANDS.map((s) => s.id)).toContain(t.strand);
     for (const t of SCIENCE_TOPICS) expect(SCI_STRANDS.map((s) => s.id)).toContain(t.strand);
     for (const t of [...MATHS_TOPICS, ...SCIENCE_TOPICS]) expect(t.grades[0] >= 0 && t.grades[1] <= 5 && t.grades[0] <= t.grades[1]).toBe(true);
+  });
+  it("every maths exercise has a worked solution that reaches the right answer", () => {
+    const noSteps = ["count", "even_odd", "skip_count", "patterns", "shapes", "symmetry", "angles", "length", "data", "solids_3d", "calendar", "factors", "weight_capacity"];
+    for (const t of MATHS_TOPICS) {
+      for (let seed = 1; seed <= 40; seed++) {
+        const e = t.make(1 + (seed % 5), seeded(seed));
+        if (noSteps.includes(t.id) && !e.steps) continue;
+        expect(e.steps?.length ?? 0, `${t.id} seed ${seed}: ${e.prompt.en}`).toBeGreaterThan(0);
+        if (e.numeric) expect(e.steps!.map((s) => s.en).join(" "), `${t.id}: ${e.prompt.en}`).toContain(e.answer);
+      }
+    }
+  });
+  it("every new trick is mathematically right", () => {
+    const r = seeded(11);
+    const check: Record<string, (a: number, b: number) => number> = { times_9: (a) => a * 9, times_25: (a) => a * 25, teens: (a, b) => a * b, urdhva: (a, b) => a * b, ends_10: (a, b) => a * b, near_50: (a) => a * a, round_adjust: (a, b) => a + b, shopkeeper: (a, b) => a - b, div_5: (a) => a / 5 };
+    for (const [id, f] of Object.entries(check)) {
+      const t = MATHS_TOPICS.find((x) => x.id === id)!;
+      for (let i = 0; i < 100; i++) {
+        const e = t.make(1 + (i % 5), r);
+        const n = (e.prompt.en.match(/\d+/g) ?? []).map(Number);
+        expect(Number(e.answer), `${id}: ${e.prompt.en}`).toBe(f(n[0], n[1]));
+      }
+    }
+    expect([toRoman(4), toRoman(9), toRoman(14), toRoman(40), toRoman(99), toRoman(444)]).toEqual(["IV", "IX", "XIV", "XL", "XCIX", "CDXLIV"]);
   });
   it("vedic tricks give the true answer", () => {
     const r = seeded(7);

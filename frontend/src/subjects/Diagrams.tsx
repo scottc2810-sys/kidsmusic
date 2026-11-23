@@ -101,6 +101,60 @@ export function Diagram({ name, show }: { name: string; show: "names" | "numbers
       <text x={200} y={80} fontSize={14} fontWeight={800}>🍚 energy</text><text x={160} y={190} textAnchor="middle" fontSize={14} fontWeight={800}>🥦 protective</text>
       <text x={78} y={90} fontSize={14} fontWeight={800}>🥚 body-building</text>
     </>, "a healthy plate");
+    case "skeleton": return svg(220, 300, <>
+      <circle cx={110} cy={40} r={26} fill="#f4f1e8" stroke={INK} strokeWidth={3} />
+      <line x1={110} y1={66} x2={110} y2={170} stroke={INK} strokeWidth={6} strokeDasharray="10 4" />
+      {[90, 105, 120, 135].map((y) => <path key={y} d={`M75 ${y} Q110 ${y - 12} 145 ${y}`} fill="none" stroke={INK} strokeWidth={3} />)}
+      <line x1={110} y1={80} x2={55} y2={150} stroke={INK} strokeWidth={5} /><line x1={110} y1={80} x2={165} y2={150} stroke={INK} strokeWidth={5} />
+      <line x1={110} y1={170} x2={75} y2={285} stroke={INK} strokeWidth={6} /><line x1={110} y1={170} x2={145} y2={285} stroke={INK} strokeWidth={6} />
+      <circle cx={92} cy={228} r={6} fill="var(--brand)" /><circle cx={128} cy={228} r={6} fill="var(--brand)" />
+      {show === "names" && <><text x={145} y={30} fontSize={13} fill={INK}>skull</text><text x={150} y={112} fontSize={13} fill={INK}>ribs</text><text x={120} y={185} fontSize={13} fill={INK}>spine</text><text x={140} y={232} fontSize={13} fill={INK}>joint (knee)</text></>}
+    </>, "skeleton");
+    case "tooth": return svg(320, 160, <>
+      <path d="M30 40 h20 v70 h-20 z" fill="#fff" stroke={INK} strokeWidth={3} /><text x={40} y={140} textAnchor="middle" fontSize={14} fontWeight={800} fill={INK}>cut</text>
+      <path d="M120 30 l10 -15 l10 15 v80 h-20 z" fill="#fff" stroke={INK} strokeWidth={3} /><text x={130} y={140} textAnchor="middle" fontSize={14} fontWeight={800} fill={INK}>tear</text>
+      <path d="M205 40 h50 v20 q-6 10 0 20 v30 h-50 v-30 q6 -10 0 -20 z" fill="#fff" stroke={INK} strokeWidth={3} /><text x={230} y={140} textAnchor="middle" fontSize={14} fontWeight={800} fill={INK}>crush</text>
+      {show === "names" && <><text x={40} y={22} textAnchor="middle" fontSize={12} fill={INK}>front</text><text x={130} y={10} textAnchor="middle" fontSize={12} fill={INK}>pointy</text><text x={230} y={22} textAnchor="middle" fontSize={12} fill={INK}>back</text></>}
+    </>, "kinds of teeth");
+    case "digestion": return svg(260, 320, <>
+      <ellipse cx={130} cy={30} rx={34} ry={20} fill="#ffd6c9" stroke={INK} strokeWidth={2} /><line x1={130} y1={50} x2={130} y2={110} stroke="#e4572e" strokeWidth={10} />
+      <path d="M130 110 q40 0 40 30 q0 30 -40 30 q-20 0 -20 -20" fill="#ffb3a7" stroke={INK} strokeWidth={2} />
+      <path d="M100 185 q-30 10 0 20 q30 10 0 20 q-30 10 0 20 q30 10 0 20" fill="none" stroke="#f08c00" strokeWidth={8} />
+      <path d="M60 180 h140 v100 h-140 z" fill="none" stroke="#a0522d" strokeWidth={8} opacity={0.6} />
+      {show === "names" && <><text x={175} y={34} fontSize={12} fill={INK}>1 mouth</text><text x={140} y={82} fontSize={12} fill={INK}>2 food pipe</text><text x={175} y={142} fontSize={12} fill={INK}>3 stomach</text><text x={120} y={238} fontSize={12} fill={INK}>4 small intestine</text><text x={60} y={302} fontSize={12} fill={INK}>5 large intestine</text></>}
+    </>, "digestive system");
+    case "heart_lungs": return svg(280, 200, <>
+      <path d="M60 40 q-40 20 -30 110 q30 20 60 0 v-110 z" fill="#ffb3c6" stroke={INK} strokeWidth={2} /><path d="M220 40 q40 20 30 110 q-30 20 -60 0 v-110 z" fill="#ffb3c6" stroke={INK} strokeWidth={2} />
+      <path d="M140 150 l-30 -30 a17 17 0 0 1 30 -22 a17 17 0 0 1 30 22 z" fill="#e4572e" stroke={INK} strokeWidth={2} />
+      <line x1={140} y1={10} x2={140} y2={40} stroke="#9fb3c8" strokeWidth={8} />
+      {show === "names" && <><text x={20} y={185} fontSize={13} fill={INK}>lung</text><text x={225} y={185} fontSize={13} fill={INK}>lung</text><text x={120} y={175} fontSize={13} fill={INK}>heart</text><text x={150} y={22} fontSize={12} fill={INK}>windpipe</text></>}
+    </>, "heart and lungs");
+    case "sound": return svg(360, 160, <>
+      <text x={20} y={95} fontSize={44}>🥁</text>
+      {[0, 1, 2, 3].map((i) => <path key={i} d={`M${90 + i * 45} 40 q25 40 0 80`} fill="none" stroke="var(--brand)" strokeWidth={4} opacity={1 - i * 0.2} />)}
+      <text x={300} y={95} fontSize={44}>👂</text>
+      {show === "names" && <text x={180} y={150} textAnchor="middle" fontSize={13} fill={INK}>vibrations travel through the air</text>}
+    </>, "sound travelling");
+    case "float": return svg(320, 180, <>
+      <rect x={0} y={70} width={320} height={110} fill="#5aa9e6" opacity={0.6} /><line x1={0} y1={70} x2={320} y2={70} stroke="#1d4ed8" strokeWidth={2} />
+      <text x={40} y={75} fontSize={36}>🪵</text><text x={130} y={72} fontSize={30}>🍃</text><text x={210} y={170} fontSize={30}>🪨</text><text x={270} y={170} fontSize={26}>🪙</text>
+      {show === "names" && <><text x={60} y={40} fontSize={14} fontWeight={800} fill={INK}>floats</text><text x={225} y={110} fontSize={14} fontWeight={800} fill="#fff">sinks</text></>}
+    </>, "floating and sinking");
+    case "seed": return svg(400, 170, <>
+      <rect x={0} y={110} width={400} height={60} fill="#8b5a2b" opacity={0.35} />
+      {["🌰", "🌱", "🌿", "🪴", "🌻"].map((e, i) => <text key={i} x={40 + i * 80} y={110} textAnchor="middle" fontSize={34}>{e}</text>)}
+      {show === "names" && ["seed", "root & shoot", "leaves", "grows", "flower"].map((w, i) => <text key={w} x={40 + i * 80} y={150} textAnchor="middle" fontSize={12} fill={INK}>{w}</text>)}
+    </>, "how a seed grows");
+    case "moon": return svg(400, 130, <>
+      {["🌑", "🌒", "🌓", "🌔", "🌕", "🌖", "🌗", "🌘"].map((e, i) => <g key={i}>
+        <text x={25 + i * 50} y={60} textAnchor="middle" fontSize={34}>{e}</text>
+        {show === "names" && <text x={25 + i * 50} y={95} textAnchor="middle" fontSize={11} fill={INK}>{["new", "crescent", "half", "", "full", "", "half", ""][i]}</text>}</g>)}
+    </>, "phases of the moon");
+    case "lever": return svg(340, 150, <>
+      <polygon points="170,120 150,140 190,140" fill={INK} /><line x1={30} y1={110} x2={310} y2={130} stroke="#c97b3a" strokeWidth={8} />
+      <text x={40} y={100} fontSize={34}>🧒</text><text x={230} y={115} fontSize={40}>📦</text>
+      {show === "names" && <><text x={170} y={150} textAnchor="middle" fontSize={12} fill={INK}>pivot</text><text x={40} y={145} fontSize={12} fill={INK}>small push, far away</text></>}
+    </>, "a lever");
     default: return null;
   }
 }
