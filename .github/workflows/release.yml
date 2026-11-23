@@ -80,7 +80,7 @@ jobs:
           case "$RUNNER_OS" in
             macOS)
               hdiutil attach dist/Melo-*.dmg -mountpoint /Volumes/Melo -nobrowse
-              cp -R /Volumes/Melo/Melo.app "$HOME/Applications/" 2>/dev/null || { mkdir -p "$HOME/Applications" && cp -R /Volumes/Melo/Melo.app "$HOME/Applications/"; }
+              mkdir -p "$HOME/Applications" && cp -R /Volumes/Melo/Melo.app "$HOME/Applications/"  # what "drag Melo to Applications" does
               hdiutil detach /Volumes/Melo
               python packaging/smoke_test.py "$HOME/Applications/Melo.app/Contents/MacOS/Melo" ;;
             *)

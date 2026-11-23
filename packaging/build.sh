@@ -37,6 +37,7 @@ case "$(uname -s)" in
   Linux)
     echo "==> Portable archive"
     cp packaging/linux/install.sh packaging/linux/melo.desktop packaging/icons/melo.png dist/Melo/
+    chmod +x dist/Melo/install.sh dist/Melo/Melo  # executable inside the archive, whatever system the repo was checked out on
     tar -C dist -czf dist/Melo-linux.tar.gz Melo
     echo "==> AppImage"
     APPDIR=build/Melo.AppDir

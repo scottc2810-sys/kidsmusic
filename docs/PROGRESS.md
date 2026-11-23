@@ -16,7 +16,7 @@ Melo is an AI music teacher for children aged 3–8, built with FastAPI, SQLite 
 | Production build | ✅ 391 kB JS (131 kB gzip) + lazily loaded 136 kB MediaPipe chunk |
 | Local deployment | ✅ Running at http://127.0.0.1:8000 (`KM_ENV=production`) |
 | AI teacher | ✅ Any brain: Claude Code CLI, Claude API, Ollama, OpenAI-compatible (local or online); chosen in the app; offline fallback always |
-| Code-review graph | ✅ Rebuilt 2026-11-22: 145 files, 1,589 nodes, 18,788 edges (`.code-review-graph/graph.db`, visualization at `.code-review-graph/graph.html`) |
+| Code-review graph | ✅ Rebuilt 2026-11-22: 174 files, 1,901 nodes, 22,551 edges, 19 communities (`.code-review-graph/graph.db`, visualization at `.code-review-graph/graph.html`) |
 | Phase 4 (guitar / violin) | 🟡 Melo plays 12 instruments (violin, sitar, santoor, tabla … added 2026-11-17); a real-instrument input adapter for chords is still to do |
 
 ## Feature checklist
@@ -67,9 +67,9 @@ Built with `code-review-graph` 2.3.9 (Tree-sitter knowledge graph, stored in `.c
 
 | Metric | Value |
 |---|---|
-| Files | 145 (Python, TS/TSX, PowerShell, Bash) — rebuilt 2026-11-22 |
-| Nodes / edges | 1,589 / 18,788 |
-| Communities | 16 (largest: app-gen 304, tests-child 248, pages-explorer 187, audio-voice 159); 17 coupling warnings |
+| Files | 174 (Python, TS/TSX, PowerShell, Bash) — rebuilt 2026-11-22 |
+| Nodes / edges | 1,901 / 22,551 |
+| Communities | 19; 20 coupling warnings |
 | Execution flows | 78 (highest criticality: `register`) |
 | Source size | ~4.6k lines Python, ~3.0k lines TS/TSX |
 
