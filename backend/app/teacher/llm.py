@@ -14,6 +14,7 @@ Privacy: prompts never contain the child's name (the literal placeholder {name} 
 """
 from __future__ import annotations
 
+import base64
 import json
 import logging
 import re
@@ -162,14 +163,18 @@ class OllamaProvider:
 
     _think_ok = True  # older Ollama versions do not know the "think" switch
 
-    def structured(self, user_prompt: str, schema: dict, max_tokens: int = 2000, timeout: float | None = None) -> dict | None:
+    def structured(self, user_prompt: str, schema: dict, max_tokens: int = 2000, timeout: float | None = None,
+                   images: list[tuple[bytes, str]] | None = None) -> dict | None:
         self.last_error = None
         model = self._model()
         if not model:
             return None
+        user: dict[str, Any] = {"role": "user", "content": user_prompt + _json_instruction(schema)}
+        if images:  # vision models (llava, qwen2.5vl, gemma3 ...) look at them; others ignore them
+            user["images"] = [base64.b64encode(d).decode() for d, _ in images]
         payload = {"model": model, "stream": False, "format": schema, "keep_alive": "15m",
                    "options": {"temperature": 0.6, "num_predict": min(max_tokens, 1500)},
-                   "messages": [{"role": "system", "content": self.system}, {"role": "user", "content": user_prompt + _json_instruction(schema)}]}
+                   "messages": [{"role": "system", "content": self.system}, user]}
         if self._think_ok:
             # thinking models (qwen3, deepseek-r1 ...) would think for minutes on a laptop: a child is waiting
             payload["think"] = False
@@ -217,13 +222,17 @@ class OpenAICompatProvider:
             return {"type": "json_object"}
         return None
 
-    def structured(self, user_prompt: str, schema: dict, max_tokens: int = 2000, timeout: float | None = None) -> dict | None:
+    def structured(self, user_prompt: str, schema: dict, max_tokens: int = 2000, timeout: float | None = None,
+                   images: list[tuple[bytes, str]] | None = None) -> dict | None:
         self.last_error = None
         headers = {"Authorization": f"Bearer {self.api_key}"} if self.api_key else {}
+        text = user_prompt + _json_instruction(schema)
+        content: Any = text if not images else [{"type": "text", "text": text}] + [
+            {"type": "image_url", "image_url": {"url": f"data:{mime};base64,{base64.b64encode(d).decode()}"}} for d, mime in images]
         while True:
             payload: dict[str, Any] = {"model": self.model, "temperature": 0.6, "max_tokens": min(max_tokens, 1500),
                                        "messages": [{"role": "system", "content": self.system},
-                                                    {"role": "user", "content": user_prompt + _json_instruction(schema)}]}
+                                                    {"role": "user", "content": content}]}
             fmt = self._format(schema)
             if fmt:
                 payload["response_format"] = fmt

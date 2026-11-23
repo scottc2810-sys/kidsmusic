@@ -117,6 +117,21 @@ def test_gender_segments_are_preferred_to_the_full_release(monkeypatch):
     assert cv.datasets_for("sa") == []
 
 
-def test_common_voice_clips_stay_out_of_the_installer():
-    spec = (get_settings().data_dir and __import__("pathlib").Path(__file__).resolve().parents[2] / "packaging" / "melo.spec").read_text(encoding="utf-8")
-    assert 'not r.get("noshare")' in spec
+def test_common_voice_clips_stay_out_of_the_installer(tmp_path):
+    import importlib.util
+    import json
+    from pathlib import Path
+
+    spec = importlib.util.spec_from_file_location("voices", Path(__file__).resolve().parents[2] / "packaging" / "voices.py")
+    voices = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(voices)
+    src = tmp_path / "native_audio"
+    (src / "ar").mkdir(parents=True)
+    refs = {"cv": {"noshare": True}, "nc": {"noncommercial": True}, "fam": {"family": True}, "ok": {}, "syn": {}}
+    for name in refs:
+        (src / "ar" / f"{name}.wav").write_bytes(b"RIFF")
+    (src / "manifest.json").write_text(json.dumps({"ar": {k: [{"file": f"ar/{k}.wav", **v}] for k, v in refs.items() if k != "syn"}}))
+    (src / "tts.json").write_text(json.dumps({"ar": {"syn": {"female": {"file": "ar/syn.wav", "text": "x"}}}}))
+    out = tmp_path / "bundle"
+    assert voices.bundle(out, src) == {"native": 1, "synthetic": 1}
+    assert sorted(p.name for p in (out / "ar").iterdir()) == ["ok.wav", "syn.wav"]

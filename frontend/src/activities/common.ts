@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import type { InstrumentInfo } from "../teaching/instrument";
 import type { Language, NoteEvent } from "../api";
 import type { MicNoteInput } from "../audio/mic";
 import { cameraAgrees, type CameraObserver } from "../vision/camera";
@@ -12,6 +13,8 @@ export interface ActivityProps {
   onSubmit: (response: Record<string, unknown>) => void;
   locked: boolean; // true after submitting, while feedback shows
   reveal?: { correct?: number; melody?: number[] };
+  /** The child's own instrument: the screen keys show its stickers (numbers, colours, letters). */
+  inst?: InstrumentInfo;
 }
 
 /**

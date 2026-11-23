@@ -6,12 +6,17 @@ import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { api, type Child, type NoteEvent, type Song, type SongCard, type SongTag, type SupportLevel } from "../api";
 import { MicNoteInput } from "../audio/mic";
 import { micErrorMessage } from "../audio/permissions";
-import { primeSpeech, speak, stopSpeaking } from "../audio/speech";
+import { isSpeaking, primeSpeech, speak, stopSpeaking } from "../audio/speech";
 import { playNote, playSequence, sleep, unlockAudio } from "../audio/synth";
 import { Melo, type MeloMood } from "../components/Melo";
+import { ConceptCards } from "../components/ConceptCards";
+import { InstrumentView } from "../components/InstrumentView";
 import { NoteGuide } from "../components/NoteGuide";
-import { Piano, rangeFor } from "../components/Piano";
-import { sungName, t } from "../i18n";
+import { rangeFor } from "../components/Piano";
+import { DOS, explainPart, explainStep, stepSpeech, wrongKeyWhy, type StepWhy } from "../teaching/explain";
+import { fitToInstrument, instrumentHello, isPads, STANDARD, type InstrumentInfo } from "../teaching/instrument";
+import { L, sungName, t } from "../i18n";
+import { useTeacher } from "../teaching/persona";
 import { CameraObserver, HandStats, loadCalibration } from "../vision/camera";
 import { KidShell, useChild } from "./KidHome";
 
@@ -60,7 +65,9 @@ export function SongList() {
   );
 }
 
-type Phase = "loading" | "listen" | "play" | "checking" | "done" | "error";
+type Phase = "loading" | "concepts" | "listen" | "step" | "play" | "checking" | "done" | "error";
+const conceptKey = (childId: string) => `melo.concepts.${childId}`;
+const seenConcepts = (childId: string) => { try { return localStorage.getItem(conceptKey(childId)) === "1"; } catch { return true; } };
 
 export function SongLesson() {
   const { id = "", songId = "" } = useParams();
@@ -73,6 +80,7 @@ export function SongLesson() {
 
 function SongRunner({ child, songId, listenFirst = false }: { child: Child; songId: string; listenFirst?: boolean }) {
   const lang = child.language;
+  useTeacher(child.id, "music"); // the music teacher's persona and voice (parent's choice)
   const nav = useNavigate();
   const [song, setSong] = useState<Song | null>(null);
   const [sid, setSid] = useState<string | null>(null);
@@ -85,6 +93,20 @@ function SongRunner({ child, songId, listenFirst = false }: { child: Child; song
   const [wordAt, setWordAt] = useState<number | null>(null);
   const [pos, setPos] = useState(0);
   const [follow, setFollow] = useState(child.age >= 6); // younger children: Melo waits for each key
+  // One by one: Melo explains WHY each key, the child presses it, then taps Next (default for the youngest).
+  const [steps, setSteps] = useState(child.age <= 4);
+  const stepsRef = useRef(steps);
+  stepsRef.current = steps;
+  const [stepIdx, setStepIdx] = useState(0);
+  const [stepOk, setStepOk] = useState(false);
+  const [why, setWhy] = useState<StepWhy | null>(null);
+  const [showWhy, setShowWhy] = useState(false);
+  const dosAt = useRef(0);
+  const stepsExplained = useRef(false);
+  const young = child.age <= 4;
+  // The child's own instrument (the parent's photos / links); the standard screen piano otherwise.
+  const [inst, setInst] = useState<InstrumentInfo>(STANDARD);
+  const conceptsDone = useRef<(() => void) | null>(null);
   const [guideIdx, setGuideIdx] = useState<number | null>(null); // beat mode: the note to press right now
   const [count, setCount] = useState<string | null>(null); // big 3-2-1 count-in
   const [tempo, setTempo] = useState(84);
@@ -165,7 +187,7 @@ function SongRunner({ child, songId, listenFirst = false }: { child: Child; song
   }, [lang, talk]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Listen to the part (keys and words light up), then it's the child's turn.
-  const listen = useCallback(async (s: Song, p: number, slow = false) => {
+  const listen = useCallback(async (s: Song, p: number, slow = false, noSteps = false) => {
     if (!alive.current) return;
     clearTimers();
     drillRef.current = null; setDrill(null);
@@ -179,7 +201,12 @@ function SongRunner({ child, songId, listenFirst = false }: { child: Child; song
     } else if (lv === "light" || lv === "memory") {
       // The child knows this part: no automatic demo. "Hear it" / "Help me" bring help back.
       await talk(t(lv === "memory" ? "fromMemory" : "remember", lang), "listening");
+    } else if (stepsRef.current && !noSteps) {
+      await startSteps(s, p);
+      return;
     } else {
+      if (lv === "full" && !noSteps) await talk(explainPart(partsOf(s), p, lang), "listening"); // the idea of the part before its notes
+      if (!alive.current) return;
       await talk(`${t("listen", lang)} ${t("part", lang)} ${p + 1}`, "listening");
       const seq = s.notes.slice(lo, hi).map((m, i) => ({ midi: m, beats: s.beats[lo + i], sing: sungName(m, lang) }));
       await playSequence(seq, bpm, (i) => {
@@ -204,6 +231,57 @@ function SongRunner({ child, songId, listenFirst = false }: { child: Child; song
     setPhase("play");
     if (beat) runGuide(s.beats.slice(lo, hi), bpm);
   }, [bounds, lang, talk, levelOf]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const partsOf = (s: Song) => s.phrases.map((_, i) => { const [a, b] = bounds(s, i); return s.notes.slice(a, b); });
+
+  /** One note of the part: why this key (and how long), Melo plays it, the key glows; the child presses it. */
+  const goStep = useCallback(async (s: Song, p: number, i: number) => {
+    if (!alive.current) return;
+    const [lo, hi] = bounds(s, p);
+    const w = explainStep(s.notes.slice(lo, hi), s.beats.slice(lo, hi), i, lang, inst,
+      { words: s.words?.slice(lo, hi) ?? null, songEnd: hi === s.notes.length, home: s.notes[0] });
+    setWhy(w); setStepIdx(i); setStepOk(false); setNudge(null); setPhase("step"); setWordAt(lo + i);
+    await talk(stepSpeech(w, young), "listening");
+    if (!alive.current) return;
+    const m = s.notes[lo + i];
+    await playSequence([{ midi: m, beats: s.beats[lo + i], sing: sungName(m, lang) }], Math.round(s.bpm * 0.7), (k) => setLit(k >= 0 ? m : null)).done;
+    setLit(null);
+    if (alive.current) { setSay(t("stepPress", lang)); setMood("listening"); }
+  }, [bounds, lang, inst, talk, young]);
+
+  const startSteps = useCallback(async (s: Song, p: number) => {
+    clearTimers(); setGuideIdx(null); setPhase("step"); setPos(0); notes.current = [];
+    await talk(explainPart(partsOf(s), p, lang), "listening");
+    if (!alive.current) return;
+    if (!stepsExplained.current) { // the first time: how one-by-one works, and one real teacher's tip
+      stepsExplained.current = true;
+      await talk(t("stepIntro", lang), "listening");
+      if (!alive.current) return;
+      await talk(L(DOS[dosAt.current++ % DOS.length], lang), "listening");
+    }
+    await goStep(s, p, 0);
+  }, [goStep, lang, talk]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  /** Next: the next note, or, after the last one, all of them together, slowly. */
+  const nextStep = useCallback(async () => {
+    if (!song) return;
+    const [lo, hi] = bounds(song, part);
+    if (stepIdx + 1 < hi - lo) { await goStep(song, part, stepIdx + 1); return; }
+    setWhy(null); setWordAt(null);
+    await talk(t("stepTogether", lang), "listening");
+    await listen(song, part, true, true);
+  }, [song, part, stepIdx, bounds, goStep, talk, lang]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  /** "Why?" for the note the child is on (any mode). */
+  const sayWhy = useCallback(() => {
+    if (!song) return;
+    const [lo, hi] = drill ? [drill.a, drill.b] : bounds(song, part);
+    const i = phase === "step" ? stepIdx : Math.min(pos, hi - lo - 1);
+    const w = explainStep(song.notes.slice(lo, hi), song.beats.slice(lo, hi), i, lang, inst,
+      { words: song.words?.slice(lo, hi) ?? null, songEnd: hi === song.notes.length, home: song.notes[0] });
+    setWhy(w); setShowWhy(true);
+    void talk([w.text, w.where, w.length, w.word, w.ending].filter(Boolean).join(" "), "listening");
+  }, [song, drill, bounds, part, phase, stepIdx, pos, lang, inst, talk]);
 
   // Spot practice, as a teacher would: take only the notes that caused trouble, play them slowly,
   // let the child get them right twice, then go back to the whole part.
@@ -273,16 +351,29 @@ function SongRunner({ child, songId, listenFirst = false }: { child: Child; song
           const c = new CameraObserver(videoRef.current, loadCalibration(child.id));
           c.start().then(() => { cam.current = c; c.onObservation((o) => hands.current.add(o)); }).catch(() => { /* camera is optional */ });
         }
+        const myInst = await api.instrument(child.id).catch(() => STANDARD);
+        if (!alive.current) return;
+        setInst(myInst);
         const r = await api.startSong(child.id, songId);
         if (!alive.current) return;
+        // the same tune, moved into the notes the child's own instrument has (octaves only, unless it is too wide)
+        r.song = { ...r.song, notes: fitToInstrument(r.song.notes, myInst).notes };
         sidRef.current = r.session_id;
         setSid(r.session_id); setSong(r.song); setLearned(r.progress.phrases_learned);
         setSupport(r.support); supportRef.current = r.support;
         const first = r.start_phrase;
         setPart(first);
         await talk(r.say, "happy");
+        const hello = instrumentHello(myInst, lang);
+        if (hello && alive.current) await talk(hello, "happy");
         if (r.song.note && r.song.source && r.song.source !== "library") await talk(r.song.note, "happy"); // what is new in an exercise made for the child
         const isNew = r.progress.plays === 0 && r.progress.phrases_learned.length === 0;
+        if (!seenConcepts(child.id) && alive.current) { // the very first song: how music is made, before any keys
+          setPhase("concepts");
+          await new Promise<void>((res) => { conceptsDone.current = res; });
+          try { localStorage.setItem(conceptKey(child.id), "1"); } catch { /* private mode */ }
+          if (!alive.current) return;
+        }
         if (isNew || listenFirst) {
           const heard = await hearWhole(r.song);
           if (!alive.current || !heard) return;
@@ -351,10 +442,12 @@ function SongRunner({ child, songId, listenFirst = false }: { child: Child; song
     finally { submitting.current = false; }
   }, [sid, song, phase, part, learned, misses, talk, listen, bounds, runDrill]);
 
-  const switchMode = (beat: boolean) => {
-    if (beat === followRef.current) return;
+  const switchMode = (mode: "steps" | "wait" | "beat") => {
+    const beat = mode === "beat", st = mode === "steps";
+    if (beat === followRef.current && st === stepsRef.current) return;
     setFollow(beat); followRef.current = beat;
-    if (song && phase === "play") void listen(song, part); // start this part again in the new way
+    setSteps(st); stepsRef.current = st;
+    if (song && (phase === "play" || phase === "step")) { stopSpeaking(); void listen(song, part); } // start this part again in the new way
   };
 
   const submitRef = useRef(submit);
@@ -364,16 +457,33 @@ function SongRunner({ child, songId, listenFirst = false }: { child: Child; song
   const playAgain = useCallback(async () => {
     try {
       const r = await api.startSong(child.id, songId);
+      r.song = { ...r.song, notes: fitToInstrument(r.song.notes, inst).notes };
       sidRef.current = r.session_id; ended.current = false;
       setSid(r.session_id); setSong(r.song); setLearned(r.progress.phrases_learned); setPart(-1);
       setSupport(r.support); supportRef.current = r.support;
       await listen(r.song, -1);
     } catch (e) { setProblem((e as Error).message); }
-  }, [child.id, songId, listen]);
+  }, [child.id, songId, listen, inst]);
 
   // Every note the child plays: remember it, move the glowing key, finish when the part is complete.
   const onNote = useCallback((midi: number, conf = 1, fromMic = false) => {
+    if (phase === "step") {
+      const want = target[stepIdx];
+      if (want == null || stepOk) return;
+      if (isPads(inst) || pcEq(midi, want)) {
+        setStepOk(true); setNudge(null); setMood("cheer"); setLit(want);
+        window.setTimeout(() => setLit((l) => (l === want ? null : l)), 300);
+        void talk(t("stepYes", lang), "happy");
+      } else {
+        let diff = want - midi;
+        if (fromMic) { diff = ((diff % 12) + 12) % 12; if (diff > 6) diff -= 12; }
+        setNudge(diff > 0 ? "up" : "down"); setMood("encourage");
+        if (!isSpeaking()) void talk(wrongKeyWhy(want, midi, inst, lang), "listening"); // why that way, not just "wrong"
+      }
+      return;
+    }
     if (phase !== "play") return;
+    if (isPads(inst)) midi = target[Math.min(notes.current.length, target.length - 1)] ?? midi; // a drum: every tap is the next note
     if (fromMic) usedMic.current = true;
     notes.current.push({ midi, t: Math.round(performance.now() - t0.current), conf });
     setLit(midi);
@@ -406,7 +516,7 @@ function SongRunner({ child, songId, listenFirst = false }: { child: Child; song
       if ((np >= target.length && !followRef.current) || notes.current.length >= target.length + 8) window.setTimeout(() => void submit(), 350);
       return np;
     });
-  }, [phase, target, submit, song, part, lang, talk, listen]);
+  }, [phase, target, submit, song, part, lang, talk, listen, stepIdx, stepOk, inst]);
 
   useEffect(() => {
     const m = mic.current;
@@ -422,15 +532,26 @@ function SongRunner({ child, songId, listenFirst = false }: { child: Child; song
       </KidShell>
     );
   }
+  if (phase === "concepts") {
+    return (
+      <KidShell child={child}>
+        <div className="lesson song-lesson">
+          <Melo mood="talking" size={100} />
+          <ConceptCards lang={lang} inst={inst} onDone={() => { conceptsDone.current?.(); conceptsDone.current = null; }} />
+        </div>
+      </KidShell>
+    );
+  }
   if (!song) return <div className="center-screen"><Melo mood="thinking" say={t("loading", lang)} /></div>;
 
   const [lo, hi] = rangeFor(song.notes);
   const [plo, phi] = drill ? [drill.a, drill.b] : bounds(song, part);
   const guideAt = phase === "listen" ? (wordAt != null ? wordAt - plo : null)
+    : phase === "step" ? stepIdx
     : phase === "play" ? (follow && !drill ? guideIdx : pos < target.length ? pos : null) : null;
   const lv = drill ? "full" : levelOf(part); // spot practice always shows every key
   // full/guided: every key glows. light: only the first key. memory: nothing (the child plays it).
-  const glow = phase !== "play" || guideAt == null ? null
+  const glow = phase === "step" ? (stepOk ? null : target[stepIdx] ?? null) : phase !== "play" || guideAt == null ? null
     : lv === "memory" ? null : lv === "light" ? (guideAt === 0 && pos === 0 ? target[0] : null) : target[guideAt];
   const askHelp = () => {
     const nb = { ...boostRef.current, [String(part)]: true };
@@ -461,16 +582,36 @@ function SongRunner({ child, songId, listenFirst = false }: { child: Child; song
         <span className={`help-badge ${lv}`} title="Melo gives less help as your child learns this part">{HELP_ICON[lv]} {t(HELP_LABEL[lv], lang)}</span>
         {preview && <NoteGuide notes={song.notes} beats={song.beats} words={song.words} lang={lang} active={previewAt} bpm={tempo} running label={t("hearWhole", lang)} />}
         {!preview && lv !== "memory" && <NoteGuide hideNames={lv === "light"} notes={target} beats={song.beats.slice(plo, phi)} words={song.words?.slice(plo, phi) ?? null} lang={lang}
-          active={guideAt} done={phase === "play" ? pos : 0} bpm={tempo} running={phase === "listen" || (phase === "play" && follow && !drill)}
+          active={guideAt} done={phase === "play" ? pos : phase === "step" ? stepIdx + (stepOk ? 1 : 0) : 0} bpm={tempo} running={phase === "listen" || (phase === "play" && follow && !drill)}
           label={drill ? t("spotPractice", lang) : `${t("part", lang)} ${part + 1}`} />}
         {drill && <span className="help-badge full">🎯 {t("spotPractice", lang)}</span>}
+        {why && (phase === "step" || (showWhy && phase === "play")) && (
+          <div className="why-card" role="status">
+            <span className="why-icon" aria-hidden>{why.icon}</span>
+            <div>
+              <p>{why.text}</p>
+              {why.where && <p className="why-where">📍 {why.where}</p>}
+              <p className="why-len">⏱️ {why.length}</p>
+              {why.word && <p>🎤 {why.word}</p>}
+              {why.ending && <p>🏠 {why.ending}</p>}
+            </div>
+          </div>
+        )}
+        {phase === "step" && (
+          <div className="row center wrap">
+            <button className="btn ghost" onClick={() => { if (song) { const m = target[stepIdx]; void playSequence([{ midi: m, beats: song.beats[plo + stepIdx] ?? 1, sing: sungName(m, lang) }], Math.round(song.bpm * 0.7), (k) => setLit(k >= 0 ? m : null)).done.then(() => setLit(null)); } }}>🔊 {t("hearNote", lang)}</button>
+            <button className="btn ghost" onClick={sayWhy}>🤔 {t("why", lang)}</button>
+            {stepOk && <button className="btn next-step" onClick={() => void nextStep()}>👉 {t("next", lang)}</button>}
+          </div>
+        )}
         <div className="mode-switch" role="group" aria-label="How to play">
-          <button className={!follow ? "sel" : ""} onClick={() => switchMode(false)} aria-pressed={!follow}>🐢 {t("waitForMe", lang)}</button>
-          <button className={follow ? "sel" : ""} onClick={() => switchMode(true)} aria-pressed={follow}>🥁 {t("withBeat", lang)}</button>
+          <button className={steps ? "sel" : ""} onClick={() => switchMode("steps")} aria-pressed={steps}>👣 {t("oneByOne", lang)}</button>
+          <button className={!follow && !steps ? "sel" : ""} onClick={() => switchMode("wait")} aria-pressed={!follow && !steps}>🐢 {t("waitForMe", lang)}</button>
+          <button className={follow ? "sel" : ""} onClick={() => switchMode("beat")} aria-pressed={follow}>🥁 {t("withBeat", lang)}</button>
         </div>
-        <Piano from={lo} to={hi} lang={lang} onPlay={(m) => onNote(m)} highlight={lv === "memory" || lv === "light" ? undefined : target}
+        <InstrumentView inst={inst} tune={target} from={lo} to={hi} lang={lang} onPlay={(m) => onNote(m)} highlight={lv === "memory" || lv === "light" ? undefined : target}
           dimOthers={lv !== "memory" && lv !== "light"} glow={glow} lit={lit}
-          disabled={phase !== "play" || source.current === "mic"} silent={source.current === "mic"} />
+          disabled={(phase !== "play" && phase !== "step") || source.current === "mic"} silent={source.current === "mic"} />
         {problem && <p className="muted small">{problem}</p>}
         <div className="row center wrap">
           {preview ? (
@@ -483,6 +624,7 @@ function SongRunner({ child, songId, listenFirst = false }: { child: Child; song
               else if (alive.current) setPhase("done");
             })()}>🎧 {t("hearWhole", lang)}</button>
           )}
+          {phase === "play" && lv !== "memory" && <button className="btn ghost" onClick={sayWhy}>🤔 {t("why", lang)}</button>}
           {phase === "play" && !drill && <button className="btn" onClick={() => void submit()}>✅ {t("done", lang)}</button>}
           {phase === "play" && drill && <button className="btn ghost" onClick={() => void listen(song, part)}>⏭ {t("next", lang)}</button>}
           {phase === "play" && (lv === "light" || lv === "memory") && (

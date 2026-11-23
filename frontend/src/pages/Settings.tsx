@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { api, type Child, type Language, type Mode } from "../api";
 import { MicNoteInput } from "../audio/mic";
 import { micErrorMessage, micPermission, requestMic, watchMicPermission, type MicState } from "../audio/permissions";
@@ -68,10 +68,10 @@ export function Settings() {
             </select>
             {langInfo(child.language).beta && <span className="muted small">Beta: translated automatically and not yet checked by a native-speaking teacher. Anything untranslated shows in English.</span>}
           </label>
-          <label>Instrument
-            <select value={child.instrument} disabled><option value="piano">Keyboard / piano</option></select>
-            <span className="muted small">Guitar and violin are coming next.</span>
-          </label>
+          <div className="field">Instrument
+            <Link to={`/parent/child/${id}/instrument`} className="btn ghost small">🎹 Set up {child.name}'s own instrument</Link>
+            <span className="muted small">Add photos or a shop link of the real instrument at home and Melo fits the lessons to it. Skip it to keep the standard lessons.</span>
+          </div>
         </div>
         <div className="row">
           <label>Learning mode

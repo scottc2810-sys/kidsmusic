@@ -131,7 +131,7 @@ def compare(langs: str, topic: str = "greetings", ui: str = "en") -> dict:
     t = TARGETS
     return {"topic": topic, "rows": rows,
             "topics": [{"id": "words", "emoji": "🔤", "title": "Words"}] + [{"id": a, "emoji": b, "title": c} for a, b, c in PHRASE_TOPICS],
-            "languages": [{"code": c, "name": t[c].name, "native": t[c].native, "flag": t[c].flag, "locale": t[c].locale, "rtl": t[c].rtl} for c in codes]}
+            "languages": [{"code": c, "name": t[c].name, "native": t[c].native, "flag": t[c].flag, "locale": t[c].locale, "rtl": t[c].rtl, "latin": t[c].latin} for c in codes]}
 
 
 @router.post("/children/{child_id}/learn/{lang}/practice", status_code=201)
@@ -153,7 +153,7 @@ def practice(lang: str, body: PracticeIn, child: Child = Depends(owned_child), d
     db.commit()
     return {"attempt_id": attempt.id, "type": act.type, "skill": act.skill, "difficulty": act.difficulty, "spec": act.public,
             "say": get_teacher().say(f"lang.intro.{act.type}", child.language).replace("{name}", child.name), "retry": False, "comfort": False,
-            "native": _native(lang, act.spec.get("item"))}
+            "native": _native(lang, act.spec.get("item")), "native_question": _native(lang, act.spec.get("question_item"))}
 
 
 @router.get("/children/{child_id}/learn")
@@ -231,6 +231,7 @@ def next_activity(lang: str, body: NextIn, child: Child = Depends(owned_child), 
     return {"attempt_id": attempt.id, "type": act.type, "skill": act.skill, "difficulty": act.difficulty, "spec": act.public,
             "say": " ".join(lines).replace("{name}", child.name), "retry": "retry" in act.events, "comfort": "comfort" in act.events,
             "native": _native(lang, act.spec.get("item")),
+            "native_question": _native(lang, act.spec.get("question_item")),
             "emotion": _intro_emotion(act)}
 
 
@@ -344,6 +345,7 @@ def answer(attempt_id: str, body: AnswerIn, child: Child = Depends(owned_child),
               "word": word.text if word else attempt.spec.get("say") or attempt.spec.get("glyph"),
               "roman": word.roman if word else None, "emoji": word.emoji if word else None, "heard": result.detail.get("heard"),
               "pronunciation": ((attempt.response or {}).get("pronunciation") or {}).get("score"), "native": _native(lang, item_id)}
+    reveal["why"] = why_line(lang, ui, attempt.spec or {}, item_id)
     return {"outcome": o, "score": result.score, "say": " ".join(p for p in parts if p).replace("{name}", child.name), "events": events,
             "star": o in ("success", "partial"), "reveal": reveal, "status": after,
             "emotion": feel.emotion, "energy": feel.energy, "sfx": feel.sfx, "streak": streak + 1 if o == "success" else 0}
@@ -380,3 +382,44 @@ def grow_now(lang: str, child: Child = Depends(owned_child), db: Session = Depen
     started = growth.grow_in_background(child.id, lang, "asked by the parent")
     return {"started": started, "message": "Melo is finding harder sentences (native recordings where they exist). This takes up to a minute."
             if started else "Melo is already preparing a pack."}
+
+
+def _meaning(item: str | None, ui: str, lang: str) -> str | None:
+    """What a word or phrase means in the child's own language (None when it is the same language)."""
+    if not item:
+        return None
+    if ui == "hinglish":
+        w = ITEMS.get("hi", {}).get(item)
+        return (w.roman or w.text).rstrip(" .!?।") if w and lang != "hi" else None
+    code = ui if ui in ITEMS else "en"
+    if code == lang:
+        return None
+    w = ITEMS.get(code, {}).get(item)
+    return w.text.rstrip(" .!?।") if w else None
+
+
+_WHY = {
+    "word": {"en": "“{word}” means “{meaning}” {emoji}.", "hi": "“{word}” का मतलब है “{meaning}” {emoji}।",
+             "hinglish": "“{word}” ka matlab hai “{meaning}” {emoji}."},
+    "reply": {"en": "When someone asks “{q}” ({qm}), we answer “{a}” ({am}). The answer fits the question, like a key fits a lock.",
+              "hi": "जब कोई पूछे “{q}” ({qm}), तो हम कहते हैं “{a}” ({am})। जवाब सवाल से मेल खाता है, जैसे ताले में चाबी।",
+              "hinglish": "Jab koi pooche “{q}” ({qm}), toh hum kehte hain “{a}” ({am}). Jawaab sawaal se match karta hai, jaise taale mein chaabi."},
+}
+
+
+def why_line(lang: str, ui: str, spec: dict, item: str | None) -> str | None:
+    """The reason behind the answer, in the child's own language: what the word means, or why this reply
+    answers that question. Not just "correct": understanding, so it is not learned by heart."""
+    t = lambda k: _WHY[k].get(ui) or _WHY[k]["en"]  # noqa: E731
+    qid = spec.get("question_item")
+    if qid and item:
+        q, a = ITEMS[lang].get(qid), ITEMS[lang].get(item)
+        qm, am = _meaning(qid, ui, lang), _meaning(item, ui, lang)
+        if q and a and qm and am:
+            return t("reply").format(q=q.text, qm=qm, a=a.text, am=am)
+        return None
+    w = ITEMS.get(lang, {}).get(item or "")
+    m = _meaning(item, ui, lang)
+    if w and m:
+        return t("word").format(word=w.text, meaning=m, emoji=w.emoji or "")
+    return None

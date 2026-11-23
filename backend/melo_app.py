@@ -23,7 +23,7 @@ import webbrowser
 from pathlib import Path
 
 APP_NAME = "Melo"
-VERSION = "1.4.0"
+VERSION = "1.5.0"
 
 
 def _prepare_environment() -> Path:

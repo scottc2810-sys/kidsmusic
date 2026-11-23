@@ -15,7 +15,7 @@ from sqlalchemy import text
 from .config import get_settings
 from .db import get_engine
 from .mcp_server import BearerAuthASGI, build_server
-from .routers import auth, basics, children, integrations, learn, lessons, native, parent_chat, progress, recordings, songs, system, teacher
+from .routers import auth, basics, children, instrument, integrations, learn, lessons, material, native, parent_chat, progress, recordings, songs, subjects, system, teacher
 from .security import CSRF_HEADER, CSRF_VALUE
 from .teacher.service import get_teacher
 
@@ -86,7 +86,7 @@ def create_app() -> FastAPI:
         return response
 
     for r in (auth.router, children.router, lessons.router, songs.router, basics.router, learn.router, teacher.router, recordings.router,
-              integrations.router, progress.router, parent_chat.router, system.router, native.router):
+              integrations.router, progress.router, parent_chat.router, system.router, native.router, instrument.router, material.router, subjects.router):
         app.include_router(r)
 
     # Claude Code / MCP over streamable HTTP at /mcp/ (Bearer token required).

@@ -5,7 +5,11 @@ import { listenOnce, speak, speechRecognitionAvailable } from "../audio/speech";
 import { playSequence } from "../audio/synth";
 import { Melo, type MeloMood } from "../components/Melo";
 import { NoteGuide } from "../components/NoteGuide";
-import { Piano } from "../components/Piano";
+import { InstrumentView } from "../components/InstrumentView";
+import { explainPart } from "../teaching/explain";
+import { useInstrument } from "../teaching/instrument";
+import { useTeacher } from "../teaching/persona";
+import { SongBuilder } from "./SongBuilder";
 import { t } from "../i18n";
 import { KidShell, useChild } from "./KidHome";
 
@@ -41,14 +45,33 @@ export function FreePiano() {
   const [demoAt, setDemoAt] = useState<number | null>(null);
   const [busy, setBusy] = useState(false);
   const intro = useRef(false);
+  const inst = useInstrument(id);
+  useTeacher(id, "music");
+  const [guided, setGuided] = useState<boolean | null>(null); // make a song with Melo, step by step (default for the youngest)
   useEffect(() => {
-    if (!child || intro.current) return;
+    if (!child || intro.current || (guided ?? child.age <= 5)) return;
     intro.current = true;
     setSay(t("composeIntro", child.language)); setMood("talking");
     void speak(t("composeIntro", child.language), child.language).then(() => setMood("happy"));
-  }, [child]);
+  }, [child, guided]);
   if (!child) return <div className="center-screen"><div className="spinner" /></div>;
   const lang = child.language;
+  const isGuided = guided ?? child.age <= 5;
+  const tabs = (
+    <div className="mode-switch" role="group" aria-label={t("composeTitle", lang)}>
+      <button className={isGuided ? "sel" : ""} aria-pressed={isGuided} onClick={() => setGuided(true)}>👣 {t("buildSong", lang)}</button>
+      <button className={!isGuided ? "sel" : ""} aria-pressed={!isGuided} onClick={() => setGuided(false)}>🎹 {t("freeKeys", lang)}</button>
+    </div>
+  );
+  if (isGuided) {
+    return (
+      <KidShell child={child}>
+        <div className="row center wrap"><h1>{t("composeTitle", lang)}</h1>{tabs}</div>
+        <SongBuilder child={child} inst={inst} />
+        <div className="row center"><button className="btn ghost" onClick={() => nav(`/play/${id}`)}>🏠 {t("back", lang)}</button></div>
+      </KidShell>
+    );
+  }
   const talk = async (text: string, after: MeloMood = "happy") => { setSay(text); setMood("talking"); await speak(text, lang); setMood(after); };
 
   const press = (m: number) => {
@@ -68,7 +91,7 @@ export function FreePiano() {
     await playSequence(i.notes.map((m, k) => ({ midi: m, beats: i.beats[k] })), COMPOSE_BPM,
       (k) => { setLit(k >= 0 ? i.notes[k] : null); setDemoAt(k >= 0 ? k : null); }).done;
     setLit(null); setDemoAt(null); setBusy(false);
-    await talk(t("followIdea", lang), "listening");
+    await talk(`${explainPart([i.notes], 0, lang)} ${t("followIdea", lang)}`, "listening"); // the why: what shape this idea makes
   };
   const beats = tuneBeats(tune.map((n) => n.t));
   const playMine = async () => {
@@ -84,6 +107,7 @@ export function FreePiano() {
     <KidShell child={child}>
       <div className="lesson compose">
         <h1>{t("composeTitle", lang)}</h1>
+        {tabs}
         <Melo mood={mood} size={100} say={say} />
         <section className="card howto">
           <ol>
@@ -100,7 +124,7 @@ export function FreePiano() {
           <NoteGuide notes={idea.notes} beats={idea.beats} lang={lang} bpm={COMPOSE_BPM}
             active={busy ? demoAt : ideaPos < idea.notes.length ? ideaPos : null} done={busy ? 0 : ideaPos} running={busy} />
         )}
-        <Piano from={48} to={72} lang={lang} lit={lit} onPlay={press} disabled={busy}
+        <InstrumentView inst={inst} tune={idea?.notes ?? tune.map((n) => n.midi)} from={48} to={72} lang={lang} lit={lit} onPlay={press} disabled={busy}
           glow={following && ideaPos < following.notes.length ? following.notes[ideaPos] : null}
           highlight={following ? following.notes : undefined} />
         {tune.length > 0 && !idea && (

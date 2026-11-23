@@ -9,6 +9,14 @@ from __future__ import annotations
 import random
 
 P: dict[str, dict[str, list[str]]] = {
+    "concept.instrument_guess": {'en': ["A flute sings with air, a guitar with strings, a drum with skin, a bell with metal. That's why each one sounds different!"], 'hi': ['बाँसुरी हवा से गाती है, गिटार तारों से, ढोल चमड़े से, घंटी धातु से। इसीलिए हर एक की आवाज़ अलग है!'], 'hinglish': ['Bansuri hawa se gaati hai, guitar taar se, drum chamde se, ghanti metal se. Isiliye har ek ki awaaz alag hai!']},
+    "concept.echo_melody": {'en': ['Listening and copying is how every musician learns. Your ears catch the tune, your fingers follow!'], 'hi': ['सुनकर नकल करना ही हर संगीतकार का सीखने का तरीका है। कान धुन पकड़ते हैं, उँगलियाँ पीछे चलती हैं!'], 'hinglish': ['Sun ke copy karna hi har musician ka seekhne ka tareeka hai. Kaan dhun pakadte hain, ungliyan peeche chalti hain!']},
+    "concept.find_note": {'en': ['Each key has its own name and its own place. Knowing where a note lives is how we play any song!'], 'hi': ['हर कुंजी का अपना नाम और अपनी जगह है। सुर कहाँ रहता है, यह जानकर हम कोई भी गाना बजा सकते हैं!'], 'hinglish': ['Har key ka apna naam aur apni jagah hai. Note kahan rehta hai yeh jaan ke hum koi bhi gaana baja sakte hain!']},
+    "concept.rhythm_tap": {'en': ['Rhythm is the pattern of long and short sounds, like the heartbeat of a song. Every song has one!'], 'hi': ['लय लंबी और छोटी आवाज़ों का पैटर्न है, जैसे गाने की धड़कन। हर गाने में होती है!'], 'hinglish': ['Rhythm lambi aur chhoti awaazon ka pattern hai, jaise gaane ki dhadkan. Har gaane mein hoti hai!']},
+    "concept.same_different": {'en': ['Why does this matter? Songs repeat bits that are the same. Hearing same and different helps you remember songs!'], 'hi': ['यह क्यों ज़रूरी है? गाने एक जैसे हिस्से दोहराते हैं। एक जैसा और अलग पहचानने से गाने याद रहते हैं!'], 'hinglish': ['Yeh kyun zaroori hai? Gaane same parts repeat karte hain. Same aur alag pehchaanne se gaane yaad rehte hain!']},
+    "concept.fast_slow": {'en': ['Why? Speed in music is called tempo. Fast music feels like running and playing, slow music feels like a lullaby.'], 'hi': ['क्यों? संगीत की रफ़्तार को लय की गति कहते हैं। तेज़ संगीत दौड़ने-खेलने जैसा लगता है, धीमा संगीत लोरी जैसा।'], 'hinglish': ['Kyun? Music ki speed ko tempo kehte hain. Fast music daudne-khelne jaisa lagta hai, slow music lori jaisa.']},
+    "concept.loud_soft": {'en': ['Why? The more strength you use, the louder the sound. Musicians play soft and loud to show feelings: soft for sleepy, loud for excited!'], 'hi': ['क्यों? जितनी ज़्यादा ताक़त, उतनी तेज़ आवाज़। संगीतकार भावना दिखाने के लिए धीमा और तेज़ बजाते हैं: नींद के लिए धीमा, उत्साह के लिए तेज़!'], 'hinglish': ['Kyun? Jitni zyada taakat, utni loud awaaz. Musicians feelings dikhane ke liye soft aur loud bajate hain: neend ke liye soft, excitement ke liye loud!']},
+    "concept.high_low": {'en': ["Why? Small things that shake fast make high sounds, big things make low sounds. That's why a bird sings high and an elephant sounds low!"], 'hi': ['क्यों? छोटी चीज़ें तेज़ काँपकर ऊँची आवाज़ बनाती हैं, बड़ी चीज़ें नीची। इसीलिए चिड़िया ऊँचा गाती है और हाथी नीचा!'], 'hinglish': ['Kyun? Chhoti cheezein tez kaanp ke oonchi awaaz banati hain, badi cheezein neechi. Isiliye chidiya ooncha gaati hai aur haathi neecha!']},
     "greeting": {
         "en": ["Hello {name}! I'm Melo. Let's play with music today!", "Hi {name}! Melo is here. Ready for a music game?"],
         "hi": ["नमस्ते {name}! मैं मेलो हूँ। चलो आज संगीत से खेलते हैं!", "हैलो {name}! मेलो यहाँ है। संगीत का खेल खेलें?"],
@@ -238,16 +246,8 @@ _MORE: dict[str, dict[str, list[str]]] = {
         "hinglish": ["Music mein mehnat lagti hai! Thoda aaraam karein ya mazedaar game?", "Chalo ungliyan hilaakar aaraam karein. Ya koi game khelein?"],
     },
     # specific, musical correction (song school / echo): {expected} and {played} are note names
-    "hint.note_up": {
-        "en": ["You played {played}. Try {expected}, a little to the right!", "Close! The next note is {expected}, just to the right of {played}."],
-        "hi": ["तुमने {played} बजाया। अब {expected} बजाओ, थोड़ा दाईं ओर!", "करीब! अगला सुर {expected} है, {played} के दाईं तरफ़।"],
-        "hinglish": ["Tumne {played} bajaya. Ab {expected} bajao, thoda right side!", "Kareeb! Agla note {expected} hai, {played} ke right mein."],
-    },
-    "hint.note_down": {
-        "en": ["You played {played}. Try {expected}, a little to the left!", "Close! The next note is {expected}, just to the left of {played}."],
-        "hi": ["तुमने {played} बजाया। अब {expected} बजाओ, थोड़ा बाईं ओर!", "करीब! अगला सुर {expected} है, {played} के बाईं तरफ़।"],
-        "hinglish": ["Tumne {played} bajaya. Ab {expected} bajao, thoda left side!", "Kareeb! Agla note {expected} hai, {played} ke left mein."],
-    },
+    "hint.note_up": {'en': ["You played {played}. Our note {expected} sounds higher, so it's a little to the RIGHT. Higher sounds live on the right!", "Close! The next note is {expected}. It's higher than {played}, so move right."], 'hi': ['तुमने {played} बजाया। हमारा सुर {expected} ऊँचा है, इसलिए थोड़ा दाईं ओर है। ऊँची आवाज़ें दाईं ओर रहती हैं!', 'करीब! अगला सुर {expected} है। वह {played} से ऊँचा है, इसलिए दाएँ जाओ।'], 'hinglish': ['Tumne {played} bajaya. Hamara note {expected} ooncha hai, isliye thoda RIGHT mein hai. Oonchi awaaz right mein rehti hai!', 'Kareeb! Agla note {expected} hai. Woh {played} se ooncha hai, isliye right jao.']},
+    "hint.note_down": {'en': ["You played {played}. Our note {expected} sounds lower, so it's a little to the LEFT. Lower sounds live on the left!", "Close! The next note is {expected}. It's lower than {played}, so move left."], 'hi': ['तुमने {played} बजाया। हमारा सुर {expected} नीचा है, इसलिए थोड़ा बाईं ओर है। नीची आवाज़ें बाईं ओर रहती हैं!', 'करीब! अगला सुर {expected} है। वह {played} से नीचा है, इसलिए बाएँ जाओ।'], 'hinglish': ['Tumne {played} bajaya. Hamara note {expected} neecha hai, isliye thoda LEFT mein hai. Neechi awaaz left mein rehti hai!', 'Kareeb! Agla note {expected} hai. Woh {played} se neecha hai, isliye left jao.']},
     "hint.note_missing": {
         "en": ["Let's keep going! The next note is {expected}.", "Keep playing! After that comes {expected}."],
         "hi": ["आगे बजाते रहो! अगला सुर {expected} है।", "बजाते रहो! उसके बाद {expected} आता है।"],
@@ -326,15 +326,15 @@ _TEACH: dict[str, dict[str, list[str]]] = {
         "hi": ["तुम बहुत अच्छा कर रहे हो! यह अगले लेवल से है। देखें!", "यह तो आसान था! अगले लेवल का यह नया वाला आज़माओ।"],
         "hinglish": ["Tum bahut achha kar rahe ho! Yeh agle level se hai. Dekhein!", "Yeh toh easy tha! Agle level ka yeh naya wala try karo."],
     },
-    "teach.high_low.higher": {"en": ["Sound {n} was the higher one. Listen again!"], "hi": ["आवाज़ {n} ऊँची थी। फिर से सुनो!"], "hinglish": ["Sound {n} oonchi thi. Phir se suno!"]},
-    "teach.high_low.lower": {"en": ["Sound {n} was the lower one. Listen again!"], "hi": ["आवाज़ {n} नीची थी। फिर से सुनो!"], "hinglish": ["Sound {n} neechi thi. Phir se suno!"]},
-    "teach.loud_soft.louder": {"en": ["Sound {n} was the louder one. Listen again!"], "hi": ["आवाज़ {n} ज़्यादा तेज़ थी। फिर से सुनो!"], "hinglish": ["Sound {n} zyada loud thi. Phir se suno!"]},
-    "teach.loud_soft.softer": {"en": ["Sound {n} was the softer one. Listen again!"], "hi": ["आवाज़ {n} धीमी थी। फिर से सुनो!"], "hinglish": ["Sound {n} soft thi. Phir se suno!"]},
-    "teach.fast_slow.faster": {"en": ["Tune {n} was the faster one. Listen again!"], "hi": ["धुन {n} तेज़ थी। फिर से सुनो!"], "hinglish": ["Dhun {n} fast thi. Phir se suno!"]},
-    "teach.fast_slow.slower": {"en": ["Tune {n} was the slower one. Listen again!"], "hi": ["धुन {n} धीमी थी। फिर से सुनो!"], "hinglish": ["Dhun {n} slow thi. Phir se suno!"]},
-    "teach.same_different.same": {"en": ["Those two tunes were the same. Listen again!"], "hi": ["दोनों धुनें एक जैसी थीं। फिर से सुनो!"], "hinglish": ["Dono dhunein same thi. Phir se suno!"]},
-    "teach.same_different.different": {"en": ["One note was different. Listen for it!"], "hi": ["एक सुर अलग था। ध्यान से सुनो!"], "hinglish": ["Ek note alag tha. Dhyaan se suno!"]},
-    "teach.instrument_guess": {"en": ["Listen to its voice once more."], "hi": ["इसकी आवाज़ एक बार और सुनो।"], "hinglish": ["Iski awaaz ek baar aur suno."]},
+    "teach.high_low.higher": {'en': ['Sound {n} was the higher one: a thin, tiny voice like a bird. High sounds live on the RIGHT of the piano. Listen again!'], 'hi': ['आवाज़ {n} ऊँची थी: पतली, चिड़िया जैसी। ऊँची आवाज़ें पियानो के दाईं ओर रहती हैं। फिर से सुनो!'], 'hinglish': ['Sound {n} oonchi thi: patli, chidiya jaisi. Oonchi awaaz piano ke RIGHT mein rehti hai. Phir se suno!']},
+    "teach.high_low.lower": {'en': ['Sound {n} was the lower one: a deep, big voice like an elephant. Low sounds live on the LEFT of the piano. Listen again!'], 'hi': ['आवाज़ {n} नीची थी: भारी, हाथी जैसी। नीची आवाज़ें पियानो के बाईं ओर रहती हैं। फिर से सुनो!'], 'hinglish': ['Sound {n} neechi thi: bhaari, haathi jaisi. Neechi awaaz piano ke LEFT mein rehti hai. Phir se suno!']},
+    "teach.loud_soft.louder": {'en': ['Sound {n} was the louder one. Loud comes from pressing or hitting harder, with more strength. Listen again!'], 'hi': ['आवाज़ {n} ज़्यादा तेज़ थी। ज़ोर से दबाने या बजाने से आवाज़ तेज़ होती है। फिर से सुनो!'], 'hinglish': ['Sound {n} zyada loud thi. Zor se dabane ya bajane se awaaz loud hoti hai. Phir se suno!']},
+    "teach.loud_soft.softer": {'en': ['Sound {n} was the softer one. Soft comes from a gentle press, like a whisper. Listen again!'], 'hi': ['आवाज़ {n} धीमी थी। हल्के से दबाने से आवाज़ धीमी होती है, जैसे फुसफुसाना। फिर से सुनो!'], 'hinglish': ['Sound {n} soft thi. Halke se dabane se awaaz soft hoti hai, jaise whisper. Phir se suno!']},
+    "teach.fast_slow.faster": {'en': ['Tune {n} was the faster one: its notes came close together, like running steps. Listen again!'], 'hi': ['धुन {n} तेज़ थी: उसके सुर पास-पास आए, जैसे दौड़ते क़दम। फिर से सुनो!'], 'hinglish': ['Dhun {n} fast thi: uske note paas-paas aaye, jaise daudte kadam. Phir se suno!']},
+    "teach.fast_slow.slower": {'en': ['Tune {n} was the slower one: its notes had more space between them, like walking slowly. Listen again!'], 'hi': ['धुन {n} धीमी थी: उसके सुरों के बीच ज़्यादा जगह थी, जैसे धीरे चलना। फिर से सुनो!'], 'hinglish': ['Dhun {n} slow thi: uske notes ke beech zyada jagah thi, jaise dheere chalna. Phir se suno!']},
+    "teach.same_different.same": {'en': ['Those two tunes were the same: every note matched, like twins. Listen again!'], 'hi': ['दोनों धुनें एक जैसी थीं: हर सुर मिलता था, जैसे जुड़वाँ। फिर से सुनो!'], 'hinglish': ['Dono dhunein same thi: har note match karta tha, jaise twins. Phir se suno!']},
+    "teach.same_different.different": {'en': ['One note was different: it jumped to another place. Listen for the note that sounds surprising!'], 'hi': ['एक सुर अलग था: वह दूसरी जगह कूद गया। वह सुर सुनो जो अचानक अलग लगे!'], 'hinglish': ['Ek note alag tha: woh doosri jagah kood gaya. Woh note suno jo surprise jaisa lage!']},
+    "teach.instrument_guess": {'en': ["Every instrument has its own voice, because of what it's made of: strings, wood, metal or air. Listen to its voice once more."], 'hi': ['हर बाजे की अपनी आवाज़ होती है, क्योंकि वह तारों, लकड़ी, धातु या हवा से बना होता है। उसकी आवाज़ एक बार और सुनो।'], 'hinglish': ['Har instrument ki apni awaaz hoti hai, kyunki woh taar, lakdi, metal ya hawa se bana hota hai. Uski awaaz ek baar aur suno.']},
     "detail.find_first": {
         "en": ["You found {note} on the very first try!"], "hi": ["तुमने पहली ही बार में {note} ढूँढ लिया!"], "hinglish": ["Tumne pehli hi baar mein {note} dhoondh liya!"],
     },

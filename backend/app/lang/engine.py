@@ -271,12 +271,12 @@ def reply_activity(lang: str, skill: str, d: int, items: dict[str, LangItemState
         question_id = rng.choices(qs, weights=weights, k=1)[0]
     q, a = phrases[question_id], phrases[REPLIES[question_id]]
     if skill == "speak":
-        return Activity("say_word", skill, d, {"item": a.id, "question": q.text, "word": a.text, "roman": None, "emoji": a.emoji,
+        return Activity("say_word", skill, d, {"item": a.id, "question_item": q.id, "question": q.text, "q_roman": q.roman, "word": a.text, "roman": None, "emoji": a.emoji,
                                                "model": False, "show_word": False, "answer": a.text}, events + ["conversation"])
     others = [w for w in phrases.values() if w.id not in (a.id, question_id) and w.text != a.text]
     opts = rng.sample(others, 2 if d < 5 else 3) + [a]
     rng.shuffle(opts)
-    return Activity("reply_pick", skill, d, {"item": a.id, "question": q.text, "show_question": skill == "read",
+    return Activity("reply_pick", skill, d, {"item": a.id, "question_item": q.id, "q_roman": q.roman, "question": q.text, "show_question": skill == "read",
                                              "roman": q.roman if (skill == "read" and not TARGETS[lang].latin and d < 5) else None,
                                              "options": [{"text": o.text} for o in opts], "answer": opts.index(a)}, events + ["conversation"])
 

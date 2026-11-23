@@ -1,6 +1,6 @@
 # Melo: App Progress
 
-_Last updated: 2026-11-17_
+_Last updated: 2026-11-22_
 
 Melo is an AI music teacher for children aged 3–8, built with FastAPI, SQLite and a React/Vite SPA. It works offline by default, can use Claude optionally, and exposes a learning-graph memory to Claude Code over MCP. See `README.md`, `docs/ARCHITECTURE.md` and `docs/REVIEW.md`.
 
@@ -9,14 +9,14 @@ Melo is an AI music teacher for children aged 3–8, built with FastAPI, SQLite 
 | Area | Status |
 |---|---|
 | MVP scope (MVP.txt phases 1–3) | ✅ Built |
-| Backend tests (`pytest`) | ✅ 150 passed |
+| Backend tests (`pytest`) | ✅ 192 passed |
 | Frontend typecheck (`tsc -b`) | ✅ Clean |
-| Frontend tests (`vitest`) | ✅ 42 passed |
+| Frontend tests (`vitest`) | ✅ 99 passed |
 | Sound and microphone | ✅ Audio unlocks on the first tap. Settings has a 🔊 Sound check and a 🎤 Mic check, and browser mic permission is requested when the parent turns it on. ⏳ Needs a by-ear check in a real browser |
 | Production build | ✅ 391 kB JS (131 kB gzip) + lazily loaded 136 kB MediaPipe chunk |
 | Local deployment | ✅ Running at http://127.0.0.1:8000 (`KM_ENV=production`) |
 | AI teacher | ✅ Any brain: Claude Code CLI, Claude API, Ollama, OpenAI-compatible (local or online); chosen in the app; offline fallback always |
-| Code-review graph | ✅ Rebuilt 2026-11-17: 111 files, 1,127 nodes, 11,803 edges, 15 communities (`.code-review-graph/graph.db`, visualization at `.code-review-graph/graph.html`) |
+| Code-review graph | ✅ Rebuilt 2026-11-22: 145 files, 1,589 nodes, 18,788 edges (`.code-review-graph/graph.db`, visualization at `.code-review-graph/graph.html`) |
 | Phase 4 (guitar / violin) | 🟡 Melo plays 12 instruments (violin, sitar, santoor, tabla … added 2026-11-17); a real-instrument input adapter for chords is still to do |
 
 ## Feature checklist
@@ -67,9 +67,9 @@ Built with `code-review-graph` 2.3.9 (Tree-sitter knowledge graph, stored in `.c
 
 | Metric | Value |
 |---|---|
-| Files | 69 (Python, TS/TSX, PowerShell, Bash) |
-| Nodes / edges | 597 / 5,290 |
-| Communities | 12 |
+| Files | 145 (Python, TS/TSX, PowerShell, Bash) — rebuilt 2026-11-22 |
+| Nodes / edges | 1,589 / 18,788 |
+| Communities | 16 (largest: app-gen 304, tests-child 248, pages-explorer 187, audio-voice 159); 17 coupling warnings |
 | Execution flows | 78 (highest criticality: `register`) |
 | Source size | ~4.6k lines Python, ~3.0k lines TS/TSX |
 
@@ -404,3 +404,21 @@ Tests: 171 backend (`tests/test_commonvoice.py`: validated-only, clips before or
 Content note: the 440 new phrase translations were written by the model; like the rest of `phrases.py` they need a native-speaking teacher's review before classroom use (French, German and Arabic teacher greetings are gendered: "maîtresse", "Frau Lehrerin", "ustaadh").
 
 Tests: 174 backend (`test_school_friends_and_feelings_for_real_conversations`, `test_parent_chat_offers_school_and_playground_phrases`, compare with 5 and 20 languages), 45 frontend (`compare.test.ts`).
+
+## Update 2026-11-22: never-silent voices, the child's own instrument, the "why" everywhere (v1.5.0)
+
+| Change | Detail |
+|---|---|
+| 🔊 **Every word has a voice** | Conversation questions were silent when the device had no voice for that language (Chrome on Windows: Marathi, Gujarati, Tamil, Telugu, Kannada, Bengali, Cantonese, Arabic, Turkish, Sanskrit...). Now: native speaker → pretrained neural voice (female + male, `app/lang/tts.py`: Edge neural voices for 18 languages, gTTS for Punjabi, optional offline AI4Bharat Indic-Parler-TTS for Sanskrit / Punjabi) → device voice → Melo's own voice. Questions get their own recordings. ~2,500 clips pre-recorded (`python -m app.lang.tts`) and shipped in the installers. Synthetic clips are never pronunciation references. |
+| 🪔 **Sanskrit** | Hindi neural voice with Sanskrit spelling fixes (visarga ः → h + echo vowel); Parler "Aryan" for proper Sanskrit when installed. |
+| 🐞 **"cat" was never downloaded** | Custom-phrase ids are `c` + 12 hex; code skipped every id starting with `c`. Fixed everywhere. |
+| 🎹 **The child's own instrument** | Parent page (photos, shop/maker links, notes → "Let Melo read them", AI brain sees the photos). Lessons show the same instrument (keys with number/colour/letter stickers, xylophone bars, drum pad), move songs into its range, and say where each note is on it. No profile = the standard lessons. |
+| 👣 **One by one + the why** | Song school: Melo explains why each key (direction, place on the instrument, length, the word it sings, why it ends at home), the child presses it, then taps Next (default ≤ 4 years). Part shapes (stairs, slide, hill), "How music is made" cards, a real teacher's do's and don'ts, reasons after wrong keys, 🤔 Why? button. |
+| 🎼 **Make a song with Melo** | Guided builder: home note → choose a move (with what it does to the music) → press the key → short or long (with why) → Next → go home. |
+| 📚 **Language personalisation** | "Own words": photos / links / notes of the family's material become a personal topic (AI brain). Every answer explains what the word means in the child's language and why a reply fits the question; One-by-one mode with Next. |
+| 📦 **Installers** | `packaging/voices.py` bundles native (shareable licences) + synthetic clips; CI fetches the voice pack from the `voices` release. |
+| 🔢 **Maths (classes 1–5)** | 28 topics in 5 strands: numbers & arithmetic (counting, compare, place value, + − × ÷, even/odd, skip counting, fractions), patterns & algebra (patterns, missing number, balance), geometry (shapes, symmetry, angles, area & perimeter), measuring & data (time, money, length, charts), **Vedic & quick tricks** (+9, ×5, 9s on fingers, ×11, Nikhilam, all-from-9, squares ending in 5), each with the worked steps and why it works. Concept cards with diagrams (number line, tens rods, arrays, fraction pizzas, clock, coins, balance…), 5-question rounds, a reason after every answer, Next buttons, number pad from class 3, difficulty 1–5 per topic on the server. |
+| 🧪 **Shape Lab** | Make (join dots: Melo names the shape and explains sides, corners, right angles, area, perimeter, symmetry), Mix (squares + half-square triangles: two triangles make a square, area adds up), Puzzles (make a rectangle with area 6, 4 lines of symmetry…). |
+| 🔬 **Science (classes 1–5)** | 16 topics: living/non-living, plant parts & needs, animal food & homes, life cycles, senses, food groups, water cycle, states of matter, weather, solar system & day/night, push/pull, magnets, light & shadow, circuits. Drawn diagrams (plant, water cycle, planets, butterfly, particles…), label / sort / order / why questions. |
+| 🧑‍🏫 **Teacher personas** | Parent page "Teachers": per subject (maths, science, music, languages) a persona (Melo, Professor Pi, Captain Science, Dadi, Coach Zoom, Maestro), device voice, speed, pitch, preview; and the child's school class. Applied in every section. |
+

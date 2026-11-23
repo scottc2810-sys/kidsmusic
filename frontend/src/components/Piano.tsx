@@ -19,9 +19,11 @@ export interface PianoProps {
   lit?: number | null; // key currently sounding (demo playback / detected by mic)
   disabled?: boolean;
   silent?: boolean; // don't make sound (e.g. real-instrument mode just displays)
+  labelFor?: (midi: number) => string; // what is printed on the child's own keys (stickers); note names otherwise
+  stickers?: boolean; // the child's keys have colour stickers: show the colour on every white key
 }
 
-export function Piano({ from = 60, to = 72, lang, onPlay, highlight, dimOthers, glow, lit, disabled, silent }: PianoProps) {
+export function Piano({ from = 60, to = 72, lang, onPlay, highlight, dimOthers, glow, lit, disabled, silent, labelFor, stickers }: PianoProps) {
   const keys = useMemo(() => Array.from({ length: to - from + 1 }, (_, i) => from + i), [from, to]);
   const whites = keys.filter((k) => !BLACK.has(k % 12));
   const hl = useMemo(() => new Set(highlight ?? []), [highlight]);
@@ -51,6 +53,7 @@ export function Piano({ from = 60, to = 72, lang, onPlay, highlight, dimOthers, 
       hl.has(m) ? "hl" : dimOthers && highlight ? "dim" : "",
       glow === m ? "glow" : "",
       lit === m ? "lit" : "",
+      stickers ? "sticker" : "",
     ].join(" ");
 
   const whiteW = 100 / whites.length;
@@ -65,7 +68,7 @@ export function Piano({ from = 60, to = 72, lang, onPlay, highlight, dimOthers, 
           aria-label={`Key ${noteLabel(m, "en")}`}
           disabled={disabled}
         >
-          <span className="key-label">{noteLabel(m, lang)}</span>
+          <span className="key-label">{labelFor ? labelFor(m) : noteLabel(m, lang)}</span>
         </button>
       ))}
       {keys.filter((m) => BLACK.has(m % 12)).map((m) => {

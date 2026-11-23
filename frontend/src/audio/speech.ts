@@ -10,6 +10,12 @@ export const setVoiceEnabled = (v: boolean) => { voiceEnabled = v; if (!v) windo
 export const isVoiceEnabled = () => voiceEnabled;
 
 const norm = (l: string) => l.replace("_", "-").toLowerCase();
+
+/** The teacher of the subject on screen (persona chosen by the parent): voice, speed and pitch. */
+export interface TeacherVoice { voice?: string | null; rate?: number; pitch?: number }
+let teacherVoice: TeacherVoice | null = null;
+export const setTeacherVoice = (v: TeacherVoice | null) => { teacherVoice = v; };
+export const getTeacherVoice = () => teacherVoice;
 const voiceKey = (lang: Language) => `melo.voice.${lang}`;
 
 function scoreVoice(v: SpeechSynthesisVoice, lang: Language): number {
@@ -42,7 +48,9 @@ export function chooseVoice(lang: Language, name: string | null) {
 function pickVoice(lang: Language): SpeechSynthesisVoice | undefined {
   const voices = window.speechSynthesis?.getVoices() ?? [];
   const chosen = chosenVoiceName(lang);
-  const picked = (chosen && voices.find((v) => v.name === chosen)) || voicesFor(lang)[0];
+  // the subject teacher's voice, when it is installed on this device and speaks this language
+  const teacher = teacherVoice?.voice ? voices.find((v) => v.name === teacherVoice!.voice && scoreVoice(v, lang) >= 0) : undefined;
+  const picked = teacher || (chosen && voices.find((v) => v.name === chosen)) || voicesFor(lang)[0];
   // No voice for this language (e.g. no Hindi voice installed): use the default voice rather than staying silent.
   return picked ?? voices.find((x) => x.default) ?? voices[0];
 }
@@ -124,8 +132,8 @@ function sayOne(synth: SpeechSynthesis, text: string, lang: Language, v: SpeechS
     if (v) u.voice = v;
     u.lang = voiceLang;
     const p = prosody(text, !!v && /natural|neural|online|google/i.test(v.name), emotion, index, (Math.random() - 0.5) * 0.04);
-    u.rate = p.rate;
-    u.pitch = p.pitch;
+    u.rate = Math.min(1.6, Math.max(0.5, p.rate * (teacherVoice?.rate ?? 1)));
+    u.pitch = Math.min(2, Math.max(0.3, p.pitch * (teacherVoice?.pitch ?? 1)));
     u.volume = p.volume;
     current = u;
     let gotBoundary = false;

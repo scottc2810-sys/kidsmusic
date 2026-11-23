@@ -14,7 +14,7 @@ from sqlalchemy.orm import Session
 
 from ..config import get_settings
 from ..db import get_db
-from ..lang import commonvoice, native_audio as na, openslr
+from ..lang import commonvoice, native_audio as na, openslr, tts
 from ..lang.phrases import ITEMS
 from ..models import Child, LangAttempt, Parent
 from ..schemas import Strict
@@ -34,7 +34,29 @@ def public_refs(lang: str, item: str | None) -> list[dict]:
         out.append({"url": f"/api/learn/native-file/{'b' if r.get('bundled') else 'd'}/{r['file']}", "gender": r["gender"],
                     "speaker": r.get("speaker"), "license": r.get("license"), "source": r.get("source"), "family": bool(r.get("family")),
                     "origin": r.get("origin", "family" if r.get("family") else "lingualibre")})
+    if not out and lang in ITEMS and item in ITEMS[lang]:
+        # no human recording yet: a pretrained neural voice (female and male), so the word is never silent
+        for t in tts.slots(get_settings().data_dir, lang, item):
+            url = f"/api/learn/tts/{lang}/{item}/{t['gender']}" if t["live"] else f"/api/learn/native-file/{'b' if t.get('bundled') else 'd'}/{t['file']}"
+            out.append({"url": url, "gender": t["gender"], "speaker": t["voice"], "license": t["license"], "source": None,
+                        "family": False, "origin": "tts", "approx": t.get("approx")})
     return out
+
+
+@router.get("/learn/tts/{lang}/{item}/{gender}")
+def tts_clip(lang: str, item: str, gender: str, request: Request) -> FileResponse:
+    """A neural-voice clip of a built-in word, recorded on first play and cached (about 1 s the first time)."""
+    rate_limiter.check(f"tts:{client_ip(request)}", 120)
+    if lang not in ITEMS or item not in ITEMS[lang] or gender not in tts.GENDERS or tts.is_custom(item):
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Unknown word")
+    try:
+        entry = tts.ensure(get_settings().data_dir, lang, item, gender)
+    except tts.Unavailable as e:
+        raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, str(e)) from None
+    p = na.file_path(get_settings().data_dir, entry["file"], bundled=bool(entry.get("bundled")))
+    if p is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "No such recording")
+    return FileResponse(p, media_type="audio/mpeg" if p.suffix == ".mp3" else "audio/wav", headers={"Cache-Control": "public, max-age=86400"})
 
 
 @router.get("/learn/native-file/{where}/{lang}/{name}")
@@ -58,12 +80,13 @@ def coverage(parent: Parent = Depends(current_parent)) -> dict:
     s = get_settings()
     out = {}
     for lang in na.ISO3:
-        items = {i: w for i, w in ITEMS.get(lang, {}).items() if not i.startswith("c")}
+        items = {i: w for i, w in ITEMS.get(lang, {}).items() if not tts.is_custom(i)}
         refs = {i: na.references(s.data_dir, lang, i) for i in items}
         files = [r for rs in refs.values() for r in rs]
         out[lang] = {"items": sum(1 for v in refs.values() if v), "of": len(items), "files": len(files),
                      "female": sum(1 for r in files if r["gender"] == "female"), "male": sum(1 for r in files if r["gender"] == "male"),
                      "family": sum(1 for r in files if r.get("family")),
+                     "synthetic": sum(1 for i in items if not refs[i] and any(not t["live"] for t in tts.slots(s.data_dir, lang, i))),
                      "missing": [{"item": i, "text": w.text, "roman": w.roman, "emoji": w.emoji} for i, w in items.items() if not refs[i]][:80]}
     return {"languages": out, "download": {k: v for k, v in _job.items()}, "source": "Lingua Libre (lingualibre.org, CC BY-SA), Tatoeba (tatoeba.org), Google / OpenSLR (openslr.org, CC BY-SA)"}
 
@@ -88,6 +111,9 @@ def start_download(body: DownloadIn, request: Request, parent: Parent = Depends(
             openslr.download(get_settings().data_dir, langs, progress=lambda lang, st: _job["done"].__setitem__(lang, {**_job["done"].get(lang, {}), "openslr": st}))
             if commonvoice.api_key():  # the owner's own Mozilla Data Collective account
                 commonvoice.download(get_settings().data_dir, langs, progress=lambda lang, st: _job["done"].__setitem__(lang, {**_job["done"].get(lang, {}), "commonvoice": st}))
+            # whatever still has no native speaker: record it now with a neural voice, so lessons work offline too
+            tts.prerecord(get_settings().data_dir, [l for l in langs if l in tts.VOICES],
+                          progress=lambda lang, st: _job["done"].__setitem__(lang, {**_job["done"].get(lang, {}), "synthetic": st}))
         except Exception as e:  # network gone: say so, keep what was downloaded
             _job["error"] = str(e)[:200]
         finally:

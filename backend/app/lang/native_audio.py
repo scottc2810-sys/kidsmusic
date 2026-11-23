@@ -79,6 +79,13 @@ def _fetch(url: str, accept: str = "*/*", timeout: float = 60, max_bytes: int | 
             time.sleep(wait)
     raise RateLimited("too many retries")
 PER_ITEM = 3
+
+
+def _custom(item: str) -> bool:
+    """A parent's own phrase ("c" + 12 hex). Not every id starting with "c" (the word "cat")."""
+    return bool(re.fullmatch(r"c[0-9a-f]{12}", item))
+
+
 RATE = 16000
 GENDER = {"Q16": "male", "Q17": "female"}
 # Melo language code -> ISO 639-3 code used by Lingua Libre
@@ -370,7 +377,7 @@ def download(data_dir: Path, langs: list[str] | None = None, progress=None, max_
         words = ITEMS[lang]
         want: dict[str, str] = {}
         for item, w in words.items():
-            if item.startswith("c"):  # custom phrases of one child are fetched for that child only
+            if _custom(item):  # custom phrases of one child are fetched for that child only
                 continue
             for v in variants(w.text):
                 want.setdefault(v, item)
@@ -484,7 +491,7 @@ def download_sentences(data_dir: Path, langs: list[str] | None = None, progress=
         have = data.setdefault(lang, {})
         got, searched = 0, 0
         for item, w in ITEMS[lang].items():
-            if item.startswith("c") or len(have.get(item, [])) >= PER_ITEM:
+            if _custom(item) or len(have.get(item, [])) >= PER_ITEM:
                 continue
             is_sentence = item.startswith(("p_", "s_")) or " " in w.text
             if not is_sentence and not only_missing_words:
@@ -541,9 +548,9 @@ def coverage(data_dir: Path) -> dict:
     m = manifest(data_dir)
     out = {}
     for lang in ISO3:
-        items = {k: v for k, v in m.get(lang, {}).items() if k in ITEMS.get(lang, {}) and not k.startswith("c")}  # not the sentence pool
+        items = {k: v for k, v in m.get(lang, {}).items() if k in ITEMS.get(lang, {}) and not _custom(k)}  # not the sentence pool
         files = [r for rs in items.values() for r in rs]
-        out[lang] = {"items": len(items), "of": len([i for i in ITEMS.get(lang, {}) if not i.startswith("c")]), "files": len(files),
+        out[lang] = {"items": len(items), "of": len([i for i in ITEMS.get(lang, {}) if not _custom(i)]), "files": len(files),
                      "female": sum(1 for r in files if r["gender"] == "female"), "male": sum(1 for r in files if r["gender"] == "male")}
     return out
 

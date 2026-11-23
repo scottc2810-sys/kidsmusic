@@ -41,6 +41,9 @@ def specifics(attempt: Attempt, result: ScoreResult, lang: str, rng: random.Rand
             out.append(say("detail.notes_all"))
         elif o == "success" and rng.random() < 0.3:
             out.append(say("detail.name", name="{name}"))  # the name is filled in locally by the caller
+        # now and then, the idea behind the game: understanding grows along with the skill, not only memory
+        if o == "success" and f"concept.{t}" in phrases.P and rng.random() < 0.35:
+            out.append(say(f"concept.{t}"))
     return [x for x in out if x]
 
 

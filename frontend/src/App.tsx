@@ -1,4 +1,9 @@
 import { NativeVoices } from "./pages/NativeVoices";
+import { InstrumentPage } from "./pages/InstrumentPage";
+import { LanguageMaterial } from "./pages/LanguageMaterial";
+import { TeachersPage } from "./pages/TeachersPage";
+import { SubjectHome, SubjectTopic } from "./pages/Subjects";
+import { ShapeLab } from "./pages/ShapeLab";
 import { ParentChat } from "./pages/ParentChat";
 import { StarMap } from "./pages/StarMap";
 import { createContext, useCallback, useContext, useEffect, useState } from "react";
@@ -51,6 +56,9 @@ export function App() {
         <Route path="/parent/child/:id/settings" element={<RequireAuth><Settings /></RequireAuth>} />
         <Route path="/parent/child/:id/progress" element={<RequireAuth><ProgressPage /></RequireAuth>} />
         <Route path="/parent/child/:id/voices" element={<RequireAuth><NativeVoices /></RequireAuth>} />
+        <Route path="/parent/child/:id/instrument" element={<RequireAuth><InstrumentPage /></RequireAuth>} />
+        <Route path="/parent/child/:id/own-words" element={<RequireAuth><LanguageMaterial /></RequireAuth>} />
+        <Route path="/parent/child/:id/teachers" element={<RequireAuth><TeachersPage /></RequireAuth>} />
         <Route path="/parent/child/:id/chat" element={<RequireAuth><ParentChat /></RequireAuth>} />
         <Route path="/parent/child/:id/recordings" element={<RequireAuth><Recordings /></RequireAuth>} />
         <Route path="/play/:id" element={<RequireAuth><KidHome /></RequireAuth>} />
@@ -64,6 +72,11 @@ export function App() {
         <Route path="/play/:id/learn-compare" element={<RequireAuth><CompareLanguages /></RequireAuth>} />
         <Route path="/play/:id/learn/:lang" element={<RequireAuth><LanguageLesson /></RequireAuth>} />
         <Route path="/play/:id/stars" element={<RequireAuth><StarMap /></RequireAuth>} />
+        <Route path="/play/:id/maths" element={<RequireAuth><SubjectHome subject="maths" /></RequireAuth>} />
+        <Route path="/play/:id/maths/shape-lab" element={<RequireAuth><ShapeLab /></RequireAuth>} />
+        <Route path="/play/:id/maths/:topic" element={<RequireAuth><SubjectTopic subject="maths" /></RequireAuth>} />
+        <Route path="/play/:id/science" element={<RequireAuth><SubjectHome subject="science" /></RequireAuth>} />
+        <Route path="/play/:id/science/:topic" element={<RequireAuth><SubjectTopic subject="science" /></RequireAuth>} />
         <Route path="/play/:id/talk" element={<RequireAuth><TalkToMelo /></RequireAuth>} />
         <Route path="*" element={<Navigate to="/parent" replace />} />
       </Routes>

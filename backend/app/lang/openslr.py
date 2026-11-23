@@ -191,7 +191,7 @@ def _melo_words(lang: str) -> set[str]:
     from .growth import _words
     from .phrases import ITEMS
 
-    return {w for i, it in ITEMS.get(lang, {}).items() if not i.startswith("c") for w in _words(it.text, lang)}
+    return {w for i, it in ITEMS.get(lang, {}).items() if not na._custom(i) for w in _words(it.text, lang)}
 
 
 def suitable(text: str, lang: str) -> bool:
@@ -217,7 +217,7 @@ def pick_pool(rows: list[dict], lang: str, size: int = POOL, seed: int = 7) -> l
     from .phrases import ITEMS
 
     vocab = _melo_words(lang)
-    lessons = {na._norm(it.text) for i, it in ITEMS.get(lang, {}).items() if not i.startswith("c")}  # built-in lessons: not a challenge
+    lessons = {na._norm(it.text) for i, it in ITEMS.get(lang, {}).items() if not na._custom(i)}  # built-in lessons: not a challenge
     by_text: dict[str, list[dict]] = {}
     for r in rows:
         if suitable(r["text"], lang) and na._norm(r["text"]) not in lessons:
@@ -287,7 +287,7 @@ def download(data_dir: Path, langs: list[str] | None = None, progress=None, pool
         for r in rows:
             by_norm.setdefault(na._norm(r["text"]), []).append(r)
         for item, w in ITEMS.get(lang, {}).items():
-            if item.startswith("c") or len(have.get(item, [])) >= na.PER_ITEM:
+            if na._custom(item) or len(have.get(item, [])) >= na.PER_ITEM:
                 continue
             refs = have.get(item, [])
             speakers = {r.get("speaker") for r in refs}

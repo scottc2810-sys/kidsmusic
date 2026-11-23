@@ -32,6 +32,19 @@ jobs:
         with: { python-version: "3.12" }
       - uses: actions/setup-node@v4
         with: { node-version: "22" }
+      - name: Voices (native speakers + neural voices for every word)
+        shell: bash
+        env: { GH_TOKEN: "${{ github.token }}" }
+        run: |
+          # The voice pack is made on a machine that downloaded / recorded them (python packaging/voices.py pack)
+          # and attached to the "voices" release. Without it the installers still work, with fewer bundled voices.
+          if gh release download voices -R "${{ github.repository }}" -p melo-voices.zip -D build; then
+            python packaging/voices.py fetch build/melo-voices.zip
+            echo "MELO_SMOKE_VOICES=1" >> "$GITHUB_ENV"
+          else
+            echo "::warning::No voice pack found on the 'voices' release: building without bundled recordings"
+            echo "MELO_SMOKE_VOICES=0" >> "$GITHUB_ENV"
+          fi
       - name: Build (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
@@ -43,6 +56,39 @@ jobs:
         run: |
           if [ "$RUNNER_OS" = "Linux" ]; then sudo apt-get update && sudo apt-get install -y python3-tk libfuse2; fi
           chmod +x packaging/build.sh && ./packaging/build.sh
+      - name: Smoke test the built app (starts it and checks every feature end to end)
+        shell: bash
+        run: |
+          case "$RUNNER_OS" in
+            Windows) python packaging/smoke_test.py dist/Melo/Melo.exe ;;
+            macOS)   python packaging/smoke_test.py dist/Melo.app/Contents/MacOS/Melo ;;
+            *)       python packaging/smoke_test.py dist/Melo/Melo ;;
+          esac
+      - name: Install the package and test the installed app (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $setup = Get-ChildItem dist\Melo-Setup-*.exe | Select-Object -First 1
+          $dir = Join-Path $env:RUNNER_TEMP "melo-installed"
+          Start-Process $setup.FullName -ArgumentList "/VERYSILENT","/SUPPRESSMSGBOXES","/NORESTART","/DIR=`"$dir`"" -Wait
+          python packaging/smoke_test.py "$dir\Melo.exe"
+          if ($LASTEXITCODE -ne 0) { exit 1 }
+      - name: Install the package and test the installed app (macOS / Linux)
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          case "$RUNNER_OS" in
+            macOS)
+              hdiutil attach dist/Melo-*.dmg -mountpoint /Volumes/Melo -nobrowse
+              cp -R /Volumes/Melo/Melo.app "$HOME/Applications/" 2>/dev/null || { mkdir -p "$HOME/Applications" && cp -R /Volumes/Melo/Melo.app "$HOME/Applications/"; }
+              hdiutil detach /Volumes/Melo
+              python packaging/smoke_test.py "$HOME/Applications/Melo.app/Contents/MacOS/Melo" ;;
+            *)
+              mkdir -p "$RUNNER_TEMP/unpack" && tar -C "$RUNNER_TEMP/unpack" -xzf dist/Melo-linux.tar.gz
+              "$RUNNER_TEMP/unpack/Melo/install.sh" < /dev/null
+              python packaging/smoke_test.py "$HOME/.local/share/melo-app/Melo"
+              if ls dist/Melo-*.AppImage >/dev/null 2>&1; then chmod +x dist/Melo-*.AppImage && python packaging/smoke_test.py dist/Melo-*.AppImage; fi ;;
+          esac
       - uses: actions/upload-artifact@v4
         with:
           name: melo-${{ runner.os }}

@@ -5,6 +5,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { api, type Child, type CompareData, type LearnActivity, type LearnLanguage } from "../api";
 import { hasVoiceFor, listenIn, sayIn, speak, speechRecognitionAvailable, stopSpeaking } from "../audio/speech";
+import { playNative, stopNative } from "../audio/native";
 import { unlockAudio } from "../audio/synth";
 import { Melo, type MeloMood } from "../components/Melo";
 import { L, t, topicTitle } from "../i18n";
@@ -82,7 +83,7 @@ function CompareView({ child }: { child: Child }) {
     api.learnCompare(langs, topic, ui).then(setData).catch((e) => setProblem((e as Error).message));
   }, [langs, topic, ui, child.id]);
   useEffect(() => { setShown(new Set()); setFeedback({}); }, [topic, langs]);
-  useEffect(() => () => { stop.current = true; stopSpeaking(); }, []);
+  useEffect(() => () => { stop.current = true; stopSpeaking(); stopNative(); }, []);
 
   const talk = useCallback(async (text: string, after: MeloMood = "happy") => {
     setSay(text); setMood("talking");
@@ -95,10 +96,16 @@ function CompareView({ child }: { child: Child }) {
   const chooseAll = () => { setMax(total); setLangs(all.map((l) => l.code)); };
   const locale = (code: string) => data?.languages.find((l) => l.code === code)?.locale ?? code;
 
-  const hear = async (rowId: string, code: string, text: string, slow = false) => {
+  /** Never silent: native speaker, else a neural voice from the server, else the device voice, else Melo's own voice. */
+  const hear = async (rowId: string, code: string, text: string, slow = false, roman?: string | null) => {
     await unlockAudio();
     setPlaying(`${rowId}|${code}`); setMood("talking");
-    await sayIn(text, locale(code), slow ? 0.6 : 0.85);
+    const refs = await api.nativeRefs(code, rowId).catch(() => []);
+    const played = refs.length ? await playNative(refs, slow) : null;
+    if (!played && !stop.current && !(await sayIn(text, locale(code), slow ? 0.6 : 0.85))) {
+      const latin = data?.languages.find((l) => l.code === code)?.latin ?? true;
+      await speak(latin || !roman ? text : roman, ui);
+    }
     setPlaying(null); setMood("happy");
   };
   const hearAll = async (rowId: string) => {
@@ -107,7 +114,7 @@ function CompareView({ child }: { child: Child }) {
     const row = data.rows.find((r) => r.id === rowId)!;
     for (const l of data.languages) {
       if (stop.current) break;
-      await hear(rowId, l.code, row.cells[l.code].text);
+      await hear(rowId, l.code, row.cells[l.code].text, false, row.cells[l.code].roman);
       await new Promise((r) => setTimeout(r, 350));
     }
   };
@@ -219,8 +226,8 @@ function CompareView({ child }: { child: Child }) {
                         </>
                       )}
                       <div className="cmp-actions">
-                        <button onClick={() => void hear(r.id, l.code, cell.text)} aria-label={t("hearIt", ui)} title={t("hearIt", ui)}>🔊</button>
-                        <button onClick={() => void hear(r.id, l.code, cell.text, true)} aria-label={t("slower", ui)} title={t("slower", ui)}>🐢</button>
+                        <button onClick={() => void hear(r.id, l.code, cell.text, false, cell.roman)} aria-label={t("hearIt", ui)} title={t("hearIt", ui)}>🔊</button>
+                        <button onClick={() => void hear(r.id, l.code, cell.text, true, cell.roman)} aria-label={t("slower", ui)} title={t("slower", ui)}>🐢</button>
                         {canSpeak && <button onClick={() => void trySay(r.id, l.code)} disabled={!!busy} aria-label={t("sayIt", ui)} title={t("sayIt", ui)}>🎤</button>}
                         <button onClick={() => void tryWrite(r.id, l.code)} disabled={!!busy} aria-label={t("tryWriting", ui)} title={t("tryWriting", ui)}>✍️</button>
                       </div>

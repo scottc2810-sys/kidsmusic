@@ -74,6 +74,8 @@ export function KidHome() {
           <button className="big-choice bc-blue" onClick={() => go(`/play/${id}/basics`)}><span>📚</span>{t("basics", lang)}</button>
           <button className="big-choice bc-pink" onClick={() => go(`/play/${id}/songs`)}><span>🎂</span>{t("songs", lang)}</button>
           <button className="big-choice bc-orange" onClick={() => go(`/play/${id}/learn`)}><span>🗣️</span>{t("languages", lang)}</button>
+          <button className="big-choice bc-blue" onClick={() => go(`/play/${id}/maths`)}><span>🔢</span>{L({ en: "Maths", hi: "गणित", hinglish: "Maths" }, lang)}</button>
+          <button className="big-choice bc-green" onClick={() => go(`/play/${id}/science`)}><span>🔬</span>{L({ en: "Science", hi: "विज्ञान", hinglish: "Science" }, lang)}</button>
           <button className="big-choice bc-green" onClick={() => go(`/play/${id}/piano`)}><span>🎨</span>{t("freePiano", lang)}</button>
           <button className="big-choice bc-purple" onClick={() => go(`/play/${id}/talk`)}><span>💬</span>{t("talk", lang)}</button>
           <button className="big-choice bc-yellow" onClick={() => go(`/play/${id}/stars`)}><span>✨</span>{L({ en: "My stars", hi: "मेरे सितारे", hinglish: "Mere stars" }, lang)}</button>

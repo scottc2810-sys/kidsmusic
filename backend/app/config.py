@@ -81,6 +81,8 @@ class Settings(BaseSettings):
     wikimedia_contact: str = ""
     # Mozilla Data Collective API key (Common Voice sentence recordings, downloaded on this computer only)
     mdc_api_key: str = ""
+    # Synthetic neural voices (edge-tts / gTTS) for words with no native recording yet. Only built-in words are sent.
+    tts_online: bool = True
     llm_interactive_timeout_seconds: float = 8.0  # a child is waiting (lesson start, chat): then the offline teacher steps in
 
     # Recordings

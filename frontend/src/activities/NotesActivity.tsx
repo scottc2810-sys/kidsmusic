@@ -4,6 +4,7 @@ import { playNote, playSequence, sleep } from "../audio/synth";
 import { NoteGuide } from "../components/NoteGuide";
 import { Piano, rangeFor } from "../components/Piano";
 import { sungName, t } from "../i18n";
+import { keyLabel } from "../teaching/instrument";
 import { type ActivityProps, useIdle, useNoResponseTimeout, useNoteInput } from "./common";
 
 type Kind = "find_note" | "echo_melody" | "play_song" | "free_play";
@@ -11,7 +12,7 @@ type Kind = "find_note" | "echo_melody" | "play_song" | "free_play";
 const pcEq = (a: number, b: number) => ((a - b) % 12 + 12) % 12 === 0;
 
 /** Piano activities. Works with the on-screen piano or a real instrument via the microphone. */
-export function NotesActivity({ kind, spec, lang, source, mic, camera, onSubmit, locked, reveal }: ActivityProps & { kind: Kind }) {
+export function NotesActivity({ kind, spec, lang, source, mic, camera, onSubmit, locked, reveal, inst }: ActivityProps & { kind: Kind }) {
   const target: number[] = useMemo(
     () => (kind === "find_note" ? [spec.target] : kind === "free_play" ? [] : spec.notes),
     [kind, spec],
@@ -148,6 +149,8 @@ export function NotesActivity({ kind, spec, lang, source, mic, camera, onSubmit,
         lit={lit}
         disabled={locked || phase !== "play"}
         silent={false}
+        labelFor={inst?.set ? (m) => keyLabel(m, inst, lang) : undefined}
+        stickers={!!inst?.set && inst.labels === "colors"}
       />
       <div className="row">
         {kind !== "free_play" && (

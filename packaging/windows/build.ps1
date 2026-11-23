@@ -6,7 +6,7 @@
 $ErrorActionPreference = "Stop"
 $Root = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
 Set-Location $Root
-$Version = "1.4.0"
+$Version = "1.5.0"
 $Py = "backend\.venv\Scripts\python.exe"
 
 Write-Host "==> Python environment"

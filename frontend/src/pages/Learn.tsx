@@ -15,6 +15,7 @@ import { Confetti, Melo, type MeloMood } from "../components/Melo";
 import { isEmotion, MOOD, type Emotion } from "../emotion";
 import { L, t, topicTitle, type StrKey, type Text } from "../i18n";
 import { KidShell, useChild } from "./KidHome";
+import { useTeacher } from "../teaching/persona";
 
 const SKILL_ICON: Record<LearnSkill, string> = { listen: "👂", speak: "🗣️", read: "📖", write: "✍️" };
 const SKILLS: LearnSkill[] = ["listen", "speak", "read", "write"];
@@ -81,6 +82,7 @@ export function LanguageLesson() {
 
 function Runner({ child, code, startTopic }: { child: Child; code: string; startTopic: string | null }) {
   const ui = child.language;
+  useTeacher(child.id, "languages"); // the language teacher's persona and voice (parent's choice)
   const nav = useNavigate();
   const [status, setStatus] = useState<LearnStatus | null>(null);
   const [act, setAct] = useState<LearnActivity | null>(null);
@@ -98,11 +100,16 @@ function Runner({ child, code, startTopic }: { child: Child; code: string; start
   const touched = useRef(Date.now()); // last time the child (or Melo) did something
   const nudges = useRef(0);
   const [problem, setProblem] = useState<string | null>(null);
+  // One by one: after each answer Melo explains, then waits for a big Next (default for the youngest)
+  const [oneByOne, setOneByOne] = useState(child.age <= 4);
+  const [waitNext, setWaitNext] = useState(false);
+  const [why, setWhy] = useState<string | null>(null);
   const alive = useRef(true);
   const focusRef = useRef(focus);
   focusRef.current = focus;
   const canSpeak = child.consent_microphone && speechRecognitionAvailable();
   const locale = status?.language.locale ?? "en-US";
+  const latin = status?.language.latin ?? true;
 
   useEffect(() => {
     alive.current = true;
@@ -118,17 +125,25 @@ function Runner({ child, code, startTopic }: { child: Child; code: string; start
   }, [ui]);
   /** Say a word in the language being learned (slowly on request). */
   const [voiceCredit, setVoiceCredit] = useState("");
-  /** Say a word: a real native speaker when we have one (female and male take turns), else the device voice. */
-  const sayWord = useCallback(async (text: string | null | undefined, slow = false, refs?: NativeRef[]) => {
+  /**
+   * Say a word, never silently. In order: a real native speaker (female and male take turns), a pretrained
+   * neural voice recorded by the server for words without one, the device's voice for this language, and
+   * finally Melo's own voice (reading the romanisation when the script is one the app voice cannot read).
+   */
+  const sayWord = useCallback(async (text: string | null | undefined, slow = false, refs?: NativeRef[], roman?: string | null) => {
     if (!text || !alive.current) return;
     setMood("talking");
     const played = refs?.length ? await playNative(refs, slow) : null;
     setVoiceCredit(played ? credit(played) : "");
-    if (!played) await sayIn(text, locale, slow ? 0.6 : 0.85);
+    if (!played && alive.current && !(await sayIn(text, locale, slow ? 0.6 : 0.85)) && alive.current) {
+      setVoiceCredit("🦉 Melo's voice (no voice for this language on this device yet)");
+      await speak(latin || !roman ? text : roman, ui);
+    }
     if (alive.current) setMood("listening");
-  }, [locale]);
-  /** Native recordings belong to the activity's word; a conversation question is spoken by Melo. */
-  const refsOf = (a: LearnActivity | null) => (a && !a.spec.question ? a.native ?? [] : []);
+  }, [locale, latin, ui]);
+  /** The recordings of what is said: a conversation question has its own, a word has the word's. */
+  const refsOf = (a: LearnActivity | null) => (!a ? [] : a.spec.question ? a.native_question ?? [] : a.native ?? []);
+  const romanOf = (a: LearnActivity | null): string | null => (!a ? null : a.spec.question ? a.spec.q_roman ?? null : a.spec.roman ?? null);
 
   const modelOf = (a: LearnActivity): string | null => {
     const s = a.spec;
@@ -141,14 +156,14 @@ function Runner({ child, code, startTopic }: { child: Child; code: string; start
   };
 
   const next = useCallback(async () => {
-    setPhase("loading"); setResult(null); setMood("thinking");
+    setPhase("loading"); setResult(null); setMood("thinking"); setWaitNext(false); setWhy(null);
     try {
       const a = await api.learnNext(child.id, code, { focus: focusRef.current ?? undefined, speech: canSpeak, topic: topicRef.current ?? undefined });
       if (!alive.current) return;
       setAct(a); setPhase("activity");
       nudges.current = 0;
       await talk(a.say, "listening", isEmotion(a.emotion) ? a.emotion : undefined);
-      await sayWord(modelOf(a), false, refsOf(a));
+      await sayWord(modelOf(a), false, refsOf(a), romanOf(a));
       touched.current = Date.now();
     } catch (e) { setProblem((e as Error).message); setPhase("error"); }
   }, [child.id, code, canSpeak, talk, sayWord]);
@@ -167,7 +182,7 @@ function Runner({ child, code, startTopic }: { child: Child; code: string; start
       touched.current = Date.now();
       void (async () => {
         await talk(L(NUDGE[n], ui), "listening", n === 0 ? "curious" : "warm");
-        if (n === 1) await sayWord(modelOf(act) ?? act.spec.word ?? act.spec.say ?? act.spec.hear, true);
+        if (n === 1) await sayWord(modelOf(act) ?? act.spec.word ?? act.spec.say ?? act.spec.hear, true, refsOf(act), romanOf(act));
       })();
     }, 1000);
     return () => clearInterval(id);
@@ -190,8 +205,16 @@ function Runner({ child, code, startTopic }: { child: Child; code: string; start
       await new Promise((res) => setTimeout(res, feel === "empathetic" ? 900 : 550));
       // after the words Melo keeps the feeling, but a sad face turns into a kind, encouraging one
       await talk(r.say, feel === "empathetic" || r.outcome === "miss" ? "encourage" : MOOD[feel], feel);
-      if (!response.skipped) await sayWord(r.reveal.word, false, r.reveal.native); // hear the right word once more: that is how it sticks
-      if (alive.current) window.setTimeout(() => { if (alive.current) void next(); }, r.outcome === "success" ? 600 : 1400);
+      if (!response.skipped) await sayWord(r.reveal.word, false, r.reveal.native, r.reveal.roman); // hear the right word once more: that is how it sticks
+      // the reason, not only right or wrong: what it means in the child's own language, why this reply fits
+      if (r.reveal.why && !response.skipped && alive.current) {
+        setWhy(r.reveal.why);
+        const sameScript = status?.language.latin || (ui === "hi" && ["hi", "mr", "sa"].includes(code));
+        if (sameScript) await talk(r.reveal.why, MOOD[feel]);
+      }
+      if (!alive.current) return;
+      if (oneByOne) setWaitNext(true); // the child decides when to go on
+      else window.setTimeout(() => { if (alive.current) void next(); }, r.outcome === "success" ? 600 : r.reveal.why ? 2600 : 1400);
     } catch (e) { setProblem((e as Error).message); setPhase("error"); }
   };
 
@@ -234,8 +257,10 @@ function Runner({ child, code, startTopic }: { child: Child; code: string; start
           ))}
         </div>
         <Melo mood={mood} size={phase === "intro" ? 150 : 92} say={say} />
+        <button className={`skill-chip${oneByOne ? " sel" : ""}`} aria-pressed={oneByOne} onClick={() => setOneByOne(!oneByOne)}>👣 {t("oneByOne", ui)}</button>
         {!hasVoiceFor(lang.locale) && (
-          <p className="muted small">No {lang.name} voice is installed on this device, so words are shown but not spoken. Add it in your system's speech settings, or open Melo in Microsoft Edge.</p>
+          <p className="muted small">No {lang.name} voice is installed on this device. Melo plays native recordings or a neural voice from the
+            server when it can, and otherwise reads the word in its own voice. For the best accent, add {lang.name} in your system's speech settings or use Microsoft Edge.</p>
         )}
 
         {phase === "intro" && (
@@ -257,12 +282,14 @@ function Runner({ child, code, startTopic }: { child: Child; code: string; start
           </div>
         )}
         {voiceCredit && (phase === "activity" || phase === "feedback") && <p className="voice-credit">{voiceCredit}</p>}
+        {why && phase === "feedback" && <div className="why-card" role="status"><span className="why-icon" aria-hidden>💡</span><p dir="auto">{why}</p></div>}
+        {waitNext && phase === "feedback" && <button className="btn next-step" onClick={() => void next()}>👉 {t("next", ui)}</button>}
         {phase === "activity" && act && (
           <div className="row center wrap">
             {modelOf(act) !== null || act.type === "say_word" ? (
               <>
-                <button className="btn ghost" onClick={() => void sayWord(modelOf(act) ?? act.spec.word ?? act.spec.say ?? act.spec.hear, false, refsOf(act))}>🔊 {t("hearIt", ui)}</button>
-                <button className="btn ghost" onClick={() => void sayWord(modelOf(act) ?? act.spec.word ?? act.spec.say ?? act.spec.hear, true, refsOf(act))}>🐢 {t("slower", ui)}</button>
+                <button className="btn ghost" onClick={() => void sayWord(modelOf(act) ?? act.spec.word ?? act.spec.say ?? act.spec.hear, false, refsOf(act), romanOf(act))}>🔊 {t("hearIt", ui)}</button>
+                <button className="btn ghost" onClick={() => void sayWord(modelOf(act) ?? act.spec.word ?? act.spec.say ?? act.spec.hear, true, refsOf(act), romanOf(act))}>🐢 {t("slower", ui)}</button>
               </>
             ) : null}
             <button className="btn ghost" onClick={() => void answer({ skipped: true })}>⏭ {t("anotherOne", ui)}</button>

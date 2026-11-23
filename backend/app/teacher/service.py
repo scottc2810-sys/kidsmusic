@@ -15,6 +15,7 @@ Privacy: the child's name is never sent; prompts use the literal placeholder "{n
 """
 from __future__ import annotations
 
+import base64
 import json
 import logging
 import os
@@ -107,13 +108,17 @@ class _AnthropicProvider:
             api_key=settings.anthropic_api_key, timeout=settings.ai_timeout_seconds, max_retries=0
         )
 
-    def structured(self, user_prompt: str, schema: dict, max_tokens: int = 2000) -> dict | None:
+    def structured(self, user_prompt: str, schema: dict, max_tokens: int = 2000, images: list[tuple[bytes, str]] | None = None) -> dict | None:
         a = self._anthropic
+        content: Any = user_prompt
+        if images:
+            content = [{"type": "image", "source": {"type": "base64", "media_type": mime, "data": base64.b64encode(data).decode()}}
+                       for data, mime in images] + [{"type": "text", "text": user_prompt}]
         kwargs: dict[str, Any] = {
             "model": self.settings.ai_model,
             "max_tokens": max_tokens,
             "system": SYSTEM_PROMPT,
-            "messages": [{"role": "user", "content": user_prompt}],
+            "messages": [{"role": "user", "content": content}],
             "thinking": {"type": "adaptive"},
             "output_config": {"effort": self.settings.ai_effort, "format": {"type": "json_schema", "schema": schema}},
         }
@@ -173,12 +178,12 @@ class _ClaudeCodeProvider:
         self.system_file = self.workdir / "system_prompt.txt"
         self.system_file.write_text(SYSTEM_PROMPT, encoding="utf-8")
 
-    def command(self, schema: dict) -> list[str]:
+    def command(self, schema: dict, tools: str = "") -> list[str]:
         s = self.settings
         return [
             self.exe, "-p", "--output-format", "json",
             "--model", s.claude_code_model, "--effort", s.ai_effort,
-            "--tools", "", "--strict-mcp-config", "--no-session-persistence",
+            "--tools", tools, "--strict-mcp-config", "--no-session-persistence",
             "--settings", json.dumps({"disableAllHooks": True}),
             "--system-prompt-file", str(self.system_file),
             "--json-schema", json.dumps(schema),
@@ -191,11 +196,29 @@ class _ClaudeCodeProvider:
 
     last_error: str | None = None
 
-    def structured(self, user_prompt: str, schema: dict, max_tokens: int = 2000) -> dict | None:
+    def structured(self, user_prompt: str, schema: dict, max_tokens: int = 2000, images: list[tuple[bytes, str]] | None = None) -> dict | None:
         self.last_error = None
+        shown: list[Path] = []
+        if images:
+            # Photos are copied into the CLI's own empty working folder; only the Read tool is allowed, to look at them.
+            vision = self.workdir / "vision"
+            vision.mkdir(exist_ok=True)
+            ext = {"image/png": "png", "image/webp": "webp"}
+            for i, (data, mime) in enumerate(images):
+                f = vision / f"photo{i + 1}.{ext.get(mime, 'jpg')}"
+                f.write_bytes(data)
+                shown.append(f)
+            user_prompt += "\nThe photos are these files (open each with the Read tool): " + ", ".join("vision/" + f.name for f in shown)
+        try:
+            return self._run(user_prompt, schema, "Read" if shown else "")
+        finally:
+            for f in shown:
+                f.unlink(missing_ok=True)
+
+    def _run(self, user_prompt: str, schema: dict, tools: str) -> dict | None:
         try:
             proc = subprocess.run(
-                self.command(schema), input=user_prompt, capture_output=True, text=True, encoding="utf-8",
+                self.command(schema, tools), input=user_prompt, capture_output=True, text=True, encoding="utf-8",
                 cwd=self.workdir, env=self.env(), timeout=self.settings.claude_code_timeout_seconds,
                 creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
             )
@@ -295,6 +318,17 @@ class TeacherService:
         if interactive and isinstance(ai, (llm.OllamaProvider, llm.OpenAICompatProvider)):
             return ai.structured(prompt, schema, max_tokens, timeout=self.settings.llm_interactive_timeout_seconds)
         return ai.structured(prompt, schema, max_tokens)
+
+    def ask_with_images(self, child: Any, prompt: str, schema: dict, images: list[tuple[bytes, str]], max_tokens: int = 2000) -> dict | None:
+        """A structured answer that may look at photos (the parent's own pictures of the instrument).
+        A brain that cannot see images still answers from the text."""
+        ai = self._ai_for(child)
+        if not ai:
+            return None
+        try:
+            return ai.structured(prompt, schema, max_tokens, images=images or None)
+        except TypeError:  # a provider without image support
+            return ai.structured(prompt, schema, max_tokens)
 
     def uses_ai(self, child: Any) -> bool:
         """True when an AI brain will be asked for this child (so it is worth building the memory brief)."""

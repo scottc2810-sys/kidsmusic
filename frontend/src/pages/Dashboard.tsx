@@ -35,6 +35,9 @@ export function Dashboard() {
               </div>
               <div className="row wrap">
                 <Link to={`/parent/child/${k.id}/progress`} className="btn ghost small">📈 Progress & memory</Link>
+                <Link to={`/parent/child/${k.id}/instrument`} className="btn ghost small">🎹 Instrument</Link>
+                <Link to={`/parent/child/${k.id}/own-words`} className="btn ghost small">📚 Own words</Link>
+                <Link to={`/parent/child/${k.id}/teachers`} className="btn ghost small">🧑‍🏫 Teachers</Link>
                 <Link to={`/parent/child/${k.id}/voices`} className="btn ghost small">🎙️ Native voices</Link>
                 <Link to={`/parent/child/${k.id}/recordings`} className="btn ghost small">🎙️ Recordings</Link>
                 <Link to={`/parent/child/${k.id}/settings`} className="btn ghost small">⚙️ Settings</Link>

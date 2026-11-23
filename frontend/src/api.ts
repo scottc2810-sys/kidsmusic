@@ -8,7 +8,7 @@ export type Avatar = "owl" | "cat" | "elephant" | "bird" | "fish" | "lion";
 export interface Parent { id: string; email: string }
 
 export interface Child {
-  id: string; name: string; age: number; avatar: Avatar; language: Language; instrument: "piano"; mode: Mode;
+  id: string; name: string; age: number; avatar: Avatar; language: Language; instrument: string; mode: Mode;
   session_minutes: number; reminder_time: string | null; reminder_days: number[];
   consent_camera: boolean; consent_microphone: boolean; consent_recording: boolean; cloud_ai_allowed: boolean;
   current_level: number; created_at: string;
@@ -90,16 +90,18 @@ export interface LearnLanguage { code: string; name: string; native: string; fla
 export interface CompareData {
   topic: string;
   topics: { id: string; emoji: string; title: string }[];
-  languages: { code: string; name: string; native: string; flag: string; locale: string; rtl: boolean }[];
+  languages: { code: string; name: string; native: string; flag: string; locale: string; rtl: boolean; latin?: boolean }[];
   rows: { id: string; emoji: string; meaning: string; english: string; cells: Record<string, { text: string; roman: string | null }> }[];
 }
 export interface LearnActivity {
   attempt_id: string; type: "listen_pick" | "read_pick" | "letter_sound" | "say_word" | "trace" | "spell" | "reply_pick"; skill: LearnSkill; difficulty: number;
   spec: Record<string, any>; say: string; retry: boolean; comfort: boolean; emotion?: string;
-  /** Recordings of this word by native speakers (female / male), with attribution. */
+  /** Recordings of this word by native speakers (female / male), with attribution; a neural voice when none exist. */
   native?: NativeRef[];
+  /** The same for a conversation question (Melo asks it). */
+  native_question?: NativeRef[];
 }
-export interface NativeRef { url: string; gender: string; speaker: string | null; license: string | null; source: string | null; family: boolean; origin?: string }
+export interface NativeRef { url: string; gender: string; speaker: string | null; license: string | null; source: string | null; family: boolean; origin?: string; approx?: string | null }
 export interface NativeCoverage {
   languages: Record<string, { items: number; of: number; files: number; female: number; male: number; family: number;
     missing: { item: string; text: string; roman: string | null; emoji: string }[] }>;
@@ -108,7 +110,7 @@ export interface NativeCoverage {
 export interface LearnAnswer {
   outcome: "success" | "partial" | "miss" | "uncertain" | "skipped"; score: number; say: string; events: string[]; star: boolean;
   reveal: { correct: number | null; word: string | null; roman: string | null; emoji: string | null; heard?: string | null;
-    pronunciation?: number | null; native?: NativeRef[] }; status: LearnStatus;
+    pronunciation?: number | null; native?: NativeRef[]; why?: string | null }; status: LearnStatus;
   /** How Melo feels about it (see emotion.ts), how big the reaction is (1-5), a small sound, and the streak so far. */
   emotion?: string; energy?: number; sfx?: "sparkle" | "tada" | "clap" | "oops" | "pop" | null; streak?: number;
 }
@@ -138,6 +140,23 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
 }
 
 const json = (body: unknown) => JSON.stringify(body);
+
+export type { InstrumentInfo } from "./teaching/instrument";
+import type { Prefs } from "./teaching/persona";
+export type { Prefs } from "./teaching/persona";
+export interface TopicProgress { difficulty: number; rounds: number; attempts: number; correct: number; stars: number }
+import type { InstrumentInfo } from "./teaching/instrument";
+export interface InstrumentKind { id: string; label: string; emoji: string; layout: string; keys: number; first: string; stand_in: boolean }
+export interface InstrumentForm {
+  kind: string; name: string; keys: number | null; first_key: string; labels: string;
+  features: { mic?: boolean; record?: boolean; lights?: boolean; demo_songs?: string[]; teach_mode?: boolean };
+  sources: string[]; notes: string; summary: string; tips: string[];
+}
+export interface InstrumentAnalysis {
+  suggestion: { kind: string; name: string; keys: number; first_key: string; labels: string; mic: boolean; record: boolean; lights: boolean;
+    demo_songs: string[]; summary: string; tips: string[]; confidence: "low" | "medium" | "high" };
+  used_ai: boolean; message: string; sources: { url: string; title: string; found: boolean; reason: string }[];
+}
 
 export interface BrainTest { ok: boolean; provider: string; model: string | null; latency_ms: number; reply: string | null; message: string }
 export interface TrackerAxis {
@@ -219,6 +238,36 @@ export const api = {
   teacherStatus: () => request<{ provider: string; model: string | null; configured: string; claude_code_found: boolean }>("/api/teacher/status"),
   teacherTest: () => request<BrainTest>("/api/teacher/test", { method: "POST" }),
   brains: () => request<BrainsFound>("/api/teacher/brains"),
+  /** Recordings of one word: native speakers, or a neural voice when there are none yet. */
+  nativeRefs: (lang: string, item: string) => request<NativeRef[]>(`/api/learn/native/${encodeURIComponent(lang)}/${encodeURIComponent(item)}`),
+  // The child's own instrument (parent's form, photos and shop links); none = the standard lessons
+  instrument: (childId: string) => request<InstrumentInfo>(`/api/children/${childId}/instrument`),
+  instrumentKinds: () => request<{ kinds: InstrumentKind[]; labels: string[] }>("/api/instrument-kinds"),
+  saveInstrument: (childId: string, body: InstrumentForm) =>
+    request<InstrumentInfo>(`/api/children/${childId}/instrument`, { method: "PUT", body: json(body) }),
+  resetInstrument: (childId: string) => request<void>(`/api/children/${childId}/instrument`, { method: "DELETE" }),
+  addInstrumentPhoto: (childId: string, file: File) => {
+    const fd = new FormData(); fd.append("file", file);
+    return request<InstrumentInfo>(`/api/children/${childId}/instrument/photos`, { method: "POST", body: fd });
+  },
+  deleteInstrumentPhoto: (childId: string, photoId: string) =>
+    request<InstrumentInfo>(`/api/children/${childId}/instrument/photos/${photoId}`, { method: "DELETE" }),
+  analyzeInstrument: (childId: string) => request<InstrumentAnalysis>(`/api/children/${childId}/instrument/analyze`, { method: "POST" }),
+  /** Photos / links / notes of the family's own material become a personal language topic (needs the AI brain). */
+  learnMaterial: (childId: string, files: File[], urls: string, notes: string, langs: string[], title: string) => {
+    const fd = new FormData();
+    files.forEach((f) => fd.append("files", f));
+    fd.append("urls", urls); fd.append("notes", notes); fd.append("langs", langs.join(",")); fd.append("title", title);
+    return request<{ ok: boolean; message: string; link: string; phrases: string[]; title: string }>(`/api/children/${childId}/learn/material`, { method: "POST", body: fd });
+  },
+  // Maths & science (classes 1-5) and the teacher persona per subject
+  prefs: (childId: string) => request<Prefs>(`/api/children/${childId}/prefs`),
+  savePrefs: (childId: string, body: { grade: number | null; teachers: Prefs["teachers"] }) =>
+    request<Prefs>(`/api/children/${childId}/prefs`, { method: "PUT", body: json(body) }),
+  subjectProgress: (childId: string, subject: "maths" | "science") =>
+    request<{ prefs: Prefs; topics: Record<string, TopicProgress> }>(`/api/children/${childId}/subjects/${subject}`),
+  subjectRound: (childId: string, subject: "maths" | "science", topic: string, body: { correct: number; total: number; difficulty: number }) =>
+    request<TopicProgress & { earned: number; level_change: number }>(`/api/children/${childId}/subjects/${subject}/${topic}/round`, { method: "POST", body: json(body) }),
   nativeCoverage: () => request<NativeCoverage>("/api/learn/native-coverage"),
   /** Ask Melo for the next, harder challenge pack of sentences in a language (found on Tatoeba / written by the AI). */
   learnGrow: (childId: string, lang: string) => request<{ started: boolean; message: string }>(`/api/children/${childId}/learn/${lang}/grow`, { method: "POST" }),

@@ -212,3 +212,50 @@ class LangAttempt(Base):
     score: Mapped[float | None] = mapped_column(Float, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
     answered_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+
+class InstrumentProfile(Base):
+    """The child's real instrument at home, described by the parent (form, photos, product links), so lessons
+    can be personalised: the right number of keys, the key stickers, where to find "home" on THAT instrument.
+    No profile = the standard on-screen piano lessons."""
+    __tablename__ = "instrument_profiles"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    child_id: Mapped[str] = mapped_column(ForeignKey("children.id", ondelete="CASCADE"), unique=True, index=True)
+    kind: Mapped[str] = mapped_column(String(20), default="keyboard")
+    name: Mapped[str] = mapped_column(String(80), default="")
+    keys: Mapped[int | None] = mapped_column(Integer, nullable=True)  # keys / bars / pads
+    first_key: Mapped[str] = mapped_column(String(3), default="C")  # leftmost white key (keyboards) / lowest bar
+    labels: Mapped[str] = mapped_column(String(12), default="none")  # none | letters | numbers | colors | sargam | solfege
+    features: Mapped[dict] = mapped_column(JSON, default=dict)  # mic, record, lights, demo_songs, teach_mode ...
+    sources: Mapped[list] = mapped_column(JSON, default=list)  # [{url, title, found}]
+    photos: Mapped[list] = mapped_column(JSON, default=list)  # [{id, file, mime}]
+    notes: Mapped[str] = mapped_column(String(4000), default="")  # the parent's words, or pasted product text
+    summary: Mapped[str] = mapped_column(String(400), default="")  # one friendly line Melo can say to the child
+    tips: Mapped[list] = mapped_column(JSON, default=list)  # practical tips for the parent (from the analysis)
+    analyzed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
+
+
+class ChildPrefs(Base):
+    """Per-child choices that are not lesson state: the school class for maths / science, and the teacher
+    persona and voice the parent picked for each subject ({"maths": {"persona", "voice", "rate", "pitch"}, ...})."""
+    __tablename__ = "child_prefs"
+    child_id: Mapped[str] = mapped_column(ForeignKey("children.id", ondelete="CASCADE"), primary_key=True)
+    data: Mapped[dict] = mapped_column(JSON, default=dict)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
+
+
+class SubjectProgress(Base):
+    """How a child is doing in one maths / science topic: difficulty 1-5 moves with the results."""
+    __tablename__ = "subject_progress"
+    __table_args__ = (UniqueConstraint("child_id", "subject", "topic"),)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    child_id: Mapped[str] = mapped_column(ForeignKey("children.id", ondelete="CASCADE"), index=True)
+    subject: Mapped[str] = mapped_column(String(12))
+    topic: Mapped[str] = mapped_column(String(40))
+    difficulty: Mapped[int] = mapped_column(Integer, default=1)
+    rounds: Mapped[int] = mapped_column(Integer, default=0)
+    attempts: Mapped[int] = mapped_column(Integer, default=0)
+    correct: Mapped[int] = mapped_column(Integer, default=0)
+    stars: Mapped[int] = mapped_column(Integer, default=0)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)

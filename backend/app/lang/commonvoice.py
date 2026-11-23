@@ -139,7 +139,7 @@ def choose(rows: list[dict], lang: str, have: dict, pool: int = POOL) -> dict[st
         by_norm.setdefault(na._norm(r["text"]), []).append(r)
     out: dict[str, list[dict]] = {}
     for item, w in ITEMS.get(lang, {}).items():
-        if item.startswith("c"):
+        if na._custom(item):
             continue
         refs = have.get(item, [])
         room = na.PER_ITEM - len(refs)

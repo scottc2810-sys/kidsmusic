@@ -14,6 +14,8 @@ import { MOOD, musicReaction, type Emotion } from "../emotion";
 import { L, noteLabel, t } from "../i18n";
 import { CameraObserver, loadCalibration } from "../vision/camera";
 import { KidShell, useChild } from "./KidHome";
+import { useInstrument } from "../teaching/instrument";
+import { useTeacher } from "../teaching/persona";
 
 type Phase = "intro" | "loading" | "activity" | "feedback" | "break" | "done" | "error";
 
@@ -32,6 +34,8 @@ export function Lesson() {
 function LessonRunner({ child, topic, focus }: { child: Child; topic: string | null; focus: string | null }) {
   const lang = child.language;
   const nav = useNavigate();
+  const inst = useInstrument(child.id);
+  useTeacher(child.id, "music");
   const home = topic ? `/play/${child.id}/basics` : `/play/${child.id}`; // Basics practice returns to Basics
   const [phase, setPhase] = useState<Phase>("intro");
   const [mood, setMood] = useState<MeloMood>("happy");
@@ -192,7 +196,7 @@ function LessonRunner({ child, topic, focus }: { child: Child; topic: string | n
 
   const props: ActivityProps | null = act ? {
     spec: act.spec, lang, source, mic: mic.current, camera: cam.current, onSubmit: submit,
-    locked: phase !== "activity" || speaking, reveal: result?.reveal,
+    locked: phase !== "activity" || speaking, reveal: result?.reveal, inst,
   } : null;
 
   return (

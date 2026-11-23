@@ -17,35 +17,21 @@ datas = [
     (str(DIST), "frontend_dist"),
     (str(BACKEND / "app" / "teacher" / "locales"), "app/teacher/locales"),
 ]
-datas += collect_data_files("mcp")
-# Native-speaker recordings (Lingua Libre, CC BY-SA), when they were downloaded on the build machine:
-# shipped read-only so families hear real voices without downloading anything.
-# Family recordings (a grandparent's voice recorded at home) stay on that computer: only public ones are copied.
-NATIVE = ROOT / "data" / "native_audio"
-if (NATIVE / "manifest.json").is_file():
-    import json
-    import shutil
+datas += collect_data_files("mcp") + collect_data_files("certifi") + collect_data_files("gtts")
+# Recordings shipped read-only so every word has a voice without downloading anything: native speakers
+# (licences that allow it) and neural-voice clips for words without one. See packaging/voices.py.
+sys.path.insert(0, str(ROOT / "packaging"))
+import voices  # noqa: E402
 
-    bundle = ROOT / "build" / "native_bundle"
-    shutil.rmtree(bundle, ignore_errors=True)
-    public = {}
-    for lang, items in json.loads((NATIVE / "manifest.json").read_text(encoding="utf-8")).items():
-        for item, refs in items.items():
-            # not family voices, and not non-commercial recordings (Tatoeba CC BY-NC...): those are downloaded by each family
-            # nor Common Voice clips ("noshare": its terms forbid re-sharing the dataset)
-            keep = [r for r in refs if not r.get("family") and not r.get("noncommercial") and not r.get("noshare")
-                    and (NATIVE / r["file"]).is_file()]
-            for r in keep:
-                (bundle / lang).mkdir(parents=True, exist_ok=True)
-                shutil.copy2(NATIVE / r["file"], bundle / r["file"])
-            if keep:
-                public.setdefault(lang, {})[item] = keep
-    if public:
-        (bundle / "manifest.json").write_text(json.dumps(public, ensure_ascii=False), encoding="utf-8")
-        datas.append((str(bundle), "native_audio"))
+bundle = ROOT / "build" / "native_bundle"
+shipped = voices.bundle(bundle)
+print(f"Melo voices bundled: {shipped}")
+if any(shipped.values()):
+    datas.append((str(bundle), "native_audio"))
 hidden = (
     collect_submodules("app") + collect_submodules("uvicorn") + collect_submodules("mcp", filter=lambda n: not n.startswith("mcp.cli"))
-    + ["sqlalchemy.dialects.sqlite", "anthropic", "multipart", "python_multipart", "dotenv", "jwt", "cryptography.fernet"]
+    + ["sqlalchemy.dialects.sqlite", "anthropic", "multipart", "python_multipart", "dotenv", "jwt", "cryptography.fernet", "miniaudio"]
+    + collect_submodules("edge_tts") + collect_submodules("gtts")  # neural voices for words without a native recording
 )
 icon = {"win32": ROOT / "packaging" / "icons" / "melo.ico", "darwin": ROOT / "packaging" / "icons" / "melo.icns"}.get(sys.platform)
 icon = str(icon) if icon and icon.is_file() else None
@@ -71,5 +57,5 @@ coll = COLLECT(exe, a.binaries, a.datas, name="Melo", upx=False)
 if sys.platform == "darwin":
     app = BUNDLE(
         coll, name="Melo.app", icon=icon, bundle_identifier="app.melo.teacher",
-        info_plist={"CFBundleShortVersionString": "1.4.0", "NSHighResolutionCapable": True, "LSMinimumSystemVersion": "11.0"},
+        info_plist={"CFBundleShortVersionString": "1.5.0", "NSHighResolutionCapable": True, "LSMinimumSystemVersion": "11.0"},
     )

@@ -11,7 +11,8 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 Language = Literal["en", "hi", "hinglish", "es", "fr", "zh", "ar"]  # keep in step with app/languages.py
 Mode = Literal["screen", "real", "listening", "practice"]
-Instrument = Literal["piano"]  # guitar / violin arrive in Phase 4
+Instrument = Literal["piano", "keyboard", "toy_keyboard", "harmonium", "melodica", "xylophone", "glockenspiel", "drums",
+                     "ukulele", "guitar", "recorder", "violin", "voice"]  # set from the parent's "My instrument" page (instrument.KINDS)
 Avatar = Literal["owl", "cat", "elephant", "bird", "fish", "lion"]
 
 _EMAIL_RE = re.compile(r"^[^@\s]{1,64}@[^@\s]{1,189}\.[^@\s]{2,}$")

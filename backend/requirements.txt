@@ -10,3 +10,8 @@ python-multipart>=0.0.9
 anthropic>=0.70
 mcp>=2.3,<3.0
 miniaudio>=1.59,<2.0  # MP3 -> WAV for native recordings (MIT)
+edge-tts>=7.0,<8.0  # neural voices for words with no native recording (online; LGPL-3.0)
+gTTS>=2.5,<3.0  # Punjabi voice, which edge-tts lacks (online; MIT)
+# Optional, offline Sanskrit / Punjabi pre-recording (heavy: torch, ~4 GB model, accept the licence on Hugging Face first):
+#   pip install torch transformers accelerate soundfile git+https://github.com/huggingface/parler-tts.git
+#   python -m app.lang.tts --parler sa pa
