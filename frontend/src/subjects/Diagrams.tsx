@@ -10,6 +10,27 @@ function Tag({ x, y, n, name, show, anchor = "start" }: { x: number; y: number; 
     : <text x={x} y={y} textAnchor={anchor} fontSize={16} fontWeight={800} fill={INK}>{name}</text>;
 }
 
+
+/** The four Vedas as four friends: a colour, a big symbol, the hand action, and picture hooks for the key facts. */
+const VEDAS: Record<string, { name: string; colour: string; symbol: string; action: string; does: string; hooks: [string, string][] }> = {
+  rig: { name: "Rig Veda", colour: "#e4572e", symbol: "🔥", action: "🙏", does: "RECITES", hooks: [["🔥", "first word: Agni"], ["📚", "10 books"], ["☀️", "Gāyatrī"], ["❓", "big questions"]] },
+  sama: { name: "Sama Veda", colour: "#3a86ff", symbol: "🎵", action: "🗣️", does: "SINGS", hooks: [["🔁", "Rig's words, sung"], ["🎶", "Sa Re Ga Ma…"], ["🧂", "tat tvam asi"], ["🐢", "slow & exact"]] },
+  yajur: { name: "Yajur Veda", colour: "#f4a100", symbol: "🙌", action: "🫗", does: "DOES", hooks: [["👣", "step by step"], ["⚪⚫", "white & black"], ["👦", "Nachiketa"], ["🤲", "enjoy by sharing"]] },
+  atharva: { name: "Atharva Veda", colour: "#2a9d8f", symbol: "🌿", action: "💚", does: "HEALS", hooks: [["🏡", "home & health"], ["🌍", "Earth is mother"], ["🦁", "satyameva jayate"], ["🌱", "Ayurveda roots"]] },
+};
+function VedaFriend({ id, x, y, small }: { id: string; x: number; y: number; small?: boolean }) {
+  const v = VEDAS[id];
+  const r = small ? 34 : 48;
+  return <g>
+    <circle cx={x} cy={y} r={r} fill={v.colour} opacity={0.9} />
+    <circle cx={x} cy={y} r={r - 6} fill="#fff" opacity={0.92} />
+    <text x={x} y={y + (small ? 12 : 16)} textAnchor="middle" fontSize={small ? 34 : 46}>{v.symbol}</text>
+    <text x={x + r - 4} y={y - r + 16} textAnchor="middle" fontSize={small ? 20 : 26}>{v.action}</text>
+    <text x={x} y={y + r + 20} textAnchor="middle" fontSize={small ? 15 : 18} fontWeight={800} fill={INK}>{v.name}</text>
+    <text x={x} y={y + r + (small ? 38 : 42)} textAnchor="middle" fontSize={small ? 14 : 17} fontWeight={900} fill={v.colour}>{v.does}</text>
+  </g>;
+}
+
 export function Diagram({ name, show }: { name: string; show: "names" | "numbers" }) {
   const svg = (w: number, h: number, children: React.ReactNode, label: string) => <svg viewBox={`0 0 ${w} ${h}`} className="viz-svg diagram" role="img" aria-label={label}>{children}</svg>;
   switch (name) {
@@ -155,6 +176,23 @@ export function Diagram({ name, show }: { name: string; show: "names" | "numbers
       <text x={40} y={100} fontSize={34}>🧒</text><text x={230} y={115} fontSize={40}>📦</text>
       {show === "names" && <><text x={170} y={150} textAnchor="middle" fontSize={12} fill={INK}>pivot</text><text x={40} y={145} fontSize={12} fill={INK}>small push, far away</text></>}
     </>, "a lever");
+    case "veda_family": return svg(400, 300, <>
+      <text x={200} y={26} textAnchor="middle" fontSize={18} fontWeight={800} fill={INK}>📜 Veda = knowledge: 4 friends</text>
+      <VedaFriend id="rig" x={100} y={90} small /><VedaFriend id="sama" x={300} y={90} small />
+      <VedaFriend id="yajur" x={100} y={210} small /><VedaFriend id="atharva" x={300} y={210} small />
+      <text x={200} y={292} textAnchor="middle" fontSize={15} fontWeight={700} fill={INK}>recite 🙏 · sing 🗣️ · do 🫗 · heal 💚</text>
+    </>, "the four Vedas: Rig recites, Sama sings, Yajur does, Atharva heals");
+    case "veda_rig": case "veda_sama": case "veda_yajur": case "veda_atharva": {
+      const v = VEDAS[name.slice(5)];
+      return svg(400, 260, <>
+        <VedaFriend id={name.slice(5)} x={95} y={95} />
+        {v.hooks.map(([icon, label], i) => <g key={label}>
+          <rect x={190} y={22 + i * 56} width={200} height={46} rx={14} fill={v.colour} opacity={0.14} stroke={v.colour} />
+          <text x={204} y={54 + i * 56} fontSize={24}>{icon}</text>
+          <text x={242} y={52 + i * 56} fontSize={15} fontWeight={800} fill={INK}>{label}</text>
+        </g>)}
+      </>, `${v.name}: ${v.does.toLowerCase()}; ${v.hooks.map((h) => h[1]).join(", ")}`);
+    }
     default: return null;
   }
 }

@@ -7,6 +7,7 @@ import { MATHS_TOPICS, STRANDS, type Topic } from "./maths";
 import { EXTRA_MATHS_CARDS, MORE_MATHS } from "./maths_more";
 import { SCI_STRANDS, SCIENCE_TOPICS, type SciTopic } from "./science";
 import { EXTRA_SCIENCE_CARDS, MORE_SCIENCE } from "./science_more";
+import { MORE_CARDS } from "./more_cards";
 import { MORE_VEDIC } from "./vedic";
 import { VEDA_STRANDS, VEDA_TOPICS } from "./vedas";
 import { worked } from "./worked";
@@ -18,7 +19,7 @@ const REAL_LIFE = new Set(["story_add_sub", "story_mul_div", "two_step", "money"
 
 const finish = <T extends Topic | SciTopic>(t: T, extra: Record<string, T["cards"]> = {}): T => ({
   ...t,
-  cards: [...t.cards, ...(extra[t.id] ?? [])],
+  cards: [...t.cards, ...(extra[t.id] ?? []), ...(MORE_CARDS[t.id] ?? [])],
   make: (d, rng) => {
     const e = t.make(d, rng);
     return { ...e, steps: e.steps ?? worked(t.id, e), apply: e.apply ?? REAL_LIFE.has(t.id) };
@@ -33,8 +34,10 @@ export const ALL_SCIENCE: SciTopic[] = [...SCIENCE_TOPICS.map((t) => finish(t, E
 
 /** Any topic of any subject, in the shape the topic page uses. */
 export interface AnyTopic { id: string; strand: string; icon: string; title: Text; grades: [number, number]; cards: Topic["cards"]; make: Topic["make"] }
+/** Vedas and finance topics with their extra concept cards (maths and science get them in finish()). */
+const withCards = (t: AnyTopic): AnyTopic => ({ ...t, cards: [...t.cards, ...(MORE_CARDS[t.id] ?? [])] });
 export const TOPICS: Record<SubjectId, AnyTopic[]> = {
-  maths: ALL_MATHS, science: ALL_SCIENCE, vedas: VEDA_TOPICS as AnyTopic[], finance: FIN_TOPICS as AnyTopic[],
+  maths: ALL_MATHS, science: ALL_SCIENCE, vedas: (VEDA_TOPICS as AnyTopic[]).map(withCards), finance: (FIN_TOPICS as AnyTopic[]).map(withCards),
 };
 export const STRANDS_OF: Record<SubjectId, { id: string; icon: string; title: Text }[]> = {
   maths: STRANDS, science: SCI_STRANDS, vedas: VEDA_STRANDS, finance: FIN_STRANDS,

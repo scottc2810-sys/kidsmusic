@@ -2,8 +2,8 @@
 // level shown). A topic: concept cards with a diagram, one at a time with Next, then a round of 5 questions.
 // Every answer gets its reason, and the child taps Next when ready. Difficulty adapts per topic on the server.
 // The teacher (persona, voice, speed) is the one the parent chose for the subject.
-import { useCallback, useEffect, useRef, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { api, type Child, type TopicProgress } from "../api";
 import { primeSpeech, speak, stopSpeaking } from "../audio/speech";
 import { playSfx, unlockAudio } from "../audio/synth";
@@ -12,6 +12,8 @@ import { L, t, type Text } from "../i18n";
 import { ShlokaOfTheDay } from "../components/ShlokaCard";
 import { STRANDS_OF, SUBJECT_INFO, TOPICS, type SubjectId } from "../subjects/index";
 import { T as TX, type Exercise, type Topic } from "../subjects/maths";
+import { missionFor } from "../subjects/missions";
+import { AskedLog, drawFresh, drawRevision, nearLevels, qid, TaughtLog, teachFirst, type Teach } from "../subjects/teachfirst";
 import { VisualView } from "../subjects/Visuals";
 import { useTeacher, type Subject as TeacherSubject } from "../teaching/persona";
 import { KidShell, useChild } from "./KidHome";
@@ -35,6 +37,18 @@ const S = {
   growing: { en: "You've mastered every level! Melo is writing new, harder questions just for you.", hi: "तुमने हर लेवल पार कर लिया! मेलो तुम्हारे लिए नए, कठिन सवाल लिख रहा है।", hinglish: "Tumne har level paar kar liya! Melo tumhare liye naye, tough sawaal likh raha hai." },
   beyond: { en: "Beyond", hi: "आगे", hinglish: "Beyond" },
   stepByStep: { en: "Step by step", hi: "एक-एक क़दम", hinglish: "Step by step" }, nextStep: { en: "Next step", hi: "अगला क़दम", hinglish: "Agla step" },
+  learnFirst: { en: "Learn this first", hi: "पहले यह सीखो", hinglish: "Pehle yeh seekho" },
+  watchMe: { en: "Watch me solve one", hi: "देखो, मैं एक हल करता हूँ", hinglish: "Dekho, main ek solve karta hoon" },
+  nowYou: { en: "Now you try!", hi: "अब तुम करो!", hinglish: "Ab tum karo!" },
+  because: { en: "Why?", hi: "क्यों?", hinglish: "Kyun?" },
+  revise: { en: "Revise", hi: "दोहराओ", hinglish: "Dohraao" },
+  revision: { en: "Revision: questions you've met before, the tricky ones first.", hi: "दोहराना: पहले आए सवाल, कठिन वाले पहले।", hinglish: "Revision: pehle aaye sawaal, mushkil wale pehle." },
+  nothingToRevise: { en: "Nothing to revise here yet: learn this topic first!", hi: "अभी दोहराने को कुछ नहीं: पहले यह विषय सीखो!", hinglish: "Abhi dohraane ko kuch nahi: pehle yeh topic seekho!" },
+  newQuestions: { en: "New questions", hi: "नए सवाल", hinglish: "Naye sawaal" },
+  allAsked: { en: "You've answered every question in this topic! Try another topic, or look at the cards again.", hi: "तुमने इस विषय का हर सवाल कर लिया! दूसरा विषय चुनो, या कार्ड फिर से देखो।", hinglish: "Tumne is topic ka har sawaal kar liya! Doosra topic chuno, ya cards phir se dekho." },
+  mission: { en: "Your mission", hi: "तुम्हारा मिशन", hinglish: "Tumhara mission" },
+  iDidIt: { en: "I did it!", hi: "मैंने कर लिया!", hinglish: "Maine kar liya!" },
+  missionDone: { en: "Mission done: you used it in real life!", hi: "मिशन पूरा: तुमने इसे असली जीवन में किया!", hinglish: "Mission poora: tumne ise real life mein kiya!" },
 } satisfies Record<string, Text>;
 
 const topicsOf = (s: Subj) => TOPICS[s] as unknown as Topic[];
@@ -86,12 +100,18 @@ function Home({ child, subject }: { child: Child; subject: Subj }) {
                 const p = prog[tp.id];
                 const fits = grade >= tp.grades[0] && grade <= tp.grades[1];
                 return (
-                  <button key={tp.id} className={`topic-card${fits ? " fits" : ""}`} onClick={() => void open(`/play/${child.id}/${subject}/${tp.id}`)}>
+                  <div key={tp.id} className="topic-wrap">
+                  <button className={`topic-card${fits ? " fits" : ""}`} onClick={() => void open(`/play/${child.id}/${subject}/${tp.id}`)}>
                     <span className="topic-icon" aria-hidden>{tp.icon}</span>
                     <strong>{L(tp.title, lang)}</strong>
                     <small className="muted">{tp.grades[0] === 0 ? "KG" : `${L(S.forClass, lang)} ${tp.grades[0]}`}–{tp.grades[1]}{fits ? ` · ⭐ ${L(S.forYou, lang)}` : ""}</small>
                     {p && <small>⭐ {p.stars} · Lv {p.difficulty}</small>}
                   </button>
+                  {p && p.rounds > 0 && (
+                    <button className="btn ghost small topic-revise" onClick={() => void open(`/play/${child.id}/${subject}/${tp.id}?revise=1`)}
+                      aria-label={`${L(S.revise, lang)}: ${L(tp.title, lang)}`}>🔁 {L(S.revise, lang)}</button>
+                  )}
+                  </div>
                 );
               })}
             </div>
@@ -143,6 +163,22 @@ function TopicRunner({ child, subject, topic }: { child: Child; subject: Subj; t
   const [applied, setApplied] = useState({ right: 0, total: 0 }); // real-life questions in this round
   const [pool, setPool] = useState<{ level: number; items: ChallengeItem[] } | null>(null); // AI challenge level beyond 5
   const asked = useRef<string[]>([]);
+  // teach before asking: a new fact is shown first, a new level starts with a worked example
+  const [teach, setTeach] = useState<Teach | null>(null);
+  const taughtLog = useMemo(() => new TaughtLog(child.id, subject, topic.id), [child.id, subject, topic.id]);
+  // never the same question twice: what this child has been shown in this topic, and in this round
+  const askedLog = useMemo(() => new AskedLog(child.id, subject, topic.id), [child.id, subject, topic.id]);
+  const roundSeen = useRef<Set<string>>(new Set());
+  const [roundTotal, setRoundTotal] = useState(ROUND);
+  const [usedUp, setUsedUp] = useState(false); // every question of this topic has been asked
+  // revision: questions already met (slips first), chosen on purpose; never moves the level
+  const [params] = useSearchParams();
+  const [revise, setRevise] = useState(params.get("revise") === "1");
+  const [noRevision, setNoRevision] = useState(false);
+  const justTaught = useRef(false); // the question on screen was taught a moment ago
+  const mission = missionFor(topic.id, child.name); // one small real-life task, in the child's name
+  const [missionDone, setMissionDone] = useState(false);
+  const taughtN = useRef(0); // such answers in this round (they show learning; the next round checks memory)
   const [mood, setMood] = useState<MeloMood>("happy");
   const [say, setSay] = useState("");
   const [party, setParty] = useState(0);
@@ -180,18 +216,58 @@ function TopicRunner({ child, subject, topic }: { child: Child; subject: Subj; t
     }).catch(() => {});
   };
   const level = pool ? pool.level : diff;
-  const nextQuestion = useCallback(() => {
-    const e = pool ? fromChallenge(pool.items[Math.floor(Math.random() * pool.items.length)]) : topic.make(diff, Math.random);
+  /** The next question this child has never seen (false = the topic is used up). */
+  const nextQuestion = useCallback((): boolean => {
+    const make = (d: number, rng: () => number) => pool ? fromChallenge(pool.items[Math.floor(rng() * pool.items.length)]) : topic.make(d, rng);
+    const levels = pool ? [pool.level] : nearLevels(diff);
+    if (revise) {
+      const r = drawRevision(make, askedLog, Math.random, roundSeen.current);
+      if (!r) return false;
+      roundSeen.current.add(qid(r));
+      asked.current = [...asked.current, r.prompt.en].slice(-3);
+      setQ(r); setPicked(null); setShown(0); setTeach(null); justTaught.current = false;
+      void talk(L(r.prompt, lang));
+      return true;
+    }
+    const e = drawFresh(make, levels, askedLog, Math.random, roundSeen.current);
+    if (!e) return false;
+    const shown = (x: Exercise) => { askedLog.add(x); roundSeen.current.add(qid(x)); };
+    shown(e);
     asked.current = [...asked.current, e.prompt.en].slice(-3);
-    setQ(e); setPicked(null); setShown(0);
-    void talk(L(e.prompt, lang));
-  }, [topic, diff, lang, talk, pool]);
-  useEffect(() => { if (phase === "practice" && !q) nextQuestion(); }, [phase, q, nextQuestion]);
+    setQ(e); setPicked(null); setShown(0); justTaught.current = false;
+    const lesson = teachFirst(e, level, taughtLog, (rng) => drawFresh(make, levels, askedLog, rng, new Set([...roundSeen.current])) ?? e);
+    if (lesson?.kind === "example" && lesson.e !== e) shown(lesson.e); // a worked example is never asked later
+    setTeach(lesson);
+    if (!lesson) { void talk(L(e.prompt, lang)); return true; }
+    const x = lesson.e;
+    void talk(lesson.kind === "fact"
+      ? `${L(S.learnFirst, lang)}. ${L(x.prompt, lang)} ${L(S.answerWas, lang)} ${x.answer}. ${L(x.why, lang)}`
+      : `${L(S.watchMe, lang)}. ${L(x.prompt, lang)}`);
+    return true;
+  }, [topic, diff, lang, talk, pool, level, taughtLog, askedLog, revise]);
+  /** Done learning: remember it was taught, then ask the question. */
+  const askNow = () => {
+    if (!teach || !q) return;
+    if (teach.kind === "fact") { taughtLog.learnFact(q); justTaught.current = true; } else taughtLog.learnLevel(level);
+    setTeach(null); setShown(0);
+    void talk(`${L(S.nowYou, lang)} ${L(q.prompt, lang)}`);
+  };
+  useEffect(() => {
+    if (phase !== "practice" || q || n !== 0) return;
+    if (revise) {
+      if (!nextQuestion()) { setRevise(false); setNoRevision(true); void talk(L(S.nothingToRevise, lang)); }
+      return;
+    }
+    if (!usedUp && !nextQuestion()) { setUsedUp(true); void talk(L(S.allAsked, lang), "happy"); }
+  }, [phase, q, nextQuestion]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const answer = async (v: string) => {
     if (!q || picked != null) return;
     const ok = v.trim().toLowerCase() === q.answer.toLowerCase();
     setPicked(v);
+    if (justTaught.current) taughtN.current += 1;
+    if (!ok) askedLog.setMissed(q, true); // revised first next time
+    else if (revise) askedLog.setMissed(q, false); // remembered now
     if (q.apply) setApplied((a) => ({ right: a.right + (ok ? 1 : 0), total: a.total + 1 }));
     if (ok) { setRight((r) => r + 1); playSfx("sparkle"); setMood("cheer"); }
     else { playSfx("oops"); setMood("encourage"); }
@@ -205,16 +281,21 @@ function TopicRunner({ child, subject, topic }: { child: Child; subject: Subj; t
     void talk(L(e.steps[k - 1], lang));
   };
   const next = async () => {
-    if (n + 1 < ROUND) { setN(n + 1); nextQuestion(); return; }
-    const total = ROUND, correct = right;
+    if (n + 1 < ROUND && nextQuestion()) { setN(n + 1); return; }
+    const total = n + 1, correct = right; // shorter when the topic ran out of new questions
+    const ranOut = total < ROUND && !revise;
+    if (ranOut) setUsedUp(true);
+    setRoundTotal(total);
     setPhase("done"); setQ(null);
     const r = await api.subjectRound(child.id, subject, topic.id, { correct, total, difficulty: level, strand: topic.strand,
-      apply_correct: applied.right, apply_total: applied.total, title: L(topic.title, "en"), examples: asked.current }).catch(() => null);
+      apply_correct: applied.right, apply_total: applied.total, title: L(topic.title, "en"), examples: asked.current, taught: taughtN.current, revision: revise }).catch(() => null);
     if (r) { setResult(r); setDiff(r.difficulty); if (r.difficulty >= 5) loadChallenges(); }
-    if (correct >= 4) setParty((p) => p + 1);
-    await talk(`${correct} ${L(S.score, lang)} ${total}! ${r?.challenge_started ? L(S.growing, lang) : r?.level_change ? L(r.level_change > 0 ? S.levelUp : S.levelDown, lang) : ""}`, "happy");
+    if (correct >= Math.ceil(total * 0.8)) setParty((p) => p + 1);
+    await talk(`${correct} ${L(S.score, lang)} ${total}! ${ranOut ? L(S.allAsked, lang) : ""} ${r?.challenge_started ? L(S.growing, lang) : r?.level_change ? L(r.level_change > 0 ? S.levelUp : S.levelDown, lang) : ""}${mission ? ` ${L(S.mission, lang)}: ${mission}` : ""}`, "happy");
   };
-  const restart = () => { setN(0); setRight(0); setApplied({ right: 0, total: 0 }); setResult(null); setQ(null); setPhase("practice"); };
+  /** Switch between a revision round and new questions, starting a fresh round. */
+  const startMode = (rev: boolean) => { setNoRevision(false); setRevise(rev); restart(); };
+  const restart = () => { roundSeen.current = new Set(); taughtN.current = 0; setN(0); setRight(0); setApplied({ right: 0, total: 0 }); setResult(null); setQ(null); setPhase("practice"); };
 
   const c = topic.cards[card];
   return (
@@ -226,6 +307,7 @@ function TopicRunner({ child, subject, topic }: { child: Child; subject: Subj; t
           <PersonaBadge name={teacher.persona.name} emoji={teacher.persona.emoji} />
           {phase !== "learn" && <span className="help-badge" title={pool ? "Questions Melo's AI teacher wrote for you after you mastered all 5 levels" : "Difficulty level of this topic (1-5), it moves with your results"}>
             {pool ? `⭐ ${L(S.beyond, lang)} · Lv ${level}` : `Lv ${diff}`}</span>}
+          {revise && phase !== "learn" && <span className="help-badge" title={L(S.revision, lang)}>🔁 {L(S.revise, lang)}</span>}
         </div>
         <Melo mood={mood} size={84} say={say} />
         {phase === "learn" && (
@@ -243,7 +325,59 @@ function TopicRunner({ child, subject, topic }: { child: Child; subject: Subj; t
             </div>
           </section>
         )}
-        {phase === "practice" && q && (
+        {phase === "practice" && q && teach && (() => {
+          const x = teach.e;
+          const steps = teach.kind === "example" ? x.steps ?? [] : [];
+          const more = shown < steps.length;
+          return (
+            <section className="concept card teach-first" aria-live="polite">
+              <small className="muted">{teach.kind === "fact" ? `💡 ${L(S.learnFirst, lang)}` : `👀 ${L(S.watchMe, lang)}`}</small>
+              <p className="q-prompt">{L(x.prompt, lang)}</p>
+              {x.visual && <VisualView v={x.visual} lang={lang} />}
+              {steps.length > 0 && shown > 0 && (
+                <ol className="worked" aria-label={L(S.stepByStep, lang)}>
+                  {steps.slice(0, shown).map((st, i) => <li key={i} className={i === shown - 1 ? "now" : ""}>{L(st, lang)}</li>)}
+                </ol>
+              )}
+              {!more && (
+                <div className="why-card" role="status">
+                  <span className="why-icon" aria-hidden>✅</span>
+                  <p><b>{L(S.answerWas, lang)} {x.answer}.</b> {L(x.why, lang)}</p>
+                </div>
+              )}
+              <div className="row center wrap">
+                <button className="btn ghost" onClick={() => void talk(more ? L(x.prompt, lang) : `${L(S.answerWas, lang)} ${x.answer}. ${L(x.why, lang)}`)}>🔊</button>
+                {more
+                  ? <button className="btn next-step" key={`s${shown}`} onClick={() => showStep(shown + 1, x)}>👣 {L(S.nextStep, lang)} ({shown + 1}/{steps.length})</button>
+                  : <button className="btn next-step" onClick={askNow}>✏️ {L(S.nowYou, lang)}</button>}
+              </div>
+            </section>
+          );
+        })()}
+        {phase === "practice" && revise && n === 0 && q && !picked && (
+          <p className="muted center">🔁 {L(S.revision, lang)}</p>
+        )}
+        {phase === "practice" && !q && noRevision && !usedUp && (
+          <section className="card concept" role="status">
+            <span className="concept-icon">🌱</span>
+            <p>{L(S.nothingToRevise, lang)}</p>
+            <div className="row center wrap">
+              <button className="btn big" onClick={() => startMode(false)}>✏️ {L(S.practise, lang)}</button>
+              <button className="btn big ghost" onClick={() => { setCard(0); setPhase("learn"); }}>💡 {L(S.learn, lang)}</button>
+            </div>
+          </section>
+        )}
+        {phase === "practice" && !q && usedUp && (
+          <section className="card concept" role="status">
+            <span className="concept-icon">🌟</span>
+            <p>{L(S.allAsked, lang)}</p>
+            <div className="row center wrap">
+              {askedLog.deck.length > 0 && <button className="btn big" onClick={() => startMode(true)}>🔁 {L(S.revise, lang)}</button>}
+              <button className="btn big ghost" onClick={() => { setCard(0); setPhase("learn"); }}>💡 {L(S.learn, lang)}</button>
+            </div>
+          </section>
+        )}
+        {phase === "practice" && q && !teach && (
           <section className="question card" aria-live="polite">
             <div className="step-dots">{Array.from({ length: ROUND }, (_, i) => <i key={i} className={i < n ? "done" : i === n ? "now" : ""} />)}</div>
             {q.apply && <span className="tip-badge real" tabIndex={0} title={L(S.realLifeTip, lang)} data-tip={L(S.realLifeTip, lang)}>🌍 {L(S.realLife, lang)}</span>}
@@ -280,14 +414,32 @@ function TopicRunner({ child, subject, topic }: { child: Child; subject: Subj; t
         )}
         {phase === "done" && (
           <section className="card concept">
-            <span className="concept-icon">{right >= 4 ? "🏆" : right >= 2 ? "⭐" : "🌱"}</span>
-            <h2>{right} / {ROUND}</h2>
+            <span className="concept-icon">{right >= Math.ceil(roundTotal * 0.8) ? "🏆" : right * 2 >= roundTotal ? "⭐" : "🌱"}</span>
+            <h2>{right} / {roundTotal}</h2>
+            {usedUp && <p>🌟 {L(S.allAsked, lang)}</p>}
             {result && <p>{"⭐".repeat(result.earned)}{result.level_change ? ` · ${L(result.level_change > 0 ? S.levelUp : S.levelDown, lang)}` : ""}</p>}
             {applied.total > 0 && <p className="tip-badge real" title={L(S.realLifeTip, lang)}>🌍 {L(S.realLife, lang)}: {applied.right}/{applied.total}</p>}
             {result?.challenge_started && <p>✨ {L(S.growing, lang)}</p>}
+            {mission && (
+              <div className="why-card mission" role="status">
+                <span className="why-icon" aria-hidden>🎯</span>
+                <p><b>{L(S.mission, lang)}:</b> {mission}</p>
+                {missionDone
+                  ? <span className="tip-badge real">✅ {L(S.missionDone, lang)}</span>
+                  : <button className="btn small" onClick={() => {
+                    setMissionDone(true); playSfx("sparkle");
+                    void api.addNote(child.id, `Did the real-life mission for ${subject} · ${L(topic.title, "en")}: ${mission}`).catch(() => {});
+                    void talk(`${teacher.praise(lang)} ${L(S.missionDone, lang)}`, "cheer");
+                  }}>🙌 {L(S.iDidIt, lang)}</button>}
+              </div>
+            )}
             <div className="row center wrap">
-              <button className="btn big" onClick={restart}>🔁 {L(S.again, lang)}</button>
-              <button className="btn big ghost" onClick={() => { setCard(0); setPhase("learn"); }}>💡 {L(S.learn, lang)}</button>
+              {revise
+                ? <button className="btn big" onClick={restart}>🔁 {L(S.revise, lang)}</button>
+                : !usedUp && <button className="btn big" onClick={restart}>▶️ {L(S.again, lang)}</button>}
+              {revise && !usedUp && <button className="btn big ghost" onClick={() => startMode(false)}>✏️ {L(S.newQuestions, lang)}</button>}
+              {!revise && askedLog.deck.length > 0 && <button className="btn big ghost" onClick={() => startMode(true)}>🔁 {L(S.revise, lang)}</button>}
+              <button className="btn big ghost" onClick={() => { restart(); setCard(0); setPhase("learn"); }}>💡 {L(S.learn, lang)}</button>
             </div>
           </section>
         )}

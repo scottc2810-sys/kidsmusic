@@ -104,11 +104,17 @@ class RoundIn(Strict):
     apply_total: int = Field(default=0, ge=0, le=50)
     title: str = Field(default="", max_length=80)  # what the topic is, for the AI teacher writing harder questions
     examples: list[str] = Field(default_factory=list, max_length=3)
+    # answered right after Melo taught that very fact ("learn first"): shows learning, not yet memory
+    taught: int = Field(default=0, ge=0, le=50)
+    # a revision round (questions met before, slips first): shows what is remembered, never moves the level
+    revision: bool = False
 
 
 @router.post("/children/{child_id}/subjects/{subject}/{topic}/round")
 def record_round(subject: str, topic: str, body: RoundIn, child: Child = Depends(owned_child), db: Session = Depends(get_db)) -> dict:
-    """One round of a topic: difficulty goes up after 80 % or more, down below 50 %, stays otherwise."""
+    """One round of a topic: difficulty goes up after 80 % or more, down below 50 %, stays otherwise.
+    A round where most answers came right after Melo taught them never moves the level up or counts as mastery:
+    the child has seen it once, the next round checks it is remembered."""
     if subject not in SUBJECTS or not topic.replace("_", "").isalnum() or len(topic) > 40:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Unknown topic")
     correct = min(body.correct, body.total)
@@ -120,7 +126,11 @@ def record_round(subject: str, topic: str, body: RoundIn, child: Child = Depends
     share = correct / body.total
     before = r.difficulty
     played = min(body.difficulty, 5)
-    r.difficulty = min(5, played + 1) if share >= 0.8 else max(1, played - 1) if share < 0.5 else played
+    recalled = min(body.taught, body.total) * 2 <= body.total and not body.revision  # at least half answered from memory
+    if body.revision:
+        r.difficulty = before  # revising old questions keeps the level where it was
+    else:
+        r.difficulty = min(5, played + 1) if share >= 0.8 and recalled else played if share >= 0.8 else max(1, played - 1) if share < 0.5 else played
     db.add(SubjectRound(child_id=child.id, subject=subject, topic=topic, strand=body.strand[:20], difficulty=body.difficulty,
                         correct=correct, total=body.total, apply_correct=min(body.apply_correct, body.apply_total), apply_total=body.apply_total))
     r.rounds += 1
@@ -129,12 +139,12 @@ def record_round(subject: str, topic: str, body: RoundIn, child: Child = Depends
     earned = 3 if share >= 0.9 else 2 if share >= 0.7 else 1 if share >= 0.4 else 0
     r.stars += earned
     memory._event(db, child.id, "subject_round",
-                  f"{subject.title()} · {topic.replace('_', ' ')}: {correct}/{body.total} right at level {before}"
+                  f"{subject.title()} · {topic.replace('_', ' ')}{' (revision)' if body.revision else ''}: {correct}/{body.total} right at level {before}"
                   + (f", now level {r.difficulty}" if r.difficulty != before else ""), memory.nid_child(child.id))
     # a concept completed: the AI teacher reviews now; at the top level the never-ending pool grows a level
-    mastered_now = share >= 0.8 and body.difficulty >= 4
+    mastered_now = share >= 0.8 and recalled and body.difficulty >= 4
     next_level = None
-    if share >= 0.8 and body.difficulty >= 5:
+    if share >= 0.8 and recalled and body.difficulty >= 5:
         next_level = max(6, body.difficulty + 1)
         have = db.scalar(select(ChallengeSet.id).where(ChallengeSet.child_id == child.id, ChallengeSet.subject == subject,
                                                        ChallengeSet.topic == topic, ChallengeSet.level == next_level))

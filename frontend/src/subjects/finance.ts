@@ -29,6 +29,12 @@ const whyMoney: FinTopic = {
     ["What was swapping things without money called?", "barter", ["banking", "saving"], "Barter means trading one thing directly for another."],
     ["Why is money easier than swapping?", "everyone accepts it", ["it is shiny", "it is heavy"], "With money you don't need to find someone who wants exactly what you have."],
     ["A farmer has rice and needs shoes, but the shoemaker doesn't want rice. What helps?", "sell rice for money, then buy shoes", ["throw the rice away", "make shoes from rice"], "Money connects all buyers and sellers.", true],
+    ["Long ago, what could a potter swap for 5 mangoes?", "a clay pot", ["a phone", "a bank card"], "In barter you swap things directly: mangoes for a pot."],
+    ["What is the biggest problem with barter?", "the other person may not want what you have", ["things are too cheap", "there are too many shops"], "Barter only works when both people want each other's things at the same time."],
+    ["Which of these is money?", "a ₹10 coin", ["a mango", "a clay pot"], "Money is what everyone accepts in exchange: coins and notes."],
+    ["Money is a promise of…", "value", ["sweets", "toys"], "A note is paper, but everyone agrees it is worth something: a promise of value."],
+    ["Why can you buy bread with a ₹20 note but not with a drawing of one?", "everyone trusts the real note", ["drawings are too small", "bread is free"], "Real money is made and backed by the government, so everyone trusts and accepts it."],
+    ["A fisher wants milk. With money, what can she do?", "sell fish for money, then buy milk", ["only eat fish", "wait for a cow"], "Money lets you sell to anyone and buy from anyone.", true],
   ]),
 };
 
@@ -36,7 +42,7 @@ const coins: FinTopic = {
   id: "coins_notes", strand: "basics", icon: "💵", title: T("Coins and notes", "सिक्के और नोट", "Sikke aur note"), grades: [1, 3],
   cards: [{ title: T("Different values"), say: T("Indian money is the rupee (₹). Coins: ₹1, ₹2, ₹5, ₹10, ₹20. Notes: ₹10, ₹20, ₹50, ₹100, ₹200, ₹500. One ₹10 note is worth the same as ten ₹1 coins: it's the VALUE that matters, not how many pieces!", "भारतीय पैसा रुपया (₹) है। सिक्के: ₹1, ₹2, ₹5, ₹10, ₹20। नोट: ₹10 से ₹500। एक ₹10 का नोट दस ₹1 सिक्कों के बराबर: गिनती नहीं, क़ीमत मायने रखती है!", "Indian paisa rupaya (₹) hai. Sikke: ₹1, ₹2, ₹5, ₹10, ₹20. Note: ₹10 se ₹500. Ek ₹10 ka note das ₹1 sikkon ke barabar: ginti nahi, keemat maayne rakhti hai!"), visual: { type: "coins", coins: [10, 5, 2, 1] } }],
   make: (d, rng) => {
-    const note = pick(rng, d <= 2 ? [10, 20] : [50, 100, 200]), coin = pick(rng, [1, 2, 5, 10].filter((c) => c < note && note % c === 0));
+    const note = pick(rng, d <= 1 ? [10, 20] : d <= 2 ? [10, 20, 50] : [50, 100, 200, 500]), coin = pick(rng, [1, 2, 5, 10].filter((c) => c < note && note % c === 0));
     return { prompt: T(`How many ₹${coin} coins make one ₹${note} note?`), choices: numChoices(rng, note / coin, 3), answer: String(note / coin), numeric: true,
       why: T(`₹${note} ÷ ₹${coin} = ${note / coin} coins.`), steps: [T(`Count up in ${coin}s until you reach ${note}.`), T(`${note} ÷ ${coin} = ${note / coin}.`)], apply: true };
   },
@@ -51,6 +57,13 @@ const needsWants: FinTopic = {
     ["Is drinking water a need or a want?", "need", ["want"], "Water is essential for life."],
     ["You have ₹50. You need a notebook (₹30) and want a chocolate (₹40). What is wise?", "Buy the notebook, save the rest", ["Buy the chocolate only", "Borrow to buy both"], "Needs first. ₹50 − ₹30 = ₹20 left to save for a want later.", true],
     ["Your shoes are too small and hurt. Are new shoes a need or a want?", "need", ["want"], "Shoes that fit protect your feet: a need. (A fancy extra pair would be a want.)", true],
+    ["Is medicine when you are ill a need or a want?", "need", ["want"], "Medicine helps you get well: a need."],
+    ["Is a video game a need or a want?", "want", ["need"], "Fun to have, but you can live well without it: a want."],
+    ["Is a warm blanket in winter a need or a want?", "need", ["want"], "It keeps you warm and healthy: a need."],
+    ["Are sweets every day a need or a want?", "want", ["need"], "Sweets are a treat, not something you need to live well."],
+    ["Is a pencil for school a need or a want?", "need", ["want"], "You need it to write and learn at school."],
+    ["Your family has ₹100 left this week. Food costs ₹80 and a new toy costs ₹60. What comes first?", "food first: it is a need", ["the toy", "nothing"], "Needs first: food ₹80, then ₹20 left to save.", true],
+    ["Is a birthday cake a need or a want?", "want", ["need"], "Lovely for a party, but not a need: a want."],
   ]),
 };
 
@@ -99,6 +112,12 @@ const wiseSpend: FinTopic = {
     ["You see an advert for a new toy and suddenly want it badly. What's smart?", "Wait a day and think if you really need it", ["Buy it immediately", "Cry until someone buys it"], "Adverts create sudden wants. Waiting shows whether the want is real.", true],
     ["A shop says 'Buy 2, get 1 free' on biscuits you don't like. Is it a good deal for you?", "No, you'd waste money on things you won't use", ["Yes, free is always good", "Yes, buy 10"], "A deal is only good if you need the thing.", true],
     ["Your friend has expensive shoes. You feel you must have them too. What's wise?", "Your shoes are fine; you don't need to copy", ["Spend all your savings", "Borrow money"], "Buying to impress others empties your pocket and doesn't make you happier.", true],
+    ["Before buying something, what should you compare?", "prices in different shops", ["the colour of the shop", "the shopkeeper's name"], "The same thing can cost less in another shop: compare first.", true],
+    ["A toy breaks after one day. What could you have done?", "check if it is well made before buying", ["buy two of them", "buy it faster"], "Cheap things that break waste money: look at the quality too.", true],
+    ["You have ₹40 and want a ₹50 book. What is wise?", "save a little more, then buy it", ["borrow ₹10 at once", "cry in the shop"], "Wait and save the ₹10 you still need: no debt.", true],
+    ["An advert says a drink will make you a champion. Is it true?", "No: adverts are made to make you want things", ["Yes, adverts never lie", "Yes, if it is expensive"], "Adverts try to sell. Think for yourself!", true],
+    ["Which question should you ask before buying anything?", "Do I need it, or just want it right now?", ["Is it the most expensive?", "Will my friends see it?"], "Need or want? Asking first stops wasted money.", true],
+    ["You want the same snack every day at school. What could you do to spend wisely?", "buy it only sometimes and save the rest", ["buy two every day", "borrow to buy more"], "Small daily spends add up: a treat sometimes, savings the rest.", true],
   ]),
 };
 
@@ -115,6 +134,12 @@ const earning: FinTopic = {
       ["Where does a family's money mostly come from?", "work done by the grown-ups", ["the money tree", "the TV"], "People earn by doing useful work."],
       ["Which helps you earn more when you grow up?", "learning useful skills", ["watching more videos", "sleeping late"], "Skills (reading, maths, a craft, a trade) make your work valuable.", true],
       ["You help a neighbour carry shopping and they offer ₹10. What is this?", "earning by helping", ["a gift for nothing", "borrowing"], "You did useful work, so you earned it.", true],
+    ["What does a farmer earn money for?", "growing food", ["watching TV", "sleeping"], "A farmer grows food that others buy."],
+    ["What does a doctor earn money for?", "helping sick people get well", ["playing games", "selling toys"], "Doctors earn by healing people."],
+    ["What does a teacher earn money for?", "teaching children", ["driving trucks", "cooking in a hotel"], "Teachers earn by helping children learn."],
+    ["Why is a carpenter paid?", "for making useful furniture", ["for nothing", "for shouting"], "People pay for work that helps them: tables, chairs, doors."],
+    ["Which is earning money?", "selling cookies you baked", ["finding a coin on the road", "getting a birthday gift"], "Earning means doing work or making something people pay for.", true],
+    ["Does money grow on trees?", "no, people earn it by working", ["yes, on mango trees", "yes, in banks"], "Money comes from work that helps others."],
     ]);
   },
 };
@@ -139,6 +164,12 @@ const sharing: FinTopic = {
     ["Your share jar has ₹30. What is a good use?", "Buy notebooks for a child who needs them", ["Buy yourself sweets", "Lose it"], "Sharing helps someone in need: that's dāna.", true],
     ["You have no money to give. Can you still share?", "Yes: time, help, toys or kind words", ["No, only money counts", "No, sharing is for adults"], "Giving time and help is dāna too.", true],
     ["Why give a little even when you have only a little?", "It builds a kind habit and helps others", ["It makes you poor", "It's a rule for rich people only"], "Small, regular giving, like saving, grows into a big difference."],
+    ["What is dāna?", "giving to people who need it", ["a kind of sweet", "a bank"], "Dāna means giving: money, food, time or help to those in need."],
+    ["A friend forgot their lunch. How can you share?", "share some of your lunch", ["laugh at them", "eat faster"], "Sharing food is dāna too: it helps right away.", true],
+    ["How does sharing make the giver feel?", "happy", ["poor", "angry"], "Helping others makes the helper happy too."],
+    ["Which jar is for helping others?", "the SHARE jar", ["the SPEND jar", "the SAVE jar"], "Spend, save, share: the share jar is for giving.", true],
+    ["Your old books are too easy for you now. What can you do?", "give them to a younger child", ["throw them away", "hide them"], "Passing on books is a wonderful kind of dāna.", true],
+    ["What does the Īśa Upaniṣad say about having things?", "enjoy by sharing, don't be greedy", ["keep everything for yourself", "never use anything"], "Īśa Upaniṣad 1: enjoy what you have by sharing it."],
   ]),
 };
 
@@ -150,6 +181,12 @@ const safety: FinTopic = {
     ["Who should know your family's bank PIN?", "only the account holder", ["any caller who says they're from the bank", "your friends"], "A PIN is secret. Banks never ask for it.", true],
     ["A game asks you to enter a card number to get free coins. What's safe?", "Close it and ask a grown-up", ["Type in the card number", "Share it with friends"], "Free offers asking for card numbers are often scams.", true],
     ["Someone online you don't know asks for money for a 'sad story'. What do you do?", "Don't send; tell a trusted adult", ["Send all your savings", "Give them your address"], "Strangers online can trick people. Check with an adult first.", true],
+    ["What is an OTP?", "a secret code sent by SMS", ["a kind of game", "a shop"], "One-Time Password: a secret code that unlocks money or accounts."],
+    ["A message says 'Click here to win ₹10,000!'. What do you do?", "don't click; show a grown-up", ["click it fast", "send it to friends"], "Prize links are often tricks. Never click: ask a grown-up.", true],
+    ["Does a real bank ever ask for your PIN on the phone?", "never", ["always", "only on Sundays"], "Banks never ask for PINs or OTPs. Anyone who asks is tricking you."],
+    ["A friend asks for your game account password. What is safe?", "keep it secret, even from friends", ["tell them", "write it on the wall"], "Passwords are only for you and your grown-ups.", true],
+    ["You see your parent's card on the table. What should you do?", "give it back to them, never use it alone", ["try buying a toy online", "take a photo of it"], "Cards are for grown-ups; using one without asking is not allowed.", true],
+    ["Someone you just met online wants your home address. What do you do?", "don't share; tell a trusted adult", ["send it", "send a photo of your house"], "Never share personal details online: tell a trusted adult.", true],
   ]),
 };
 
@@ -194,10 +231,11 @@ const compound: FinTopic = {
       return { prompt: T(`Using the rule of 72, about how many years does money take to double at ${r}% a year?`), choices: numChoices(rng, 72 / r, 2), answer: String(72 / r), numeric: true, apply: true,
         why: T(`72 ÷ ${r} = ${72 / r} years.`), steps: [T("Rule of 72: years to double ≈ 72 ÷ rate."), T(`72 ÷ ${r} = ${72 / r}.`)] };
     }
-    const y1 = 110, y2 = 121;
-    return { prompt: T("₹100 grows at 10% a year, compounded. How much after 2 years?"), choices: shuffle(rng, ["121", "120", "110"]), answer: "121", apply: true,
-      why: T(`Year 1: 100 + 10 = ${y1}. Year 2: 10% of ${y1} = 11, so ${y1} + 11 = ${y2}. (Simple interest would give only 120.)`),
-      steps: [T("Year 1: 10% of 100 = 10 → 110."), T("Year 2: 10% of 110 = 11 (interest on interest too!) → 121."), T("Simple interest gives 120; compounding gives 121, and the gap grows every year.")] };
+    const p = pick(rng, [100, 200, 500, 1000, 2000]), r = pick(rng, [10, 20]);
+    const y1 = p + (p * r) / 100, y2 = y1 + (y1 * r) / 100, simple = p + (2 * p * r) / 100;
+    return { prompt: T(`₹${p} grows at ${r}% a year, compounded. How much after 2 years?`), choices: shuffle(rng, [String(y2), String(simple), String(y1)]), answer: String(y2), apply: true,
+      why: T(`Year 1: ${p} + ${(p * r) / 100} = ${y1}. Year 2: ${r}% of ${y1} = ${(y1 * r) / 100}, so ${y1} + ${(y1 * r) / 100} = ${y2}. (Simple interest would give only ${simple}.)`),
+      steps: [T(`Year 1: ${r}% of ${p} = ${(p * r) / 100} → ${y1}.`), T(`Year 2: ${r}% of ${y1} = ${(y1 * r) / 100} (interest on interest too!) → ${y2}.`), T(`Simple interest gives ${simple}; compounding gives ${y2}, and the gap grows every year.`)] };
   },
 };
 
@@ -222,6 +260,12 @@ const lifeMoney: FinTopic = {
     ["What does insurance do?", "helps pay big costs if something bad happens", ["makes money grow fast", "pays for holidays"], "Many people pay a little each year, and the fund helps whoever faces a big loss.", true],
     ["Why should someone start saving for old age when they are young?", "money has more years to grow", ["old people don't need money", "it's too late to start young"], "Compounding works best over many years.", true],
     ["At your age, which money habit matters most?", "saving a little and telling needs from wants", ["borrowing for toys", "spending everything quickly"], "Habits learned young last a lifetime.", true],
+    ["What is a pension?", "money paid to people in old age after they stop working", ["a type of pen", "a school prize"], "Saving through working years gives a pension or savings to live on later."],
+    ["What should a person with a first job do with part of every salary?", "save it", ["spend it all at once", "lend it to strangers"], "Saving part of every salary builds security.", true],
+    ["Why do parents save for their children's education?", "school and college cost a lot over many years", ["it's a rule", "children pay them back"], "Big costs in the future need saving now.", true],
+    ["Who can help the next generation with money and advice?", "older family members", ["nobody", "cartoon characters"], "Grandparents help with savings and wisdom.", true],
+    ["What is a budget?", "a plan for how money will be spent and saved", ["a big shop", "a kind of coin"], "A budget splits income into needs, wants, savings and sharing.", true],
+    ["Which costs most for a family over a lifetime?", "a home", ["a pencil", "a sweet"], "Big things like a home need saving or borrowing with a plan.", true],
   ]),
 };
 

@@ -273,7 +273,7 @@ export const api = {
     request<Prefs>(`/api/children/${childId}/prefs`, { method: "PUT", body: json(body) }),
   subjectProgress: (childId: string, subject: SubjectName) =>
     request<{ prefs: Prefs; topics: Record<string, TopicProgress> }>(`/api/children/${childId}/subjects/${subject}`),
-  subjectRound: (childId: string, subject: SubjectName, topic: string, body: { correct: number; total: number; difficulty: number; strand?: string; apply_correct?: number; apply_total?: number; title?: string; examples?: string[] }) =>
+  subjectRound: (childId: string, subject: SubjectName, topic: string, body: { correct: number; total: number; difficulty: number; strand?: string; apply_correct?: number; apply_total?: number; title?: string; examples?: string[]; taught?: number; revision?: boolean }) =>
     request<TopicProgress & { earned: number; level_change: number; mastered?: boolean; challenge_started?: boolean }>(`/api/children/${childId}/subjects/${subject}/${topic}/round`, { method: "POST", body: json(body) }),
   subjectChallenges: (childId: string, subject: SubjectName, topic: string) =>
     request<{ levels: { level: number; items: unknown[] }[]; growing: boolean }>(`/api/children/${childId}/subjects/${subject}/${topic}/challenges`),

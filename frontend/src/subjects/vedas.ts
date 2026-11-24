@@ -5,10 +5,11 @@
 import type { Text } from "../i18n";
 import { pick, shuffle, T, type Card, type Exercise, type Rng } from "./maths";
 import { SHLOKAS } from "./shlokas";
+import { FOUR_VEDAS } from "./vedas4";
 
-export type VedaStrand = "texts" | "shlokas" | "gita" | "life" | "links";
+export type VedaStrand = "four" | "shlokas" | "gita" | "life" | "links";
 export const VEDA_STRANDS: { id: VedaStrand; icon: string; title: Text }[] = [
-  { id: "texts", icon: "📜", title: T("The Vedas", "वेद", "Ved") },
+  { id: "four", icon: "📜", title: T("Meet the four Vedas", "चारों वेदों से मिलो", "Chaaron Vedon se milo") },
   { id: "shlokas", icon: "🪔", title: T("Shlokas", "श्लोक", "Shlok") },
   { id: "gita", icon: "🪷", title: T("Gita wisdom", "गीता का ज्ञान", "Gita ka gyaan") },
   { id: "life", icon: "🌟", title: T("Life skills for every age", "हर उम्र के जीवन-कौशल", "Har umar ke life skills") },
@@ -24,22 +25,6 @@ const ask = (rng: Rng, pool: Q[], visual?: Exercise["visual"]): Exercise => {
 };
 /** A card that teaches one shloka: the verse, its meaning and the everyday lesson. */
 const shlokaCard = (id: string, title?: string): Card => ({ title: T(title ?? SHLOKAS[id].source), say: { en: `${SHLOKAS[id].meaning.en} ${SHLOKAS[id].lesson.en}`, hi: `${SHLOKAS[id].meaning.hi ?? ""} ${SHLOKAS[id].lesson.hi ?? ""}`, hinglish: `${SHLOKAS[id].meaning.hinglish ?? ""} ${SHLOKAS[id].lesson.hinglish ?? ""}` }, visual: S(id) });
-
-const fourVedas: VedaTopic = {
-  id: "four_vedas", strand: "texts", icon: "📜", title: T("The four Vedas", "चार वेद", "Chaar Ved"), grades: [1, 5],
-  cards: [
-    { title: T("The oldest books of knowledge"), say: T("'Veda' means KNOWLEDGE. The Vedas are among the oldest books in the world, first passed on by heart, teacher to student, for thousands of years. There are four: the RIG Veda (hymns and praise), the SAMA Veda (the same verses set to melody: the root of Indian music), the YAJUR Veda (words for actions and ceremonies) and the ATHARVA Veda (everyday life: health, home, the Earth).", "'वेद' का अर्थ है ज्ञान। वेद दुनिया की सबसे पुरानी पुस्तकों में हैं, हज़ारों साल गुरु से शिष्य तक याद करके पहुँचाए गए। चार वेद: ऋग्वेद (स्तुति के मंत्र), सामवेद (वही मंत्र गायन में: भारतीय संगीत की जड़), यजुर्वेद (कर्म और यज्ञ के मंत्र), अथर्ववेद (रोज़ का जीवन: स्वास्थ्य, घर, धरती)।", "'Ved' ka matlab hai GYAAN. Ved duniya ki sabse puraani kitaabon mein hain, hazaaron saal guru se shishya tak yaad karke pahunchaaye gaye. Chaar Ved: Rigved (stuti ke mantra), Samaved (wahi mantra gaayan mein: Indian music ki jad), Yajurved (karm aur yagya ke mantra), Atharvaved (roz ka jeevan: health, ghar, dharti).") },
-    { title: T("Upanishads and Vedangas"), say: T("At the end of each Veda come the UPANISHADS: big questions like 'Who am I?' and 'What is truth?'. Six VEDANGAS ('limbs of the Veda') help us study them: Shiksha (pronunciation), Vyakarana (grammar), Chandas (rhythm of verses), Nirukta (meaning of words), Jyotisha (astronomy and maths) and Kalpa (how to do things properly).", "हर वेद के अंत में उपनिषद हैं: 'मैं कौन हूँ?', 'सत्य क्या है?' जैसे बड़े प्रश्न। छह वेदांग पढ़ने में मदद करते हैं: शिक्षा (उच्चारण), व्याकरण, छंद, निरुक्त (शब्दों का अर्थ), ज्योतिष (खगोल-गणित), कल्प (विधि)।", "Har Ved ke ant mein Upanishad hain: 'Main kaun hoon?', 'Satya kya hai?' jaise bade sawaal. Chhe Vedang padhne mein madad karte hain: Shiksha (uchchaaran), Vyakaran, Chhand, Nirukt (shabdon ka arth), Jyotish (astronomy-ganit), Kalp (vidhi).") },
-  ],
-  make: (_d, rng) => ask(rng, [
-    ["Which Veda is the Veda of melodies, the root of Indian music?", "Sama Veda", ["Rig Veda", "Atharva Veda"], "The Sama Veda sets the Rig Veda's verses to tunes: Indian classical music grew from this singing."],
-    ["What does the word 'Veda' mean?", "knowledge", ["story", "song"], "Veda comes from 'vid', to know: Veda means knowledge."],
-    ["Which is the oldest of the four Vedas?", "Rig Veda", ["Sama Veda", "Atharva Veda"], "The Rig Veda is the oldest; the Sama Veda takes many of its verses and sings them."],
-    ["Which Veda talks most about everyday life, health and the Earth?", "Atharva Veda", ["Sama Veda", "Yajur Veda"], "The Atharva Veda has hymns for home, health and the Earth, like the Bhūmi Sūkta: 'The Earth is my mother'."],
-    ["How were the Vedas kept safe for thousands of years before books?", "learned by heart, teacher to student", ["carved in stone", "painted on walls"], "Students memorised them perfectly with special methods of repeating, so not one sound changed."],
-    ["Which Vedanga is about the correct pronunciation of sounds?", "Shiksha", ["Jyotisha", "Kalpa"], "Shiksha teaches how each sound is made: in the throat, palate, teeth or lips."],
-  ]),
-};
 
 const learnShloka: VedaTopic = {
   id: "shloka_meaning", strand: "shlokas", icon: "🪔", title: T("Shlokas and their meaning", "श्लोक और उनका अर्थ", "Shlok aur unka arth"), grades: [0, 5],
@@ -227,5 +212,5 @@ const purusharthas: VedaTopic = {
   ], S("isha_vasyam")),
 };
 
-export const VEDA_TOPICS: VedaTopic[] = [fourVedas, learnShloka, gitaKarma, gitaSelf, gitaBalance, honesty, kindness, earth, health, emotions, effort, lifeStages,
+export const VEDA_TOPICS: VedaTopic[] = [...FOUR_VEDAS, learnShloka, gitaKarma, gitaSelf, gitaBalance, honesty, kindness, earth, health, emotions, effort, lifeStages,
   samaMusic, shulba, sanskritSounds, jyotisha, purusharthas];
