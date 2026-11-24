@@ -52,6 +52,7 @@ def test_versions_are_in_step_everywhere():
     assert f'VERSION = "{v}"' in (root / "backend" / "melo_app.py").read_text(encoding="utf-8")
     assert f'"version": "{v}"' in (root / "frontend" / "package.json").read_text(encoding="utf-8")
     assert f'$Version = "{v}"' in (root / "packaging" / "windows" / "build.ps1").read_text(encoding="utf-8")
+    assert f'$Version = "{v}"' in (root / "packaging" / "windows" / "build_msix.ps1").read_text(encoding="utf-8")
     assert f'VERSION="{v}"' in (root / "packaging" / "build.sh").read_text(encoding="utf-8")
 
 

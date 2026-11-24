@@ -101,6 +101,14 @@ jobs:
             "$f : $($s.Status) $($s.SignerCertificate.Subject)"
             if ($s.Status -ne "Valid") { exit 1 }
           }
+      - name: Microsoft Store package (MSIX, signed by the Store on upload)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        env:
+          MSIX_IDENTITY_NAME: ${{ vars.MSIX_IDENTITY_NAME }}
+          MSIX_PUBLISHER: ${{ vars.MSIX_PUBLISHER }}
+          MSIX_PUBLISHER_DISPLAY: ${{ vars.MSIX_PUBLISHER_DISPLAY }}
+        run: ./packaging/windows/build_msix.ps1
       - name: Apple signing certificate (macOS)
         if: runner.os == 'macOS' && env.MAC_SIGN == 'true'
         uses: apple-actions/import-codesign-certs@v3
@@ -161,6 +169,7 @@ jobs:
           name: melo-${{ runner.os }}
           path: |
             dist/Melo-Setup-*.exe
+            dist/Melo-*.msix
             dist/Melo-windows.zip
             dist/Melo-*.dmg
             dist/Melo-*.AppImage
