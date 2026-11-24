@@ -9,6 +9,8 @@ from app.lang import native_audio as na
 from app.lang import tts
 from app.routers.native import public_refs
 
+from .conftest import register
+
 
 def test_sanskrit_visarga_is_spoken_with_its_echo_vowel():
     f = tts.sanskrit_for_hindi_voice
@@ -54,6 +56,7 @@ def test_word_without_native_recording_gets_neural_voices(client, fake_engine):
     refs = public_refs("mr", "p_name_q")
     assert {r["gender"] for r in refs} == {"female", "male"}
     assert all(r["origin"] == "tts" and r["url"].startswith("/api/learn/tts/mr/p_name_q/") for r in refs)
+    register(client)
     r = client.get(refs[0]["url"])
     assert r.status_code == 200 and r.content.startswith(b"ID3")
     # recorded once, then served from the cache as a plain file
@@ -74,10 +77,12 @@ def test_parents_phrases_never_go_online(client, fake_engine):
     with pytest.raises(tts.Unavailable):
         tts.ensure(get_settings().data_dir, "en", "c0123456789ab", "female")
     assert fake_engine == []
+    register(client)
     assert client.get("/api/learn/tts/en/c0123456789ab/female").status_code == 404
 
 
 def test_offline_means_no_voice_not_an_error(client, monkeypatch):
     monkeypatch.setattr(tts, "engine_ready", lambda e: False)
     assert public_refs("kn", "p_bye") == []  # the page then uses the device voice, then Melo's own voice
+    register(client)
     assert client.get("/api/learn/tts/kn/p_bye/female").status_code == 503

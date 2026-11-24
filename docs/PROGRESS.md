@@ -9,7 +9,7 @@ Melo is an AI music teacher for children aged 3–8, built with FastAPI, SQLite 
 | Area | Status |
 |---|---|
 | MVP scope (MVP.txt phases 1–3) | ✅ Built |
-| Backend tests (`pytest`) | ✅ 200 passed |
+| Backend tests (`pytest`) | ✅ 206 passed |
 | Frontend typecheck (`tsc -b`) | ✅ Clean |
 | Frontend tests (`vitest`) | ✅ 180 passed |
 | Sound and microphone | ✅ Audio unlocks on the first tap. Settings has a 🔊 Sound check and a 🎤 Mic check, and browser mic permission is requested when the parent turns it on. ⏳ Needs a by-ear check in a real browser |
@@ -427,4 +427,14 @@ Tests: 174 backend (`test_school_friends_and_feelings_for_real_conversations`, `
 | 🪙 **Money & finance** | 16 topics in 5 strands (basics, saving & spending, earning & business, smart & safe, growing money), mostly real-life decisions, numbers with worked steps. |
 | 🕉️ **Vedas & wisdom** | 17 topics: the four Vedas, 23 shlokas (Devanagari, IAST, source, meaning, life lesson, recite), Gita concepts (2.47, 2.48, 6.5, 2.14, 6.17, 17.15, 3.21, 4.38), life skills from childhood to old age, Vedic links to music, geometry, Sanskrit, astronomy and money. Shloka of the day in every subject. Personas Guruji and Money Mitra. |
 | 🏆 **Results per subject + combined** | Every area scored on 🧠 learned 45 %, 🌍 uses it in real life 35 %, 🔁 remembers 20 % (plus ✅ concepts completed), and an overall "All subjects" result; icons and star rows explain themselves on hover / focus. |
+
+## Update 2026-11-24: security test and code signing
+
+| Change | Detail |
+|---|---|
+| 🔒 **Security sweep** | `tests/test_security.py`: all 91 API operations signed out and as another family, fuzzed with injection / XSS / traversal payloads, forged sessions, CSRF, brute force, MCP tokens, hostile uploads and links. Live path-traversal probes against the installed app. Details in `docs/REVIEW.md` (25). |
+| 🐞 **Fixed** | Voice recordings (including family voices) needed no sign-in; instrument photos never reached the Claude Code brain (Read was refused); IPv4-mapped addresses slipped past the link reader's private-address check. |
+| ✍️ **Code signing ready** | Windows: Azure Artifact Signing in CI (signs Melo.exe, rebuilds Setup with `build.ps1 -InstallerOnly`, signs Setup, checks both). macOS: Developer ID signing with hardened runtime (`packaging/macos/entitlements.plist`), DMG notarized and stapled. Off until the owner adds the certificates as GitHub secrets: `docs/SIGNING.md`. |
+
+Tests: 206 backend, 180 frontend.
 

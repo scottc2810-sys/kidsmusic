@@ -12,6 +12,8 @@ One Python process serves the API and the web app. It runs the same way on Windo
 | macOS 11+ | `Melo-1.3.0.dmg` | Open, drag Melo to Applications. The app is not signed with an Apple Developer ID, so the first time right-click it and choose **Open**. |
 | Linux | `Melo-1.3.0-x86_64.AppImage` | Make it executable and double-click. Or unpack `Melo-linux.tar.gz` and run `./install.sh` (adds Melo to the applications menu, no root). |
 
+Signed installers (no "unknown publisher" / "cannot check it" warnings): see [docs/SIGNING.md](docs/SIGNING.md).
+
 Melo opens in your web browser (Chrome or Edge recommended) with a small "Melo is running" window to reopen or close it. Lessons, recordings and keys are kept in your user profile (`%LOCALAPPDATA%\Melo`, `~/Library/Application Support/Melo`, `~/.local/share/Melo`) and survive updates and uninstalling. No Python, Node or internet connection is needed to run it; hand tracking for the camera is bundled.
 
 **Build the installers yourself** (on the system you are building for):

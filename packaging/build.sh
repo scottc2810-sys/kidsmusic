@@ -30,9 +30,26 @@ case "$(uname -s)" in
     rm -rf build/dmg && mkdir -p build/dmg
     cp -R dist/Melo.app build/dmg/
     ln -s /Applications build/dmg/Applications
-    hdiutil create -volname "Melo" -srcfolder build/dmg -ov -format UDZO "dist/Melo-$VERSION.dmg"
-    echo "Done: dist/Melo-$VERSION.dmg"
-    echo "Note: the app is not signed with an Apple Developer ID. The first time, right-click Melo and choose Open."
+    DMG="dist/Melo-$VERSION.dmg"
+    if [ -n "${MELO_CODESIGN_IDENTITY:-}" ]; then
+      codesign --verify --deep --strict dist/Melo.app  # PyInstaller signed it (melo.spec)
+    fi
+    hdiutil create -volname "Melo" -srcfolder build/dmg -ov -format UDZO "$DMG"
+    if [ -n "${MELO_CODESIGN_IDENTITY:-}" ]; then
+      codesign --force --timestamp --sign "$MELO_CODESIGN_IDENTITY" "$DMG"
+      if [ -n "${MELO_NOTARY_KEY_ID:-}" ]; then
+        echo "==> Notarizing with Apple (a few minutes)"
+        xcrun notarytool submit "$DMG" --key "$MELO_NOTARY_KEY_FILE" --key-id "$MELO_NOTARY_KEY_ID" --issuer "$MELO_NOTARY_ISSUER" --wait
+        xcrun stapler staple "$DMG"
+        spctl --assess --type open --context context:primary-signature -v "$DMG"
+        echo "Done: $DMG (signed and notarized: opens without a warning)"
+      else
+        echo "Done: $DMG (signed, not notarized: set MELO_NOTARY_KEY_ID / _ISSUER / _KEY_FILE to notarize)"
+      fi
+    else
+      echo "Done: $DMG"
+      echo "Note: the app is not signed with an Apple Developer ID. The first time, right-click Melo and choose Open."
+    fi
     ;;
   Linux)
     echo "==> Portable archive"

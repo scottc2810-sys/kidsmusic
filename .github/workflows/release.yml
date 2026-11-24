@@ -26,6 +26,11 @@ jobs:
       matrix:
         os: [windows-latest, macos-latest, ubuntu-22.04]
     runs-on: ${{ matrix.os }}
+    env:
+      # Code signing turns itself on when the secrets exist (see docs/SIGNING.md); without them the builds stay unsigned.
+      WIN_SIGN: ${{ secrets.AZURE_CLIENT_ID != '' && 'true' || 'false' }}
+      MAC_SIGN: ${{ secrets.MACOS_CERT_P12 != '' && 'true' || 'false' }}
+      MELO_PUBLISHER: ${{ vars.MELO_PUBLISHER || 'Melo' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -51,6 +56,68 @@ jobs:
         run: |
           choco install innosetup --no-progress -y
           ./packaging/windows/build.ps1
+      - name: Sign Melo.exe (Microsoft Azure Artifact Signing)
+        if: runner.os == 'Windows' && env.WIN_SIGN == 'true'
+        uses: azure/artifact-signing-action@v2
+        with:
+          azure-tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          azure-client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          azure-client-secret: ${{ secrets.AZURE_CLIENT_SECRET }}
+          endpoint: ${{ secrets.AZURE_SIGNING_ENDPOINT }}
+          signing-account-name: ${{ secrets.AZURE_SIGNING_ACCOUNT }}
+          certificate-profile-name: ${{ secrets.AZURE_CERT_PROFILE }}
+          files-folder: ${{ github.workspace }}\dist\Melo
+          files-folder-filter: exe
+          file-digest: SHA256
+          timestamp-rfc3161: http://timestamp.acs.microsoft.com
+          timestamp-digest: SHA256
+      - name: Rebuild the installer around the signed Melo.exe
+        if: runner.os == 'Windows' && env.WIN_SIGN == 'true'
+        shell: pwsh
+        run: |
+          Compress-Archive -Path dist\Melo -DestinationPath dist\Melo-windows.zip -Force
+          ./packaging/windows/build.ps1 -InstallerOnly
+      - name: Sign Melo-Setup.exe
+        if: runner.os == 'Windows' && env.WIN_SIGN == 'true'
+        uses: azure/artifact-signing-action@v2
+        with:
+          azure-tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          azure-client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          azure-client-secret: ${{ secrets.AZURE_CLIENT_SECRET }}
+          endpoint: ${{ secrets.AZURE_SIGNING_ENDPOINT }}
+          signing-account-name: ${{ secrets.AZURE_SIGNING_ACCOUNT }}
+          certificate-profile-name: ${{ secrets.AZURE_CERT_PROFILE }}
+          files-folder: ${{ github.workspace }}\dist
+          files-folder-filter: exe
+          file-digest: SHA256
+          timestamp-rfc3161: http://timestamp.acs.microsoft.com
+          timestamp-digest: SHA256
+      - name: Check the Windows signatures
+        if: runner.os == 'Windows' && env.WIN_SIGN == 'true'
+        shell: pwsh
+        run: |
+          foreach ($f in @("dist\Melo\Melo.exe") + (Get-ChildItem dist\Melo-Setup-*.exe).FullName) {
+            $s = Get-AuthenticodeSignature $f
+            "$f : $($s.Status) $($s.SignerCertificate.Subject)"
+            if ($s.Status -ne "Valid") { exit 1 }
+          }
+      - name: Apple signing certificate (macOS)
+        if: runner.os == 'macOS' && env.MAC_SIGN == 'true'
+        uses: apple-actions/import-codesign-certs@v3
+        with:
+          p12-file-base64: ${{ secrets.MACOS_CERT_P12 }}
+          p12-password: ${{ secrets.MACOS_CERT_PASSWORD }}
+      - name: Apple notarization key (macOS)
+        if: runner.os == 'macOS' && env.MAC_SIGN == 'true'
+        env: { KEY_P8: "${{ secrets.APPLE_NOTARY_KEY_P8 }}" }
+        run: |
+          printf '%s' "$KEY_P8" > "$RUNNER_TEMP/notary.p8"
+          {
+            echo "MELO_CODESIGN_IDENTITY=${{ secrets.MACOS_SIGN_IDENTITY }}"
+            echo "MELO_NOTARY_KEY_FILE=$RUNNER_TEMP/notary.p8"
+            echo "MELO_NOTARY_KEY_ID=${{ secrets.APPLE_NOTARY_KEY_ID }}"
+            echo "MELO_NOTARY_ISSUER=${{ secrets.APPLE_NOTARY_ISSUER }}"
+          } >> "$GITHUB_ENV"
       - name: Build (macOS / Linux)
         if: runner.os != 'Windows'
         run: |

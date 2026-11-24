@@ -67,6 +67,13 @@ def test_lessons_get_native_recordings_and_files_are_served_safely(client, refs)
     assert f.status_code == 200 and f.headers["content-type"] == "audio/wav" and f.content[:4] == b"RIFF"
     assert client.get("/api/learn/native-file/d/es/..%2F..%2Fmelo.db").status_code == 404
     assert client.get("/api/learn/native-file/x/es/p_hello-0-f.wav").status_code == 404
+    # family voices and every recording are for signed-in parents only
+    url = r[0]["url"]
+    client.post("/api/auth/logout")
+    client.cookies.clear()
+    assert client.get(url).status_code == 401
+    assert client.get("/api/learn/native/es/p_hello").status_code == 401
+    assert client.get("/api/learn/tts/es/p_hello/female").status_code == 401
 
 
 def test_child_voice_is_compared_with_native_speakers(client, refs):

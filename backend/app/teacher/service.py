@@ -184,6 +184,9 @@ class _ClaudeCodeProvider:
             self.exe, "-p", "--output-format", "json",
             "--model", s.claude_code_model, "--effort", s.ai_effort,
             "--tools", tools, "--strict-mcp-config", "--no-session-persistence",
+            # Read (only given with photos) may open the photo folder and nothing else: -p cannot ask for approval,
+            # and parent notes in the prompt must never steer it to other files on this computer.
+            *(["--allowedTools", "Read(./vision/**)"] if tools == "Read" else []),
             "--settings", json.dumps({"disableAllHooks": True}),
             "--system-prompt-file", str(self.system_file),
             "--json-schema", json.dumps(schema),

@@ -44,7 +44,7 @@ def public_refs(lang: str, item: str | None) -> list[dict]:
 
 
 @router.get("/learn/tts/{lang}/{item}/{gender}")
-def tts_clip(lang: str, item: str, gender: str, request: Request) -> FileResponse:
+def tts_clip(lang: str, item: str, gender: str, request: Request, parent: Parent = Depends(current_parent)) -> FileResponse:
     """A neural-voice clip of a built-in word, recorded on first play and cached (about 1 s the first time)."""
     rate_limiter.check(f"tts:{client_ip(request)}", 120)
     if lang not in ITEMS or item not in ITEMS[lang] or gender not in tts.GENDERS or tts.is_custom(item):
@@ -60,7 +60,8 @@ def tts_clip(lang: str, item: str, gender: str, request: Request) -> FileRespons
 
 
 @router.get("/learn/native-file/{where}/{lang}/{name}")
-def native_file(where: str, lang: str, name: str) -> FileResponse:
+def native_file(where: str, lang: str, name: str, parent: Parent = Depends(current_parent)) -> FileResponse:
+    """Signed-in only: family recordings are a relative's voice and stay private to this install."""
     p = na.file_path(get_settings().data_dir, f"{lang}/{name}", bundled=where == "b")
     if where not in ("b", "d") or p is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "No such recording")
@@ -68,7 +69,7 @@ def native_file(where: str, lang: str, name: str) -> FileResponse:
 
 
 @router.get("/learn/native/{lang}/{item}")
-def native_refs(lang: str, item: str) -> list[dict]:
+def native_refs(lang: str, item: str, parent: Parent = Depends(current_parent)) -> list[dict]:
     if lang not in ITEMS or item not in ITEMS[lang]:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Unknown word")
     return public_refs(lang, item)

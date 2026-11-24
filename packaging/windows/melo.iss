@@ -12,6 +12,9 @@
 #ifndef SourceDir
   #define SourceDir "..\..\dist\Melo"
 #endif
+#ifndef AppPublisher
+  #define AppPublisher "Melo"
+#endif
 #ifndef AppVersion
   #define AppVersion "1.5.0"
 #endif
@@ -20,7 +23,7 @@
 AppId={{6B0E2A7C-3D1F-4E8B-9C55-MELO0MUSIC01}
 AppName={#AppName}
 AppVersion={#AppVersion}
-AppPublisher=Melo
+AppPublisher={#AppPublisher}
 AppComments=AI music teacher for children
 DefaultDirName={localappdata}\Programs\{#AppName}
 DefaultGroupName={#AppName}

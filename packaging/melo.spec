@@ -2,6 +2,7 @@
 #   python -m PyInstaller packaging/melo.spec --noconfirm --distpath dist --workpath build
 # Produces dist/Melo/ (a folder with Melo.exe / Melo) and, on macOS, dist/Melo.app.
 # The built web app (frontend/dist) and the language packs are bundled inside.
+import os
 import sys
 from pathlib import Path
 
@@ -35,6 +36,10 @@ hidden = (
 )
 icon = {"win32": ROOT / "packaging" / "icons" / "melo.ico", "darwin": ROOT / "packaging" / "icons" / "melo.icns"}.get(sys.platform)
 icon = str(icon) if icon and icon.is_file() else None
+# macOS signing (optional): MELO_CODESIGN_IDENTITY="Developer ID Application: Name (TEAMID)" signs every binary
+# with the hardened runtime, as notarization requires. Unset = unsigned build (right-click > Open the first time).
+sign_id = (os.environ.get("MELO_CODESIGN_IDENTITY") or None) if sys.platform == "darwin" else None
+entitlements = str(ROOT / "packaging" / "macos" / "entitlements.plist") if sign_id else None
 
 a = Analysis(
     [str(BACKEND / "melo_app.py")],
@@ -52,6 +57,8 @@ exe = EXE(
     console=False,  # no terminal window; output goes to melo.log in the data folder
     icon=icon,
     upx=False,
+    codesign_identity=sign_id,
+    entitlements_file=entitlements,
 )
 coll = COLLECT(exe, a.binaries, a.datas, name="Melo", upx=False)
 if sys.platform == "darwin":

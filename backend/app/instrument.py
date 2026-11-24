@@ -173,7 +173,9 @@ def _public_host(host: str) -> bool:
     except OSError:
         return False
     for info in infos:
-        ip = ipaddress.ip_address(info[4][0])
+        ip = ipaddress.ip_address(info[4][0].split("%")[0])
+        if getattr(ip, "ipv4_mapped", None):  # ::ffff:127.0.0.1 is 127.0.0.1
+            ip = ip.ipv4_mapped
         if ip.is_private or ip.is_loopback or ip.is_link_local or ip.is_reserved or ip.is_multicast or ip.is_unspecified:
             return False
     return True
