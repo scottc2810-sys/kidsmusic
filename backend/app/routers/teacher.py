@@ -82,7 +82,7 @@ def brains(parent: Parent = Depends(current_parent)) -> dict:
     return {
         "current": get_teacher().status(),
         "saved": {k: v for k, v in saved.items() if k != "llm_api_key"} | {"has_api_key": bool(saved.get("llm_api_key") or s.llm_api_key)},
-        "claude_code": {"found": bool(find_claude_cli(s.claude_code_bin))},
+        "claude_code": {"found": s.edition != "retail" and bool(find_claude_cli(s.claude_code_bin)), "offered": s.edition != "retail"},
         "ollama": {"running": models is not None, "url": ollama_url, "models": (models or [])[:40],
                    "suggested": llm.pick_ollama_model(models or []) if models else None},
         "local_servers": local,
@@ -96,6 +96,8 @@ def set_brain(body: BrainIn, request: Request, parent: Parent = Depends(current_
     rate_limiter.check(f"brain:{parent.id}:{client_ip(request)}", 10)
     if not (_url_ok(body.ollama_url) and _url_ok(body.llm_base_url)):
         raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, "Addresses must start with http:// or https://")
+    if body.provider == "claude_code" and get_settings().edition == "retail":
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, "Claude Code is not available in this edition: choose the offline teacher, Ollama or an online service with your own key")
     if body.provider == "openai" and not (body.llm_base_url and body.llm_model):
         raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, "Give the server address and the model name")
     s = get_settings()

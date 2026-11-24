@@ -61,7 +61,7 @@ export function BrainPicker() {
         {" "}The brain is only used for children whose <em>AI brain</em> switch is on in their settings. Their name is never sent.
       </p>
       <div className="brain-options" role="radiogroup">
-        {opt("claude_code", "Claude Code", "Your Claude Code login on this computer. No API key.", found.claude_code.found)}
+        {found.claude_code.offered !== false && opt("claude_code", "Claude Code", "Your Claude Code login on this computer. No API key.", found.claude_code.found)}
         {opt("ollama", "Ollama (free, private, on this computer)", found.ollama.running
           ? `${found.ollama.models.length} model(s) installed.` : "Install from ollama.com, then run: ollama pull llama3.2", found.ollama.running)}
         {opt("local", "Other local model server", "LM Studio, llama.cpp, Jan, vLLM… (OpenAI-compatible)", found.local_servers.length ? true : null)}

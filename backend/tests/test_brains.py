@@ -197,3 +197,22 @@ def test_slow_local_brain_never_makes_the_child_wait(client, fake, monkeypatch):
             break
     assert plan["source"] == "ai-late" and plan["focus_skill"] == "rhythm" and allowed["id"] == cid
     get_settings.cache_clear()
+
+
+def test_retail_edition_never_uses_or_offers_claude_code(client, fake, monkeypatch, tmp_path):
+    """Families' installed copies: a personal Claude Code subscription is never the brain, even when installed."""
+    import app.teacher.service as svc
+    from app.config import get_settings
+
+    monkeypatch.setattr(svc, "find_claude_cli", lambda *_: "C:/fake/claude.exe")
+    retail = TeacherService(Settings(ai_provider="auto", edition="retail", data_dir=tmp_path, ollama_url=fake.url, anthropic_api_key=None))
+    assert retail.status()["provider"] == "ollama" and retail.status()["claude_code_found"] is False
+    forced = TeacherService(Settings(ai_provider="claude_code", edition="retail", data_dir=tmp_path, anthropic_api_key=None))
+    assert forced.status()["provider"] == "offline"
+    dev = TeacherService(Settings(ai_provider="auto", edition="dev", data_dir=tmp_path, anthropic_api_key=None))
+    assert dev.status()["provider"] == "claude_code"
+    # in the app: not offered, and choosing it is refused
+    monkeypatch.setattr(get_settings(), "edition", "retail")
+    register(client)
+    assert client.get("/api/teacher/brains").json()["claude_code"] == {"found": False, "offered": False}
+    assert client.put("/api/teacher/brain", json={"provider": "claude_code"}).status_code == 422

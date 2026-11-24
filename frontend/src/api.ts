@@ -203,7 +203,7 @@ export interface BrainChoice { provider: BrainKind; ollama_url?: string; ollama_
 export interface BrainsFound {
   current: { provider: string; model: string | null; configured: string; endpoint: string | null; local: boolean; claude_code_found: boolean };
   saved: Partial<BrainChoice> & { has_api_key: boolean };
-  claude_code: { found: boolean };
+  claude_code: { found: boolean; offered?: boolean }; // offered = false in the retail edition (families' copies)
   ollama: { running: boolean; url: string; models: string[]; suggested: string | null };
   local_servers: { name: string; base_url: string; models: string[] }[];
   online: { id: string; name: string; base_url: string; model: string }[];

@@ -292,6 +292,9 @@ class TeacherService:
 
     def _make(self, mode: str) -> tuple[Provider | None, str]:
         s = self.settings
+        if mode == "claude_code" and s.edition == "retail":
+            log.warning("Claude Code is not offered in the retail edition; using the offline teacher")
+            return None, "offline"
         if mode == "claude_code":
             return _ClaudeCodeProvider(s), "claude_code"
         if mode == "anthropic" or (mode == "auto" and s.anthropic_api_key):
@@ -303,7 +306,7 @@ class TeacherService:
         if mode == "auto":
             # Installed app with no configuration: use what is on this computer, best first.
             # Any brain is still only used for children whose parent turned the AI brain on.
-            if find_claude_cli(s.claude_code_bin):
+            if s.edition != "retail" and find_claude_cli(s.claude_code_bin):
                 return _ClaudeCodeProvider(s), "claude_code"
             if s.llm_base_url and s.llm_model:
                 return self._openai(), "openai"
@@ -365,7 +368,8 @@ class TeacherService:
         local = self._kind in ("ollama", "claude_code") or bool(getattr(p, "is_local", False))
         return {"provider": self._kind, "model": model, "configured": self.settings.ai_provider, "endpoint": where, "local": local,
                 # found on this computer, even when settings keep Melo on another brain
-                "claude_code_found": self._kind == "claude_code" or bool(find_claude_cli(self.settings.claude_code_bin))}
+                "claude_code_found": self._kind == "claude_code" or (self.settings.edition != "retail" and bool(find_claude_cli(self.settings.claude_code_bin))),
+                "edition": self.settings.edition}
 
     # -- instant lines ------------------------------------------------------------------------
     @staticmethod

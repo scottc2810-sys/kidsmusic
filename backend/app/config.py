@@ -58,6 +58,10 @@ class Settings(BaseSettings):
     # auto = Claude API when a key is set, else the local Claude Code CLI, else an OpenAI-compatible endpoint
     # (KM_LLM_BASE_URL), else a running Ollama, else offline. The parent can also choose in the app (saved to brain.json).
     ai_provider: Literal["auto", "anthropic", "claude_code", "ollama", "openai", "offline"] = "auto"
+    # retail = the installers families buy: Claude Code (a personal subscription) is never used or offered as the
+    # brain; families choose the offline teacher, a free local model (Ollama) or their own API key. dev = the owner's
+    # own copy and source runs. Installed (frozen) copies default to retail; KM_EDITION=dev in Melo/.env overrides.
+    edition: Literal["dev", "retail"] = "retail" if FROZEN else "dev"
     anthropic_api_key: str | None = Field(
         default=None, validation_alias=AliasChoices("KM_ANTHROPIC_API_KEY", "ANTHROPIC_API_KEY")
     )
