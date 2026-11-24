@@ -242,6 +242,7 @@ export const api = {
   login: (email: string, password: string) => request<Parent>("/api/auth/login", { method: "POST", body: json({ email, password }) }),
   logout: () => request<void>("/api/auth/logout", { method: "POST" }),
   deleteAccount: () => request<void>("/api/auth/account", { method: "DELETE" }),
+  updateCheck: () => request<{ current: string; latest: string | null; newer: boolean; url: string | null; name: string | null }>("/api/system/update"),
   teacherStatus: () => request<{ provider: string; model: string | null; configured: string; claude_code_found: boolean }>("/api/teacher/status"),
   teacherTest: () => request<BrainTest>("/api/teacher/test", { method: "POST" }),
   brains: () => request<BrainsFound>("/api/teacher/brains"),

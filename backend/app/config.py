@@ -75,6 +75,8 @@ class Settings(BaseSettings):
     claude_code_timeout_seconds: float = 30.0  # CLI start-up adds a few seconds over the API
     # Ollama (KM_AI_PROVIDER=ollama): local models, free and private. Empty model = pick from what is installed.
     ollama_url: str = "http://127.0.0.1:11434"
+    # where Melo asks whether a newer version is out ("" = never ask); see app/updates.py
+    update_url: str = "https://api.github.com/repos/scottc2810-sys/kidsmusic/releases/latest"
     ollama_model: str = ""
     # Any OpenAI-compatible endpoint (KM_AI_PROVIDER=openai): LM Studio, llama.cpp, vLLM, OpenAI, OpenRouter, Groq, Gemini ...
     llm_base_url: str = ""

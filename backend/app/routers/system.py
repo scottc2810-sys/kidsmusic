@@ -10,6 +10,7 @@ import sys
 from fastapi import APIRouter, Depends
 
 from ..config import FROZEN, get_settings
+from .. import updates
 from ..models import Parent
 from ..security import current_parent
 from ..teacher import llm
@@ -45,3 +46,9 @@ def system_check(parent: Parent = Depends(current_parent)) -> dict:
     add("brain", "AI brain in use", st["provider"] != "offline", False, f"{st['provider']}{' · ' + str(st['model']) if st.get('model') else ''}",
         "Optional: choose an AI brain under Parent → AI brain. Melo teaches offline without one.")
     return {"checks": checks, "ok": all(c["ok"] for c in checks if c["required"]), "platform": sys.platform}
+
+
+@router.get("/system/update")
+def update_check(parent: Parent = Depends(current_parent)) -> dict:
+    """Whether a newer Melo is out (cached for 12 hours; nothing personal is sent)."""
+    return updates.check(get_settings().update_url)

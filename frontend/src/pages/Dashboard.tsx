@@ -17,6 +17,7 @@ export function Dashboard() {
   return (
     <ParentShell title="Your little musicians">
       <Toast msg={error} kind="error" />
+      <UpdateBanner />
       {kids === null ? <div className="spinner" /> : (
         <div className="grid">
           {kids.map((k) => (
@@ -174,5 +175,21 @@ function AddChild({ onDone }: { onDone: (c: Child | null) => void }) {
         <button className="btn">Create profile</button>
       </div>
     </form>
+  );
+}
+
+/** A newer Melo is out: say so once on the dashboard, with the download page (checked at most twice a day). */
+function UpdateBanner() {
+  const [u, setU] = useState<{ latest: string | null; newer: boolean; url: string | null } | null>(null);
+  const [hidden, setHidden] = useState(false);
+  useEffect(() => { api.updateCheck().then(setU).catch(() => {}); }, []);
+  if (!u?.newer || !u.url || hidden) return null;
+  return (
+    <div className="card update-banner" role="status">
+      <span aria-hidden>✨</span>
+      <p>Melo {u.latest} is available. Your progress and recordings stay as they are when you update.</p>
+      <a className="btn small" href={u.url} target="_blank" rel="noreferrer noopener">Get the update</a>
+      <button className="btn ghost small" onClick={() => setHidden(true)}>Later</button>
+    </div>
   );
 }
