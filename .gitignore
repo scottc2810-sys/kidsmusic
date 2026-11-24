@@ -10,3 +10,7 @@ __pycache__/
 frontend/public/mediapipe/
 dist/
 build/
+
+# shared native-recording tracker (owner + Claude), never committed or bundled
+voice-tracker.csv
+voice-missing.csv

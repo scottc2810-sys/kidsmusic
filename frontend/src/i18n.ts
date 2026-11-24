@@ -172,6 +172,11 @@ const TOPIC_TITLE: Record<string, Text> = {
   school: { en: "At school", hi: "स्कूल में", hinglish: "School mein" },
   friends: { en: "Playing with friends", hi: "दोस्तों के साथ खेलना", hinglish: "Doston ke saath khelna" },
   feelings: { en: "Feelings and caring", hi: "भावनाएँ और देखभाल", hinglish: "Bhaavnaayein aur dekhbhaal" },
+  home: { en: "At home", hi: "घर पर", hinglish: "Ghar par" },
+  travel: { en: "Getting around", hi: "आना-जाना", hinglish: "Aana-jaana" },
+  doctor: { en: "At the doctor", hi: "डॉक्टर के पास", hinglish: "Doctor ke paas" },
+  celebrate: { en: "Celebrations", hi: "उत्सव और जश्न", hinglish: "Utsav aur jashn" },
+  weather: { en: "Time and weather", hi: "समय और मौसम", hinglish: "Samay aur mausam" },
 };
 /** Conversation topic title in the child's language. */
 export const topicTitle = (id: string, english: string, lang: Language) => (TOPIC_TITLE[id] ? L(TOPIC_TITLE[id], lang) : tr(english, lang));

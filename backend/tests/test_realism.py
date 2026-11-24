@@ -46,7 +46,7 @@ def test_melo_reacts_like_a_teacher_not_a_quiz():
 def test_new_languages_have_words_phrases_and_letters():
     for code in ("sa", "gu", "bn", "pa", "ta", "te", "kn", "de", "ja"):
         t = TARGETS[code]
-        assert len(WORDS[code]) == 38 and len(PHRASE_WORDS[code]) == 57 and len(LETTERS[code]) >= 16
+        assert len(WORDS[code]) == 38 and len(PHRASE_WORDS[code]) == 150 and len(LETTERS[code]) >= 16
         assert all((w.roman is None) == t.latin for w in WORDS[code].values()), code
         assert all((w.roman is None) == t.latin for w in PHRASE_WORDS[code].values()), code
     assert TARGETS["sa"].locale == "hi-IN"  # no engine has a Sanskrit voice: a Hindi voice reads it

@@ -15,14 +15,15 @@ def skills(**difficulty):
 
 
 def test_every_language_has_every_phrase_and_pictures_are_unambiguous():
-    assert len({p[2] for p in PHRASES}) == len(PHRASES) == 57 and set(TOPIC_IDS) == {"greetings", "meeting", "polite", "directions", "food", "help", "market",
-                                                                                     "school", "friends", "feelings"}
+    assert len({p[2] for p in PHRASES}) == len(PHRASES) == 150 and set(TOPIC_IDS) == {"greetings", "meeting", "polite", "directions", "food", "help", "market",
+                                                                                      "school", "friends", "feelings",
+                                                                                      "home", "travel", "doctor", "celebrate", "weather"}
     for code, t in TARGETS.items():
-        assert len(PHRASE_WORDS[code]) == 57 and all(w.text for w in PHRASE_WORDS[code].values())
+        assert len(PHRASE_WORDS[code]) == 150 and all(w.text for w in PHRASE_WORDS[code].values())
         assert all((w.roman is None) == t.latin for w in PHRASE_WORDS[code].values()), code
-        assert len({w.text for w in PHRASE_WORDS[code].values()}) >= 34  # at most one shared phrase per language
+        assert len({w.text for w in PHRASE_WORDS[code].values()}) >= 140  # nearly every phrase is worded differently
         for topic in TOPIC_IDS:
-            assert len(topic_pool(code, topic)) == {"school": 8, "friends": 8, "feelings": 6}.get(topic, 5)
+            assert len(topic_pool(code, topic)) >= 10  # every situation has at least 10 phrases
 
 
 def test_writing_a_phrase_means_putting_its_words_in_order():
@@ -58,7 +59,8 @@ def test_known_phrases_come_up_less():
     rng = random.Random(4)
     items = {pid: LangItemState(child_id="c", lang="es", item=pid, strength=0.95, seen=5, correct=5) for pid in ("p_hello", "p_morning", "p_how", "p_fine")}
     picks = [engine.choose("es", skills(), items, rng, topic="greetings", focus="listen").spec["item"] for _ in range(60)]
-    assert picks.count("p_bye") > len(picks) * 0.35  # the one phrase not yet known is practised most
+    known = {"p_hello", "p_morning", "p_how", "p_fine"}
+    assert sum(p not in known for p in picks) > len(picks) * 0.7  # phrases not yet known are practised most
 
 
 def _right(aid):
@@ -95,7 +97,7 @@ def test_side_by_side_comparison_and_practice(client):
     left = next(r for r in cmp["rows"] if r["id"] == "p_left")
     assert left["english"] == "Turn left." and left["meaning"] == "baayen mudiye."  # Hinglish learner: meaning in Latin Hindi
     assert left["cells"]["zh"] == {"text": "向左转。", "roman": "xiàng zuǒ zhuǎn."} and left["cells"]["es"]["roman"] is None
-    assert len(cmp["topics"]) == 11 and {"school", "friends", "feelings"} <= {t["id"] for t in cmp["topics"]}
+    assert len(cmp["topics"]) == 16 and {"school", "friends", "feelings", "home", "doctor", "weather"} <= {t["id"] for t in cmp["topics"]}
     words = client.get("/api/learn/compare?langs=fr,ko&topic=words&ui=en").json()
     assert len(words["rows"]) == 38 and words["rows"][0]["cells"]["ko"]["text"] == "고양이"
     assert client.get("/api/learn/compare?langs=es,fr,xx&topic=greetings").status_code == 422
@@ -104,7 +106,7 @@ def test_side_by_side_comparison_and_practice(client):
     from app.lang.content import TARGETS
 
     every = client.get(f"/api/learn/compare?langs={','.join(TARGETS)}&topic=friends").json()
-    assert len(every["languages"]) == 20 and all(len(r["cells"]) == 20 for r in every["rows"]) and len(every["rows"]) == 8
+    assert len(every["languages"]) == 20 and all(len(r["cells"]) == 20 for r in every["rows"]) and len(every["rows"]) == 10
     # practise one phrase in one language straight from the comparison: write it, then it counts
     p = client.post(f"/api/children/{cid}/learn/zh/practice", json={"item": "p_left", "skill": "write"}).json()
     assert p["type"] == "spell" and "answer" not in p["spec"] and sorted(p["spec"]["tiles"]) == sorted("向左转")
@@ -122,7 +124,7 @@ def test_school_friends_and_feelings_for_real_conversations(client):
     from app.lang.phrases import REPLIES
 
     for code in TARGETS:
-        for topic, n in (("school", 8), ("friends", 8), ("feelings", 6)):
+        for topic, n in (("school", 10), ("friends", 10), ("feelings", 10), ("home", 10), ("travel", 10), ("doctor", 10), ("celebrate", 10), ("weather", 10)):
             pool = topic_pool(code, topic)
             assert len(pool) == n and len({w.text for w in pool}) == n, (code, topic)
             assert all(w.roman for w in pool) or TARGETS[code].latin, (code, topic)

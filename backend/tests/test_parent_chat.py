@@ -20,14 +20,14 @@ def test_mantra_song_and_market_topic_exist_everywhere(client):
     assert len(s["notes"]) == len(s["words"]) == len(s["words_hi"]) == s["phrases"][-1] == 33
     for code in ITEMS:
         market = topic_pool(code, "market")
-        assert len(market) == 5 and all(w.text for w in market), code
+        assert len(market) == 10 and all(w.text for w in market), code
     assert {TOPIC_OF[p] for p in ("p_price", "p_money")} == {"market"} and PHRASE_WORDS["hi"]["p_price"].roman
     register(client)
     cid = make_child(client)["id"]
     songs = client.get(f"/api/children/{cid}/songs").json()
     assert any(x["id"] == "mahamrityunjaya_mantra" for x in (songs["songs"] if isinstance(songs, dict) else songs))
     cmp = client.get("/api/learn/compare?langs=hi,sa,ta,en&topic=market").json()
-    assert len(cmp["rows"]) == 5 and cmp["rows"][0]["cells"]["sa"]["text"]
+    assert len(cmp["rows"]) == 10 and cmp["rows"][0]["cells"]["sa"]["text"]
 
 
 def test_offline_parent_chat_understands_common_requests(client):

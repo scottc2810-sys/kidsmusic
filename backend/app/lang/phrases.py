@@ -15,7 +15,16 @@ PHRASE_TOPICS: list[tuple[str, str, str]] = [
     ("market", "🛒", "At the market"),
     ("school", "🏫", "At school"), ("friends", "🛝", "Playing with friends"), ("feelings", "💛", "Feelings and caring"),
 ]
+# five more day-to-day scenarios, and every topic at 10+ phrases (phrases_more.py)
+from .phrases_more import MORE_PHRASES, MORE_TOPICS  # noqa: E402
+from .phrases_more_a import MORE_A  # noqa: E402
+from .phrases_more_b import MORE_B  # noqa: E402
+from .phrases_more_c import MORE_C  # noqa: E402
+from .phrases_more_d import MORE_D  # noqa: E402
+
+PHRASE_TOPICS += MORE_TOPICS
 TOPIC_IDS = [t[0] for t in PHRASE_TOPICS]
+_MORE: dict[str, list[str]] = {**MORE_A, **MORE_B, **MORE_C, **MORE_D}
 
 # (id, topic, picture): every picture differs, so picture choices are never ambiguous
 PHRASES: list[tuple[str, str, str]] = [
@@ -33,6 +42,7 @@ PHRASES: list[tuple[str, str, str]] = [
     ("p_ok_q", "feelings", "🫂"), ("p_hurt", "feelings", "🩹"), ("p_sad", "feelings", "😢"), ("p_sleepy", "feelings", "🥱"),
     ("p_like", "feelings", "👍"), ("p_scared", "feelings", "😨"),
 ]
+PHRASES += [(pid, topic, emoji) for pid, topic, emoji, _en in MORE_PHRASES]
 # At the market: added later, kept apart so each language's list above stays readable
 _MARKET = {'en': ['How much is this?', 'It is too expensive.', 'Two, please.', 'A bag, please.', 'Here is the money.'], 'hi': ['यह कितने का है?|yah kitne ka hai?', 'यह बहुत महँगा है।|yah bahut mahanga hai.', 'दो दीजिए, कृपया।|do deejiye, kripya.', 'एक थैला दीजिए।|ek thaila deejiye.', 'यह लीजिए पैसे।|yah leejiye paise.'], 'mr': ['हे किती रुपयांचं आहे?|he kiti rupayancha aahe?', 'हे खूप महाग आहे.|he khoop mahaag aahe.', 'दोन द्या, कृपया.|don dya, krupaya.', 'एक पिशवी द्या.|ek pishvi dya.', 'हे घ्या पैसे.|he ghya paise.'], 'fr': ["C'est combien ?", "C'est trop cher.", "Deux, s'il vous plaît.", "Un sac, s'il vous plaît.", "Voici l'argent."], 'es': ['¿Cuánto cuesta esto?', 'Es demasiado caro.', 'Dos, por favor.', 'Una bolsa, por favor.', 'Aquí está el dinero.'], 'ar': ['بكم هذا؟|bikam haadha?', 'هذا غالٍ جدا.|haadha ghaalin jiddan.', 'اثنان من فضلك.|ithnaan min fadlik.', 'كيس من فضلك.|kees min fadlik.', 'تفضل المال.|tafaddal al-maal.'], 'zh': ['这个多少钱？|zhège duōshao qián?', '太贵了。|tài guì le.', '请给我两个。|qǐng gěi wǒ liǎng gè.', '请给我一个袋子。|qǐng gěi wǒ yí gè dàizi.', '给你钱。|gěi nǐ qián.'], 'yue': ['呢個幾多錢？|ni1 go3 gei2 do1 cin2?', '太貴喇。|taai3 gwai3 laa3.', '唔該俾兩個我。|m4 goi1 bei2 loeng5 go3 ngo5.', '唔該俾個袋我。|m4 goi1 bei2 go3 doi2 ngo5.', '俾錢你。|bei2 cin2 nei5.'], 'ko': ['이거 얼마예요?|igeo eolmayeyo?', '너무 비싸요.|neomu bissayo.', '두 개 주세요.|du gae juseyo.', '봉투 주세요.|bongtu juseyo.', '여기 돈이요.|yeogi doniyo.'], 'ru': ["Сколько это стоит?|skol'ko eto stoit?", 'Это слишком дорого.|eto slishkom dorogo.', 'Два, пожалуйста.|dva, pozhaluysta.', 'Пакет, пожалуйста.|paket, pozhaluysta.', "Вот деньги.|vot den'gi."], 'tr': ['Bu ne kadar?', 'Çok pahalı.', 'İki tane, lütfen.', 'Bir poşet, lütfen.', 'Buyurun, para.'], 'sa': ['एतत् कियत् मूल्यम्?|etat kiyat moolyam?', 'एतत् अतीव महार्घम्।|etat ateeva mahaargham.', 'कृपया द्वे ददातु।|kripayaa dve dadaatu.', 'कृपया एकं स्यूतं ददातु।|kripayaa ekam syootam dadaatu.', 'इदं धनम्।|idam dhanam.'], 'gu': ['આ કેટલાનું છે?|aa ketlaanu chhe?', 'આ બહુ મોંઘું છે.|aa bahu monghu chhe.', 'બે આપો, કૃપા કરીને.|be aapo, krupa karine.', 'એક થેલી આપો.|ek theli aapo.', 'આ લો પૈસા.|aa lo paisa.'], 'bn': ['এটার দাম কত?|etar dam koto?', 'এটা খুব দামি।|eta khub dami.', 'দুটো দিন, দয়া করে।|duto din, doya kore.', 'একটা ব্যাগ দিন।|ekta byag din.', 'এই নিন টাকা।|ei nin taka.'], 'pa': ['ਇਹ ਕਿੰਨੇ ਦਾ ਹੈ?|ih kinne da hai?', 'ਇਹ ਬਹੁਤ ਮਹਿੰਗਾ ਹੈ।|ih bahut mehnga hai.', 'ਦੋ ਦਿਓ, ਕਿਰਪਾ ਕਰਕੇ।|do dio, kirpa karke.', 'ਇੱਕ ਥੈਲਾ ਦਿਓ।|ikk thaila dio.', 'ਆਹ ਲਓ ਪੈਸੇ।|aah lao paise.'], 'ta': ['இது எவ்வளவு?|idhu evvalavu?', 'இது மிகவும் விலை அதிகம்.|idhu migavum vilai adhigam.', 'இரண்டு கொடுங்கள்.|irandu kodungal.', 'ஒரு பை கொடுங்கள்.|oru pai kodungal.', 'இதோ பணம்.|idho panam.'], 'te': ['ఇది ఎంత?|idi enta?', 'ఇది చాలా ఖరీదు.|idi chaalaa khareedu.', 'రెండు ఇవ్వండి.|rendu ivvandi.', 'ఒక సంచి ఇవ్వండి.|oka sanchi ivvandi.', 'ఇదిగో డబ్బు.|idigo dabbu.'], 'kn': ['ಇದು ಎಷ್ಟು?|idu eshtu?', 'ಇದು ತುಂಬಾ ದುಬಾರಿ.|idu tumbaa dubaari.', 'ಎರಡು ಕೊಡಿ.|eradu kodi.', 'ಒಂದು ಚೀಲ ಕೊಡಿ.|ondu cheela kodi.', 'ಇಗೋ ಹಣ.|igo hana.'], 'de': ['Wie viel kostet das?', 'Das ist zu teuer.', 'Zwei, bitte.', 'Eine Tüte, bitte.', 'Hier ist das Geld.'], 'ja': ['これはいくらですか？|kore wa ikura desu ka?', 'たかすぎます。|takasugimasu.', 'ふたつください。|futatsu kudasai.', 'ふくろをください。|fukuro o kudasai.', 'はい、おかねです。|hai, okane desu.']}
 
@@ -414,7 +424,7 @@ REPLIES: dict[str, str] = {"p_how": "p_fine", "p_name_q": "p_name", "p_age_q": "
 
 
 def _build(code: str) -> dict[str, Word]:
-    rows = _P[code] + _MARKET[code] + _SCHOOL[code]
+    rows = _P[code] + _MARKET[code] + _SCHOOL[code] + _MORE[code]
     assert len(rows) == len(PHRASES), (code, len(rows))
     out = {}
     for (pid, _topic, emoji), raw in zip(PHRASES, rows):
