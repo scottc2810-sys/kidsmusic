@@ -470,3 +470,16 @@ Content note: the 1,860 new phrase translations were written by the model; like 
 * `docs/GO_TO_MARKET.md`: honest review, SWOT, 22 changes needed before selling (11 must-do), platforms, USA and India plans, pricing to test, a 12-week roadmap with gates, and when to start ads.
 * Computer voices pre-recorded for the 93 new phrases in all 20 languages (female and male; Punjabi has a single voice). Exception: Microsoft's Russian male voice refuses about 87 of the new sentences every time (a service quirk; the female Russian voice reads them), so those phrases have the female voice only until licensed voices replace edge-tts.
 
+## Update 2026-11-24 (master branch): ready-to-sell fixes
+
+| Change | Detail |
+|---|---|
+| 🛒 **Retail edition** | Installed copies default to `KM_EDITION=retail`: Claude Code is never the brain or offered; offline teacher, Ollama or the family's own key. `KM_EDITION=dev` in Melo/.env for the owner. |
+| 📄 **Privacy, terms, agreement** | `/privacy`, `/terms` (drafts for a lawyer); sign-up requires the parent or guardian agreement; versions stored (`agreements` table). |
+| ✨ **Update check** | `/api/system/update` asks GitHub releases at most twice a day (no personal data); dashboard banner. |
+| 💬 **Help and feedback** | Parent → Help: quick answers, feedback by email or copy, technical details only. |
+| ⭐ **Free and family plan** | Offline Ed25519 licence keys (`backend/scripts/licence_keys.py`); free plan limits enforced on the server (402) for children, songs and languages; topic locks in the app; Parent → Plan. |
+| 🪟 **Microsoft Store package** | `packaging/windows/build_msix.ps1` + CI step: an unsigned MSIX the Store signs; identity from repository variables. |
+
+Launch checklist for the owner: end of `docs/GO_TO_MARKET.md`.
+

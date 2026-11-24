@@ -186,3 +186,25 @@ them secondary; confirm the legal points with a lawyer before launch.
 - [Baker Botts: India's final DPDP rules](https://ourtake.bakerbotts.com/post/102lund/india-notifies-final-rules-for-digital-data-protection-act)
 - [Lemon Squeezy alternatives after the shutdown](https://gauravtiwari.org/lemon-squeezy-alternatives/)
 - [Dodo Payments: merchant of record for India](https://dodopayments.com/blogs/top-merchant-of-record-for-saas-india)
+
+## Progress on the master branch (2026-11-24)
+
+Done in code (tested):
+
+- [x] #1 Customer AI plan: families' copies (retail edition) never use or offer a personal Claude Code login; offline teacher, local Ollama or the family's own API key. Your copy keeps Claude Code (`KM_EDITION=dev` in Melo/.env).
+- [x] #5 Licence keys and a free tier: offline-signed family plan keys; free plan = 1 child, first 5 songs, 1 language, first 2 topics per strand; Parent → ⭐ Plan.
+- [x] #7 (drafts) Privacy policy, terms of use, parent agreement at sign-up; data deletion was already there.
+- [x] #8 Microsoft Store package (MSIX) built in CI; the Store signs it on upload.
+- [x] #13 Update check: a banner when a newer release is out.
+- [x] #21 (part) Help and feedback page.
+
+Only you can do these (launch checklist):
+
+1. **Back up the licence private key** `C:\Users\<you>\.melo\licence_private.key` (password manager or an encrypted USB drive). Without it no new keys can be issued for copies already sold. Never share or commit it.
+2. Issue keys: `python backend/scripts/licence_keys.py issue --to "<buyer>"` (add `--days 365` for a yearly plan). Gumroad, Payhip and similar shops can email a key from a list you upload.
+3. Fill `SUPPORT_EMAIL`, `SELLER` and `BUY_URL` in `frontend/src/pages/Legal.tsx`.
+4. Have a lawyer review the Privacy Policy and Terms (`frontend/src/pages/Legal.tsx`); bump the versions there and in `backend/app/legal.py` after changes.
+5. Microsoft Store: register in Partner Center (free), reserve the name "Melo", then set the GitHub repository variables `MSIX_IDENTITY_NAME`, `MSIX_PUBLISHER`, `MSIX_PUBLISHER_DISPLAY` from its Product identity page; upload `Melo-<version>.msix` from the CI run.
+6. Publish a release (tag `v1.5.1` or later) so the update check has something to point to.
+7. Still open from the plan: licensed voices (#2), content review (#3, #4), the beta (#10), landing pages and video (#11).
+
