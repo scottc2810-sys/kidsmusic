@@ -175,3 +175,7 @@ The same reactions are used in the music lessons. Every language shows its **jou
 * **Progress tracker** (Parent → child → Progress): spider charts for music, every language and learning habits, updated after every activity. Each score is 80 % measured from the child's activities and 20 % assessed by a teacher, a parent or the AI teacher. Filter by area or by one skill everywhere (Reading, Writing, Speaking …), search the 230 assessment parameters, and get a summary with the next lesson plan. Children see their own **star map**.
 * **Talk to Melo** (Parent → child → 💬): tell Melo what you want ("add the Mahamrityunjaya mantra", "she gets frustrated, go gently", "market phrases in Hindi"); Melo proposes changes and you tap Apply. Conversations are remembered with a running summary.
 * **AI brain** (Parent → 🧠 AI brain): Claude Code, Ollama (`ollama pull llama3.2`), LM Studio / llama.cpp / Jan, or an online service with your own key. Includes a 🩺 system check. Melo also works fully offline.
+
+### Selling Melo
+
+Honest review, SWOT, every change needed before a paid launch, platforms, and the go-to-market plans for the USA and India: [docs/GO_TO_MARKET.md](docs/GO_TO_MARKET.md).

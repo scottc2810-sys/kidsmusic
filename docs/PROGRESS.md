@@ -9,9 +9,9 @@ Melo is an AI music teacher for children aged 3–8, built with FastAPI, SQLite 
 | Area | Status |
 |---|---|
 | MVP scope (MVP.txt phases 1–3) | ✅ Built |
-| Backend tests (`pytest`) | ✅ 206 passed |
+| Backend tests (`pytest`) | ✅ 208 passed |
 | Frontend typecheck (`tsc -b`) | ✅ Clean |
-| Frontend tests (`vitest`) | ✅ 180 passed |
+| Frontend tests (`vitest`) | ✅ 191 passed |
 | Sound and microphone | ✅ Audio unlocks on the first tap. Settings has a 🔊 Sound check and a 🎤 Mic check, and browser mic permission is requested when the parent turns it on. ⏳ Needs a by-ear check in a real browser |
 | Production build | ✅ 391 kB JS (131 kB gzip) + lazily loaded 136 kB MediaPipe chunk |
 | Local deployment | ✅ Running at http://127.0.0.1:8000 (`KM_ENV=production`) |
@@ -437,4 +437,36 @@ Tests: 174 backend (`test_school_friends_and_feelings_for_real_conversations`, `
 | ✍️ **Code signing ready** | Windows: Azure Artifact Signing in CI (signs Melo.exe, rebuilds Setup with `build.ps1 -InstallerOnly`, signs Setup, checks both). macOS: Developer ID signing with hardened runtime (`packaging/macos/entitlements.plist`), DMG notarized and stapled. Off until the owner adds the certificates as GitHub secrets: `docs/SIGNING.md`. |
 
 Tests: 206 backend, 180 frontend.
+
+## Update 2026-11-24: teach before asking, the four Vedas one by one, real-life missions
+
+| Change | Detail |
+|---|---|
+| 🐞 **Questions about things never taught** | Measured: 9,293 of 19,367 sampled recall questions (48 %) asked about a fact the topic's cards never taught (most topics had 1–2 cards, every finance topic 1, questions drew on 5–20 facts; a second visit skipped the cards; new levels brought new question types with no example). |
+| 👣 **Teach before asking** (`subjects/teachfirst.ts`) | Every subject, every topic, also the AI-written levels 6+: a FACT is taught on a "Learn this first" card (question, answer, why, picture) the first time it comes up, then asked; a METHOD (numbers to work out) starts each new level with a worked example using other numbers, revealed step by step with Next. What each child was taught is remembered per topic on the device; later rounds ask from memory. A round mostly answered right after teaching never raises the level or counts as mastery (`taught` in the round, server rule tested). |
+| 📚 **More concept cards** (`subjects/more_cards.ts`) | 76 new cards for 58 weak topics (shapes, symmetry, 3D shapes, calendar, Roman numerals, Vedic ÷9, divisibility, sound, heat, magnets, light, soil, circuits, habitats, digestion…, all Gita / life-skills topics, all money topics). `coverage.test.ts`: every word answer a topic can ask now appears in its cards (0 % untaught, was 48 %); shlokas are taught one verse at a time. |
+| 🕉️ **The four Vedas, one by one** (`subjects/vedas4.ts`) | New first strand "Meet the four Vedas": the Veda family (with hand actions: Rig recites 🙏, Sama sings 🗣️, Yajur does 🫗, Atharva heals 💚) and a topic per Veda: what it is, what's inside, a story or famous line (Agni as the first word, the Nāsadīya question hymn, Sama = the same words sung, the seven swaras, tat tvam asi, Nachiketa and śreyas/preyas, Īśa Upanishad, Bhūmi Sūkta, satyameva jayate from the Muṇḍaka Upanishad, Ayurveda roots), a stick point and "in your day" lessons. Picture hooks: a drawn badge per Veda (colour, symbol, action, four icon hooks) and a family picture (`Diagrams.tsx`). English, Hindi and Hinglish. |
+| 🔁 **Never the same question twice** (`teachfirst.ts`: `AskedLog`, `drawFresh`) | Rounds drew at random from banks as small as 3 questions, so money (and other) questions came back two or three times in one round. Now every question a child is shown in a topic (asked, or used as a worked example) is remembered (a short fingerprint per question, per child and topic, on the device) and never asked again; an empty level borrows unseen questions from the nearest level; a used-up topic ends the round early and says so instead of repeating. Test: 30 rounds per topic across all levels, no repeat anywhere. |
+| 🔁 **Revise finished lessons** | Every topic the child has played has a 🔁 Revise button (topic list, end of a round, the "every question done" screen). Revision asks questions the child has already met, slips first; a right answer in revision takes a slip off the list. Questions are rebuilt from the seed they were made with (about 20 bytes each, up to 400 per topic, slips always kept), so nothing large is stored. Revision rounds are recorded and earn stars but never change the level, count as mastery or start AI levels (`revision` in the round). New practice still never repeats. Songs (learned ones stay in the list), music basics (only future tiers are locked) and language topics could already be revisited. Topics played before this update have no saved questions yet, so their revision starts once new questions are answered. |
+| 🪙 **More money questions** | why money 3 → 9, needs & wants 5 → 12, spending wisely 3 → 9, sharing 3 → 9, staying safe 4 → 10, money through life 4 → 10, earning 3 → 9, compound growth 6 → 15 (more amounts and rates), coins more notes; every new answer is in the Learn cards. Still small (under 10 at a level): about 60 science and Vedas & wisdom topics (3–9), so they are used up after one or two rounds until more questions are written. |
+| 🎯 **Real-life missions** (`subjects/missions.ts`) | Every money and Vedas & wisdom topic ends with one small task in the child's name ("Asha, at dinner, thank the farmer, the sun and the rain"); "I did it!" writes it to the learning graph for the AI teacher and the results. |
+
+Tests: 208 backend, 191 frontend.
+
+## Update 2026-11-24: 10+ phrases per situation, five new situations, a shared recording tracker
+
+| Change | Detail |
+|---|---|
+| 💬 **Every conversation topic at 10 phrases** | Greetings, meeting someone, polite words, directions, food and drink, asking for help and at the market went from 5 to 10; at school and playing with friends from 8 to 10; feelings and caring from 6 to 10. |
+| 🏠🚌🩺🎈🌦️ **Five new everyday situations**, 10 phrases each | At home (we're home, brushing teeth, washing hands, bath, dressing, tidying, helping, dinner, TV, bedtime), getting around (bus, sitting, seat belt, crossing, green light, train, arriving, ticket, how long, holding hands), at the doctor (unwell, head, tummy, cough, fever, medicine, mouth, breath, better, rest), celebrations (birthday, party, gift, thanks, cake, song, dance, New Year, congratulations, photo), time and weather (time, Monday, holiday, rain, sun, cold, hot, wind, late, early). |
+| 🌍 **All 20 languages** | 93 new phrases × 20 languages (`app/lang/phrases_more*.py`), romanised where the script is not Latin, every picture different. First person is gender-neutral where the language allows (dative forms in Hindi, Marathi, Gujarati, Punjabi, Sanskrit; "ash'uru bi..." in Arabic; present tense and "mne" in Russian; "let's..." for routines). 150 phrases in 15 situations per language. |
+| 🔊 **Voices for the new phrases** | Native recordings searched again on Lingua Libre, Tatoeba and OpenSLR (exact matches); neural-voice clips (female and male) pre-recorded so no new phrase is silent offline. |
+| 📋 **Shared recording tracker** (`backend/scripts/voice_tracker.py`) | `voice-tracker.csv` (every word and phrase × 20 languages: native female / male counts, sources, status, whether a computer voice is saved, search links for Wikimedia Commons, Tatoeba and Forvo) and `voice-missing.csv` (only what still lacks a female or male native speaker). Both in the project root, git-ignored and never bundled. The owner fills `found_url_or_file`, `found_license`, `found_speaker`, `found_gender`; `python scripts/voice_tracker.py import` brings them in (local .wav / .mp3 or a direct https link; CC0 / CC BY / CC BY-SA / public domain / own recording only, never NC or ND) and marks them imported; `export` refreshes coverage and keeps the owner's columns. |
+
+Content note: the 1,860 new phrase translations were written by the model; like the rest of the phrases they need a native speaker's review before classroom use.
+
+### Update 2026-11-24 (later): go-to-market plan, voices for the new phrases
+
+* `docs/GO_TO_MARKET.md`: honest review, SWOT, 22 changes needed before selling (11 must-do), platforms, USA and India plans, pricing to test, a 12-week roadmap with gates, and when to start ads.
+* Computer voices pre-recorded for the 93 new phrases in all 20 languages (female and male; Punjabi has a single voice). Exception: Microsoft's Russian male voice refuses about 87 of the new sentences every time (a service quirk; the female Russian voice reads them), so those phrases have the female voice only until licensed voices replace edge-tts.
 
