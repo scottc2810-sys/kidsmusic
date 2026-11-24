@@ -48,6 +48,18 @@ class Credentials(Strict):
         return v
 
 
+class RegisterIn(Credentials):
+    """Sign-up: only a parent or legal guardian, who accepts the privacy policy and terms."""
+    agree: bool = Field(default=False, validate_default=True)
+
+    @field_validator("agree")
+    @classmethod
+    def _agree(cls, v: bool) -> bool:
+        if not v:
+            raise ValueError("Please confirm you are the parent or guardian and accept the Privacy Policy and Terms")
+        return v
+
+
 class LoginIn(Strict):
     email: str = Field(min_length=3, max_length=254)
     password: str = Field(min_length=1, max_length=128)

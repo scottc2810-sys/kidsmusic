@@ -161,7 +161,7 @@ if __name__ == "__main__":
     init_engine(f"sqlite:///{tmp}/sim.db")
     with TestClient(create_app()) as c:
         c.headers.update({"X-Requested-With": "melo"})
-        c.post("/api/auth/register", json={"email": "sim@example.test", "password": "simulate-123-x"})
+        c.post("/api/auth/register", json={"email": "sim@example.test", "password": "simulate-123-x", "agree": True})
         for label, p in (("strong", 0.9), ("average", 0.65), ("struggling", 0.3)):
             cid = c.post("/api/children", json={"name": "Kid", "age": 5, "language": "en", "session_minutes": 20}).json()["id"]
             print(f"\n=== {label} child ({int(p * 100)}% right): music ===")

@@ -14,6 +14,7 @@ import { ConnectClaude } from "./pages/ConnectClaude";
 import { Dashboard } from "./pages/Dashboard";
 import { KidHome } from "./pages/KidHome";
 import { Lesson } from "./pages/Lesson";
+import { PrivacyPage, TermsPage } from "./pages/Legal";
 import { Login } from "./pages/Login";
 import { ProgressPage } from "./pages/ProgressPage";
 import { Recordings } from "./pages/Recordings";
@@ -50,6 +51,8 @@ export function App() {
       {reminder && <div className="reminder-banner" role="status">🎵 {reminder}</div>}
       <Routes>
         <Route path="/login" element={<Login />} />
+        <Route path="/privacy" element={<PrivacyPage />} />
+        <Route path="/terms" element={<TermsPage />} />
         <Route path="/" element={<Navigate to="/parent" replace />} />
         <Route path="/parent" element={<RequireAuth><Dashboard /></RequireAuth>} />
         <Route path="/parent/connect" element={<RequireAuth><ConnectClaude /></RequireAuth>} />

@@ -22,7 +22,7 @@ def test_auth_flow_and_csrf(client):
 
 def test_duplicate_email_and_weak_password(client):
     register(client)
-    assert client.post("/api/auth/register", json={"email": "parent@example.com", "password": "another-pass"}).status_code == 409
+    assert client.post("/api/auth/register", json={"email": "parent@example.com", "password": "another-pass", "agree": True}).status_code == 409
     assert client.post("/api/auth/register", json={"email": "x@y.io", "password": "short"}).status_code == 422
 
 

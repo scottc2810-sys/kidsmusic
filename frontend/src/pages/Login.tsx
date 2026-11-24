@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Navigate, useLocation, useNavigate } from "react-router-dom";
+import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { api } from "../api";
 import { useAuth } from "../App";
 import { Melo } from "../components/Melo";
@@ -9,6 +9,7 @@ export function Login() {
   const [mode, setMode] = useState<"login" | "register">("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [agree, setAgree] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const nav = useNavigate();
@@ -20,7 +21,7 @@ export function Login() {
     setBusy(true);
     setError(null);
     try {
-      const p = mode === "login" ? await api.login(email, password) : await api.register(email, password);
+      const p = mode === "login" ? await api.login(email, password) : await api.register(email, password, agree);
       setParent(p);
       nav((loc.state as any)?.from ?? "/parent", { replace: true });
     } catch (err) {
@@ -43,12 +44,19 @@ export function Login() {
             value={password} onChange={(e) => setPassword(e.target.value)} />
         </label>
         {mode === "register" && <p className="muted small">At least 8 characters. Only a parent should hold this account.</p>}
+        {mode === "register" && (
+          <label className="agree">
+            <input type="checkbox" required checked={agree} onChange={(e) => setAgree(e.target.checked)} />
+            <span>I am this child's parent or legal guardian, and I agree to the <Link to="/privacy" target="_blank">Privacy Policy</Link> and <Link to="/terms" target="_blank">Terms of Use</Link>.</span>
+          </label>
+        )}
         {error && <p className="error" role="alert">{error}</p>}
         <button className="btn big" disabled={busy}>{busy ? "…" : mode === "login" ? "Sign in" : "Create account"}</button>
         <button type="button" className="link" onClick={() => { setMode(mode === "login" ? "register" : "login"); setError(null); }}>
           {mode === "login" ? "New here? Create an account" : "Already have an account? Sign in"}
         </button>
       </form>
+      <p className="small muted"><Link to="/privacy">Privacy</Link> · <Link to="/terms">Terms</Link></p>
     </main>
   );
 }

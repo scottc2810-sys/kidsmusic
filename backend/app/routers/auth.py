@@ -7,8 +7,9 @@ from sqlalchemy.orm import Session
 
 from ..config import get_settings
 from ..db import get_db
-from ..models import Parent, Recording
-from ..schemas import Credentials, LoginIn, ParentOut
+from ..legal import PRIVACY_VERSION, TERMS_VERSION
+from ..models import Agreement, Parent, Recording
+from ..schemas import LoginIn, ParentOut, RegisterIn
 from ..security import (
     clear_session_cookie,
     client_ip,
@@ -26,11 +27,14 @@ router = APIRouter(prefix="/api/auth", tags=["auth"])
 
 
 @router.post("/register", response_model=ParentOut, status_code=201)
-def register(body: Credentials, request: Request, response: Response, db: Session = Depends(get_db)) -> ParentOut:
+def register(body: RegisterIn, request: Request, response: Response, db: Session = Depends(get_db)) -> ParentOut:
     rate_limiter.check(f"register:{client_ip(request)}", get_settings().login_rate_per_minute)
     parent = Parent(email=body.email, password_hash=hash_password(body.password))
     db.add(parent)
     try:
+        db.flush()
+        db.add_all([Agreement(parent_id=parent.id, document="privacy", version=PRIVACY_VERSION),
+                    Agreement(parent_id=parent.id, document="terms", version=TERMS_VERSION)])
         db.commit()
     except IntegrityError:
         db.rollback()

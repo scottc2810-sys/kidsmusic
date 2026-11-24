@@ -238,7 +238,7 @@ export interface BasicsStatus { tiers: Record<string, TopicTier>; exercises: Mad
 
 export const api = {
   me: () => request<Parent>("/api/auth/me"),
-  register: (email: string, password: string) => request<Parent>("/api/auth/register", { method: "POST", body: json({ email, password }) }),
+  register: (email: string, password: string, agree: boolean) => request<Parent>("/api/auth/register", { method: "POST", body: json({ email, password, agree }) }),
   login: (email: string, password: string) => request<Parent>("/api/auth/login", { method: "POST", body: json({ email, password }) }),
   logout: () => request<void>("/api/auth/logout", { method: "POST" }),
   deleteAccount: () => request<void>("/api/auth/account", { method: "DELETE" }),

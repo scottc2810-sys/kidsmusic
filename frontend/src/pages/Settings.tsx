@@ -141,6 +141,7 @@ export function Settings() {
           <button className="btn danger" onClick={async () => { if (confirm(`Permanently delete ${child.name}'s profile and ALL data?`)) { await api.deleteChild(id); nav("/parent"); } }}>Delete child profile</button>
         </div>
         <AccountDelete />
+        <p className="small muted"><Link to="/privacy">Privacy Policy</Link> · <Link to="/terms">Terms of Use</Link></p>
       </section>
     </ParentShell>
   );

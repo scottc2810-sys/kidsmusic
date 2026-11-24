@@ -64,6 +64,16 @@ class ConsentEvent(Base):
     at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
 
+class Agreement(Base):
+    """A parent accepted a version of the privacy policy or terms (at sign-up, or again when they change)."""
+    __tablename__ = "agreements"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    parent_id: Mapped[str] = mapped_column(ForeignKey("parents.id", ondelete="CASCADE"), index=True)
+    document: Mapped[str] = mapped_column(String(20))  # privacy | terms
+    version: Mapped[str] = mapped_column(String(20))
+    at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
 class SkillState(Base):
     __tablename__ = "skill_states"
     __table_args__ = (UniqueConstraint("child_id", "skill"),)
