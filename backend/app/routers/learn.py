@@ -16,7 +16,8 @@ from pydantic import Field
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from .. import assessment, memory
+from .. import assessment, licence, memory
+from ..config import get_settings
 from ..db import get_db
 from ..lang import engine
 from ..lang.content import TARGETS, WORDS
@@ -134,11 +135,21 @@ def compare(langs: str, topic: str = "greetings", ui: str = "en") -> dict:
             "languages": [{"code": c, "name": t[c].name, "native": t[c].native, "flag": t[c].flag, "locale": t[c].locale, "rtl": t[c].rtl, "latin": t[c].latin} for c in codes]}
 
 
+def _language_allowed(db: Session, child: Child, lang: str) -> None:
+    """Free plan: a child studies as many languages as the plan allows; the first ones started stay open."""
+    n = licence.limit(get_settings(), "languages")
+    if n is None:
+        return
+    started = set(db.scalars(select(LangSkillState.lang).where(LangSkillState.child_id == child.id)).all())
+    licence.require(get_settings(), lang in started or len(started) < n)
+
+
 @router.post("/children/{child_id}/learn/{lang}/practice", status_code=201)
 def practice(lang: str, body: PracticeIn, child: Child = Depends(owned_child), db: Session = Depends(get_db)) -> dict:
     """Practise one chosen word or phrase (from the side-by-side view): hear-and-pick, read, say or write it.
     Answered like any other activity, so it counts toward the child's progress."""
     _target(lang)
+    _language_allowed(db, child, lang)
     if body.item not in ITEMS[lang]:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Unknown word")
     if body.skill == "speak" and not child.consent_microphone:
@@ -178,6 +189,7 @@ def language_status(lang: str, child: Child = Depends(owned_child), db: Session 
 @router.post("/children/{child_id}/learn/{lang}/next", status_code=201)
 def next_activity(lang: str, body: NextIn, child: Child = Depends(owned_child), db: Session = Depends(get_db)) -> dict:
     _target(lang)
+    _language_allowed(db, child, lang)
     skills, items = _state(db, child, lang)
     # an activity left unanswered (tab closed, child wandered off) is simply dropped: no penalty
     for a in db.scalars(select(LangAttempt).where(LangAttempt.child_id == child.id, LangAttempt.lang == lang, LangAttempt.outcome.is_(None))):

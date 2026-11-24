@@ -14,8 +14,9 @@ from pydantic import BaseModel, Field, ValidationError
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from .. import basics, coach, engine, memory
+from .. import basics, coach, engine, licence, memory
 from ..languages import note_name as _lang_note_name
+from ..config import get_settings
 from ..curriculum import LEVELS, SONGS
 from ..db import get_db
 from ..models import Attempt, Child, LessonSession
@@ -158,21 +159,32 @@ def _public_song(sid: str, song: dict, child: Child) -> dict:
     }
 
 
+def _ordered(library: dict) -> list:
+    order = {"celebration": 0, "indian": 1, "nursery": 2, "alankar": 3, "claude": 4}
+    return sorted(library.items(), key=lambda kv: (order.get(kv[1].get("tag", "nursery"), 3), kv[1]["ease"], kv[1]["title"]))
+
+
+def _locked(library: dict) -> set[str]:
+    """Songs past the free plan's first ones (none on the family plan)."""
+    n = licence.limit(get_settings(), "songs")
+    return set() if n is None else {sid for sid, _ in _ordered(library)[n:]}
+
+
 @router.get("/children/{child_id}/songs")
 def list_songs(child: Child = Depends(owned_child), db: Session = Depends(get_db)) -> list[dict]:
     library = _all_songs(db, child)
     prog = _progress(db, child.id, library)
-    order = {"celebration": 0, "indian": 1, "nursery": 2, "alankar": 3, "claude": 4}
-    items = sorted(library.items(), key=lambda kv: (order.get(kv[1].get("tag", "nursery"), 3), kv[1]["ease"], kv[1]["title"]))
+    locked = _locked(library)
     return [{
         "id": sid, "title": s["title"], "tag": s.get("tag", "nursery"), "ease": s["ease"], "phrase_count": len(s["phrases"]),
-        "progress": {k: v for k, v in prog.get(sid, _empty_progress()).items() if k != "stats"},
-    } for sid, s in items]
+        "progress": {k: v for k, v in prog.get(sid, _empty_progress()).items() if k != "stats"}, "locked": sid in locked,
+    } for sid, s in _ordered(library)]
 
 
 @router.post("/children/{child_id}/songs/{song_id}/start", status_code=201)
 def start_song(song_id: str, child: Child = Depends(owned_child), db: Session = Depends(get_db)) -> dict:
     song = _song_or_404(song_id, db, child)
+    licence.require(get_settings(), song_id not in _locked(_all_songs(db, child)))
     # close any song/lesson left open (tab closed)
     for s in db.scalars(select(LessonSession).where(LessonSession.child_id == child.id, LessonSession.ended_at.is_(None))):
         s.ended_at, s.end_reason = datetime.now(timezone.utc), "abandoned"

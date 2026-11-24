@@ -210,7 +210,9 @@ export interface BrainsFound {
 }
 export type SongTag = "celebration" | "indian" | "nursery" | "alankar" | "claude";
 export interface SongProgress { phrases_learned: number[]; completed: boolean; plays: number }
-export interface SongCard { id: string; title: string; tag: SongTag; ease: number; phrase_count: number; progress: SongProgress }
+export interface SongCard { id: string; title: string; tag: SongTag; ease: number; phrase_count: number; progress: SongProgress; locked?: boolean }
+export type PlanLimits = { children: number | null; songs: number | null; languages: number | null; topics_per_strand: number | null };
+export interface PlanStatus { plan: "free" | "family"; edition: "dev" | "retail"; limits: PlanLimits; licence: { id: string; to: string; expires: string | null } | null }
 export interface Song {
   id: string; title: string; tag: SongTag; ease: number; bpm: number; note: string | null; source?: string;
   notes: number[]; beats: number[]; phrases: number[]; words: string[] | null;
@@ -242,6 +244,9 @@ export const api = {
   login: (email: string, password: string) => request<Parent>("/api/auth/login", { method: "POST", body: json({ email, password }) }),
   logout: () => request<void>("/api/auth/logout", { method: "POST" }),
   deleteAccount: () => request<void>("/api/auth/account", { method: "DELETE" }),
+  licence: () => request<PlanStatus>("/api/licence"),
+  licenceAdd: (key: string) => request<PlanStatus>("/api/licence", { method: "PUT", body: json({ key }) }),
+  licenceRemove: () => request<PlanStatus>("/api/licence", { method: "DELETE" }),
   updateCheck: () => request<{ current: string; latest: string | null; newer: boolean; url: string | null; name: string | null }>("/api/system/update"),
   teacherStatus: () => request<{ provider: string; model: string | null; configured: string; claude_code_found: boolean }>("/api/teacher/status"),
   teacherTest: () => request<BrainTest>("/api/teacher/test", { method: "POST" }),

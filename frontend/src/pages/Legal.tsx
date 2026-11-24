@@ -9,6 +9,8 @@ export const TERMS_VERSION = "2026-11-24";
 /** Filled in before launch: the address parents write to, and who sells Melo. */
 export const SUPPORT_EMAIL = "";
 export const SELLER = "the seller of Melo";
+/** The shop page where parents buy the family plan (a licence key arrives by email). */
+export const BUY_URL = "";
 
 const contact = () => (SUPPORT_EMAIL
   ? <>by email to <a href={`mailto:${SUPPORT_EMAIL}`}>{SUPPORT_EMAIL}</a></>

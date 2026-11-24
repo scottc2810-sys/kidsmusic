@@ -7,12 +7,14 @@ import platform
 import shutil
 import sys
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException, Request
+from pydantic import Field
 
 from ..config import FROZEN, get_settings
-from .. import updates
+from .. import licence, updates
 from ..models import Parent
-from ..security import current_parent
+from ..schemas import Strict
+from ..security import client_ip, current_parent, rate_limiter
 from ..teacher import llm
 from ..teacher.service import find_claude_cli, get_teacher
 
@@ -52,3 +54,27 @@ def system_check(parent: Parent = Depends(current_parent)) -> dict:
 def update_check(parent: Parent = Depends(current_parent)) -> dict:
     """Whether a newer Melo is out (cached for 12 hours; nothing personal is sent)."""
     return updates.check(get_settings().update_url)
+
+
+class LicenceIn(Strict):
+    key: str = Field(min_length=10, max_length=1000)
+
+
+@router.get("/licence")
+def licence_status(parent: Parent = Depends(current_parent)) -> dict:
+    """This copy's plan (free or family), what the free plan includes, and the active key's details."""
+    return licence.status(get_settings())
+
+
+@router.put("/licence")
+def licence_add(body: LicenceIn, request: Request, parent: Parent = Depends(current_parent)) -> dict:
+    rate_limiter.check(f"licence:{client_ip(request)}", 10)
+    if not licence.save_key(get_settings().data_dir, body.key):
+        raise HTTPException(422, "That key isn't valid. Copy it again from your purchase email, all of it.")
+    return licence.status(get_settings())
+
+
+@router.delete("/licence")
+def licence_remove(parent: Parent = Depends(current_parent)) -> dict:
+    licence.remove_key(get_settings().data_dir)
+    return licence.status(get_settings())

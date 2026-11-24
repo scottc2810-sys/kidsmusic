@@ -6,6 +6,8 @@ from sqlalchemy.orm import Session
 
 from .. import path as learning
 from ..curriculum import LEVELS
+from .. import licence
+from ..config import get_settings
 from ..db import get_db
 from ..engine import as_utc, skill_states, skills_snapshot
 from ..models import Attempt, Child, ConsentEvent, LangAttempt, LangItemState, LangSkillState, LessonSession, Parent, Recording, SkillState
@@ -32,6 +34,8 @@ def create_child(body: ChildCreate, parent: Parent = Depends(current_parent), db
     count = db.scalar(select(func.count()).select_from(Child).where(Child.parent_id == parent.id)) or 0
     if count >= MAX_CHILDREN:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, f"Up to {MAX_CHILDREN} child profiles per account")
+    free_max = licence.limit(get_settings(), "children")
+    licence.require(get_settings(), free_max is None or count < free_max)
     child = Child(parent_id=parent.id, **body.model_dump())
     if child.mode == "real" and not child.consent_microphone:
         child.mode = "screen"

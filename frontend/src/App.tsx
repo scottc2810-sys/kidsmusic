@@ -15,6 +15,7 @@ import { Dashboard } from "./pages/Dashboard";
 import { KidHome } from "./pages/KidHome";
 import { Lesson } from "./pages/Lesson";
 import { HelpPage } from "./pages/Help";
+import { PlanPage } from "./pages/Plan";
 import { PrivacyPage, TermsPage } from "./pages/Legal";
 import { Login } from "./pages/Login";
 import { ProgressPage } from "./pages/ProgressPage";
@@ -58,6 +59,7 @@ export function App() {
         <Route path="/parent" element={<RequireAuth><Dashboard /></RequireAuth>} />
         <Route path="/parent/connect" element={<RequireAuth><ConnectClaude /></RequireAuth>} />
         <Route path="/parent/help" element={<RequireAuth><HelpPage /></RequireAuth>} />
+        <Route path="/parent/plan" element={<RequireAuth><PlanPage /></RequireAuth>} />
         <Route path="/parent/child/:id/settings" element={<RequireAuth><Settings /></RequireAuth>} />
         <Route path="/parent/child/:id/progress" element={<RequireAuth><ProgressPage /></RequireAuth>} />
         <Route path="/parent/child/:id/voices" element={<RequireAuth><NativeVoices /></RequireAuth>} />

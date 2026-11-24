@@ -27,10 +27,13 @@ const ORDER: SupportLevel[] = ["full", "guided", "light", "memory"];
 const HELP_LABEL = { full: "helpFull", guided: "helpGuided", light: "helpLight", memory: "helpMemory" } as const;
 const HELP_ICON: Record<SupportLevel, string> = { full: "🧭", guided: "👣", light: "🌱", memory: "🌟" };
 
+const ASK_GROWN_UP = { en: "This song is in the family plan. Ask a grown-up!", hi: "यह गाना फ़ैमिली प्लान में है। किसी बड़े से पूछो!", hinglish: "Yeh gaana family plan mein hai. Kisi bade se poochho!" };
+
 export function SongList() {
   const { id = "" } = useParams();
   const { child, error } = useChild(id);
   const [songs, setSongs] = useState<SongCard[] | null>(null);
+  const [lockMsg, setLockMsg] = useState(false);
   const nav = useNavigate();
   useEffect(() => { api.songs(id).then(setSongs).catch(() => setSongs([])); }, [id]);
   useEffect(() => { if (child) void speak(t("pickSong", child.language), child.language); }, [child]);
@@ -42,14 +45,18 @@ export function SongList() {
       <div className="lesson song-school">
         <Melo mood="happy" size={120} say={t("pickSong", lang)} />
         <ShlokaOfTheDay subject="music" lang={lang} />
+        {lockMsg && <p className="card notice" role="status">🔒 {L(ASK_GROWN_UP, lang)}</p>}
         <div className="song-grid">
           {songs.map((s) => {
             const learned = s.progress.completed;
-            const open = async (listen: boolean) => { primeSpeech(); await unlockAudio(); nav(`/play/${id}/songs/${s.id}${listen ? "?listen=1" : ""}`); };
+            const open = async (listen: boolean) => {
+              if (s.locked) { setLockMsg(true); void speak(L(ASK_GROWN_UP, lang), lang); return; }
+              primeSpeech(); await unlockAudio(); nav(`/play/${id}/songs/${s.id}${listen ? "?listen=1" : ""}`);
+            };
             return (
               <div key={s.id} className="song-card-wrap">
-              <button className={`song-card tag-${s.tag}${learned ? " learned" : ""}`} onClick={() => void open(false)}>
-                <span className="song-icon" aria-hidden>{TAG_ICON[s.tag]}</span>
+              <button className={`song-card tag-${s.tag}${learned ? " learned" : ""}${s.locked ? " locked" : ""}`} onClick={() => void open(false)}>
+                <span className="song-icon" aria-hidden>{s.locked ? "🔒" : TAG_ICON[s.tag]}</span>
                 <span className="song-title">{s.title}</span>
                 <span className="song-dots" aria-label={`${s.progress.phrases_learned.length} of ${s.phrase_count} parts learned`}>
                   {Array.from({ length: s.phrase_count }, (_, i) => <i key={i} className={s.progress.phrases_learned.includes(i) ? "on" : ""} />)}

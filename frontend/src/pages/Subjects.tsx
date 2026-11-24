@@ -13,6 +13,7 @@ import { ShlokaOfTheDay } from "../components/ShlokaCard";
 import { STRANDS_OF, SUBJECT_INFO, TOPICS, type SubjectId } from "../subjects/index";
 import { T as TX, type Exercise, type Topic } from "../subjects/maths";
 import { missionFor } from "../subjects/missions";
+import { topicLocked, usePlan } from "../plan";
 import { AskedLog, drawFresh, drawRevision, nearLevels, qid, TaughtLog, teachFirst, type Teach } from "../subjects/teachfirst";
 import { VisualView } from "../subjects/Visuals";
 import { useTeacher, type Subject as TeacherSubject } from "../teaching/persona";
@@ -41,6 +42,7 @@ const S = {
   watchMe: { en: "Watch me solve one", hi: "देखो, मैं एक हल करता हूँ", hinglish: "Dekho, main ek solve karta hoon" },
   nowYou: { en: "Now you try!", hi: "अब तुम करो!", hinglish: "Ab tum karo!" },
   because: { en: "Why?", hi: "क्यों?", hinglish: "Kyun?" },
+  askGrownUp: { en: "This one is in the family plan. Ask a grown-up!", hi: "यह फ़ैमिली प्लान में है। किसी बड़े से पूछो!", hinglish: "Yeh family plan mein hai. Kisi bade se poochho!" },
   revise: { en: "Revise", hi: "दोहराओ", hinglish: "Dohraao" },
   revision: { en: "Revision: questions you've met before, the tricky ones first.", hi: "दोहराना: पहले आए सवाल, कठिन वाले पहले।", hinglish: "Revision: pehle aaye sawaal, mushkil wale pehle." },
   nothingToRevise: { en: "Nothing to revise here yet: learn this topic first!", hi: "अभी दोहराने को कुछ नहीं: पहले यह विषय सीखो!", hinglish: "Abhi dohraane ko kuch nahi: pehle yeh topic seekho!" },
@@ -77,6 +79,8 @@ function Home({ child, subject }: { child: Child; subject: Subj }) {
   const [prog, setProg] = useState<Record<string, TopicProgress>>({});
   useEffect(() => { api.subjectProgress(child.id, subject).then((p) => setProg(p.topics)).catch(() => {}); }, [child.id, subject]);
   const grade = teacher.grade ?? Math.max(0, Math.min(5, child.age - 5));
+  const plan = usePlan();
+  const [lockMsg, setLockMsg] = useState(false);
   const said = useRef(false);
   useEffect(() => { if (teacher.prefs && !said.current) { said.current = true; void speak(teacher.hello(child.name, lang), lang); } }, [teacher.prefs]); // eslint-disable-line react-hooks/exhaustive-deps
   const open = async (path: string) => { primeSpeech(); await unlockAudio(); nav(path); };
@@ -87,6 +91,7 @@ function Home({ child, subject }: { child: Child; subject: Subj }) {
           <span className="help-badge">{grade ? `${L(S.forClass, lang)} ${grade}` : L(S.preschool, lang)}</span></div>
         <Melo mood="happy" size={100} say={teacher.hello(child.name, lang)} />
         <ShlokaOfTheDay subject={subject} lang={lang} />
+        {lockMsg && <p className="card notice" role="status">🔒 {L(S.askGrownUp, lang)}</p>}
         {subject === "maths" && (
           <button className="topic-card lab" onClick={() => void open(`/play/${child.id}/maths/shape-lab`)}>
             <span className="topic-icon">🧪</span><strong>{L(S.shapeLab, lang)}</strong><small>{L(S.shapeLabAbout, lang)}</small>
@@ -96,13 +101,15 @@ function Home({ child, subject }: { child: Child; subject: Subj }) {
           <section key={st.id} className="strand">
             <h2>{st.icon} {L(st.title, lang)}</h2>
             <div className="topic-grid">
-              {topicsOf(subject).filter((tp) => tp.strand === st.id).map((tp) => {
+              {topicsOf(subject).filter((tp) => tp.strand === st.id).map((tp, ti) => {
                 const p = prog[tp.id];
+                const locked = topicLocked(plan, ti);
                 const fits = grade >= tp.grades[0] && grade <= tp.grades[1];
                 return (
                   <div key={tp.id} className="topic-wrap">
-                  <button className={`topic-card${fits ? " fits" : ""}`} onClick={() => void open(`/play/${child.id}/${subject}/${tp.id}`)}>
-                    <span className="topic-icon" aria-hidden>{tp.icon}</span>
+                  <button className={`topic-card${fits ? " fits" : ""}${locked ? " locked" : ""}`}
+                    onClick={() => (locked ? setLockMsg(true) : void open(`/play/${child.id}/${subject}/${tp.id}`))}>
+                    <span className="topic-icon" aria-hidden>{locked ? "🔒" : tp.icon}</span>
                     <strong>{L(tp.title, lang)}</strong>
                     <small className="muted">{tp.grades[0] === 0 ? "KG" : `${L(S.forClass, lang)} ${tp.grades[0]}`}–{tp.grades[1]}{fits ? ` · ⭐ ${L(S.forYou, lang)}` : ""}</small>
                     {p && <small>⭐ {p.stars} · Lv {p.difficulty}</small>}

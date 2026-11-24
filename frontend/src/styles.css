@@ -804,3 +804,5 @@ legend { font-weight: 700; padding: 0 6px; }
 .faq p { margin: 8px 0 4px; }
 pre.tech { white-space: pre-wrap; font-size: 0.8rem; background: var(--surface-2, transparent); padding: 8px; border-radius: 8px; }
 .btn.disabled { opacity: 0.5; pointer-events: none; }
+.topic-card.locked, .song-card.locked { opacity: 0.6; }
+.plan-card textarea { font-family: ui-monospace, monospace; font-size: 0.85rem; }
