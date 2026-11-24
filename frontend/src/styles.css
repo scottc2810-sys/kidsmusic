@@ -799,3 +799,8 @@ legend { font-weight: 700; padding: 0 6px; }
 .auth-card .agree input { width: auto; margin-top: 4px; }
 .update-banner { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 12px; }
 .update-banner p { flex: 1; margin: 0; min-width: 200px; }
+.faq { border-bottom: 1px solid var(--line); padding: 8px 0; }
+.faq summary { cursor: pointer; font-weight: 600; }
+.faq p { margin: 8px 0 4px; }
+pre.tech { white-space: pre-wrap; font-size: 0.8rem; background: var(--surface-2, transparent); padding: 8px; border-radius: 8px; }
+.btn.disabled { opacity: 0.5; pointer-events: none; }

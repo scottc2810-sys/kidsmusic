@@ -23,6 +23,7 @@ export function ParentShell({ title, back, children }: { title: string; back?: s
           {ai && <span className={`pill ${ai !== "offline" ? "ok" : ""}`} title="AI teacher provider">
             {ai === "anthropic" ? "Claude teacher" : ai === "claude_code" ? "Claude Code teacher" : "Offline teacher"}</span>}
           <Link to="/parent/connect" className="btn ghost small">🧠 AI brain</Link>
+          <Link to="/parent/help" className="btn ghost small">💬 Help</Link>
           <span className="muted small hide-sm">{parent?.email}</span>
           <button className="btn ghost small" onClick={logout}>Sign out</button>
         </nav>
