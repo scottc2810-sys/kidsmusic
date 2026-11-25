@@ -8,6 +8,8 @@ import { ParentChat } from "./pages/ParentChat";
 import { StarMap } from "./pages/StarMap";
 import { StoryList, StoryPage } from "./pages/Stories";
 import { ListenRoom } from "./pages/Listen";
+import { MoveHome, MovePage } from "./pages/Move";
+import { BrainGamePage, BrainHome } from "./pages/BrainGames";
 import { AlphabetCompareView, AlphabetHome, AlphabetPage } from "./pages/Alphabet";
 import { NoteRain, NoteRainList } from "./pages/NoteRain";
 import { createContext, useCallback, useContext, useEffect, useState } from "react";
@@ -95,6 +97,10 @@ export function App() {
         <Route path="/play/:id/talk" element={<RequireAuth><TalkToMelo /></RequireAuth>} />
         <Route path="/play/:id/stories" element={<RequireAuth><StoryList /></RequireAuth>} />
         <Route path="/play/:id/listen" element={<RequireAuth><ListenRoom /></RequireAuth>} />
+        <Route path="/play/:id/move" element={<RequireAuth><MoveHome /></RequireAuth>} />
+        <Route path="/play/:id/move/:moveId" element={<RequireAuth><MovePage /></RequireAuth>} />
+        <Route path="/play/:id/brain" element={<RequireAuth><BrainHome /></RequireAuth>} />
+        <Route path="/play/:id/brain/:game" element={<RequireAuth><BrainGamePage /></RequireAuth>} />
         <Route path="/play/:id/alphabet" element={<RequireAuth><AlphabetHome /></RequireAuth>} />
         <Route path="/play/:id/alphabet/:code" element={<RequireAuth><AlphabetPage /></RequireAuth>} />
         <Route path="/play/:id/alphabet-compare" element={<RequireAuth><AlphabetCompareView /></RequireAuth>} />

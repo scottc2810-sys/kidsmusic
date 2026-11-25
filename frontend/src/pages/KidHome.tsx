@@ -88,6 +88,8 @@ export function KidHome() {
           <button className="big-choice bc-purple" onClick={() => go(`/play/${id}/note-rain`)}><span>🌧️</span>{L({ en: "Note rain", hi: "सुरों की बारिश", hinglish: "Suron ki baarish" }, lang)}</button>
           <button className="big-choice bc-green" onClick={() => go(`/play/${id}/stories`)}><span>📖</span>{L({ en: "Stories", hi: "कहानियाँ", hinglish: "Kahaaniyaan" }, lang)}</button>
           <button className="big-choice bc-blue" onClick={() => go(`/play/${id}/listen`)}><span>🎧</span>{L({ en: "Listen & feel", hi: "सुनो और महसूस करो", hinglish: "Suno aur mehsoos karo" }, lang)}</button>
+          <button className="big-choice bc-orange" onClick={() => go(`/play/${id}/move`)}><span>🤸</span>{L({ en: "Move & yoga", hi: "कसरत और योग", hinglish: "Kasrat aur yog" }, lang)}</button>
+          <button className="big-choice bc-pink" onClick={() => go(`/play/${id}/brain`)}><span>🧠</span>{L({ en: "Brain games", hi: "दिमाग़ के खेल", hinglish: "Dimaag ke khel" }, lang)}</button>
           <button className="big-choice bc-orange" onClick={() => go(`/play/${id}/learn`)}><span>🗣️</span>{t("languages", lang)}</button>
           <button className="big-choice bc-blue" onClick={() => go(`/play/${id}/maths`)}><span>🔢</span>{L({ en: "Maths", hi: "गणित", hinglish: "Maths" }, lang)}</button>
           <button className="big-choice bc-green" onClick={() => go(`/play/${id}/science`)}><span>🔬</span>{L({ en: "Science", hi: "विज्ञान", hinglish: "Science" }, lang)}</button>

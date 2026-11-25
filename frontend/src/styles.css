@@ -1012,3 +1012,49 @@ pre.tech { white-space: pre-wrap; font-size: 0.8rem; background: var(--surface-2
 @keyframes wobble { 0%, 100% { transform: rotate(0); } 25% { transform: rotate(-8deg); } 75% { transform: rotate(8deg); } }
 @keyframes sc-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
 @media (prefers-reduced-motion: reduce) { .abc-balloon, .abc-bubble, .abc-game-icon { animation: none !important; } }
+
+/* ---- Move & stretch ---- */
+.move-home, .move-session, .brain-home, .brain-round { max-width: 900px; margin: 0 auto; width: 100%; }
+.move-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; width: 100%; }
+.move-card { position: relative; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 10px; border: 0; border-radius: 22px; font: inherit; color: #26203b; cursor: pointer; box-shadow: 0 5px 0 rgba(0,0,0,0.1); text-align: center; overflow: hidden; }
+.move-card.kind-exercise { background: linear-gradient(135deg, #ffe0b8, #ffd1dc); }
+.move-card.kind-yoga { background: linear-gradient(135deg, #d6f5e3, #d7ecff); }
+.move-card img { width: 100%; height: 92px; object-fit: cover; border-radius: 14px; }
+.move-icon { font-size: 3rem; height: 92px; display: grid; place-items: center; }
+.move-tick { position: absolute; top: 6px; right: 8px; }
+.move-media { margin: 0 auto; width: 100%; max-width: 560px; display: grid; gap: 4px; }
+.move-media video, .move-media img { width: 100%; max-height: 340px; object-fit: contain; border-radius: 20px; background: #111; }
+.move-step { text-align: center; display: grid; gap: 8px; justify-items: center; max-width: 620px; margin: 0 auto; }
+.move-doing { display: grid; gap: 10px; justify-items: center; }
+.move-count { font-size: 1.6rem; font-weight: 900; }
+.move-count.big { font-size: 5rem; line-height: 1; color: var(--brand); }
+.move-count small { font-size: 1.4rem; color: var(--muted); }
+.move-cue { font-size: 2.4rem; font-weight: 900; color: var(--warn); }
+
+/* ---- Brain games ---- */
+.brain-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 12px; width: 100%; }
+.brain-card { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 16px 10px; border: 0; border-radius: 26px; font: inherit; color: #26203b; cursor: pointer; box-shadow: 0 6px 0 rgba(0,0,0,0.12); }
+.brain-card strong { font-size: 1.15rem; }
+.brain-icon { font-size: 3rem; line-height: 1; }
+.brain-round { display: grid; gap: 12px; justify-items: center; text-align: center; }
+.memory-grid { display: grid; gap: 10px; width: 100%; max-width: 460px; }
+.memory-card { aspect-ratio: 1; border: 0; border-radius: 18px; font-size: 2.6rem; background: linear-gradient(135deg, #8c72ff, #4cc9f0); color: #fff; cursor: pointer; box-shadow: 0 4px 0 rgba(0,0,0,0.15); transition: transform 0.25s; }
+.memory-card.up { background: #fff; color: inherit; transform: rotateY(180deg); }
+.memory-card.up span { display: inline-block; transform: rotateY(180deg); }
+.memory-card.found { background: #e3f7ec; }
+.simon-pads { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; width: 100%; max-width: 360px; }
+.simon-pad { aspect-ratio: 1; border: 0; border-radius: 28px; background: var(--c); opacity: 0.55; cursor: pointer; box-shadow: 0 6px 0 rgba(0,0,0,0.15); transition: opacity 0.1s, transform 0.1s; }
+.simon-pad.lit { opacity: 1; transform: scale(1.06); box-shadow: 0 0 24px var(--c); }
+.simon-pad:disabled { cursor: default; }
+.odd-grid { display: grid; gap: 8px; width: 100%; max-width: 420px; }
+.odd-cell { aspect-ratio: 1; border: 2px solid var(--line); border-radius: 16px; background: var(--surface); font-size: 2.2rem; cursor: pointer; }
+.odd-cell.right { border-color: var(--ok); background: #e3f7ec; }
+.odd-cell.wrong { border-color: #f0b4bf; }
+.pattern-row { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; font-size: 2.4rem; }
+.pattern-q { border: 3px dashed var(--brand); border-radius: 14px; padding: 0 6px; }
+.stars-board { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: 100%; max-width: 360px; }
+.stars-cell { aspect-ratio: 1; border: 2px solid var(--line); border-radius: 22px; background: linear-gradient(180deg, #1d2450, #3b4a8c); font-size: 3rem; cursor: pointer; }
+.count-board { position: relative; width: 280px; height: 280px; border-radius: 26px; background: var(--brand-soft); }
+.count-board i { position: absolute; width: 30px; height: 30px; margin: -15px 0 0 -15px; border-radius: 50%; background: var(--brand); }
+@media (prefers-reduced-motion: reduce) { .memory-card, .simon-pad { transition: none; } }
+.pattern-row + .abc-bubbles .abc-bubble { font-size: 3rem; }
