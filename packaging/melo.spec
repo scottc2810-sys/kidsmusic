@@ -46,7 +46,8 @@ a = Analysis(
     pathex=[str(BACKEND)],
     datas=datas,
     hiddenimports=hidden,
-    excludes=["pytest", "IPython", "matplotlib", "PIL", "pandas", "scipy"],
+    # piper bundles eSpeak-NG (GPL) and is only used to pre-record voices on the build machine: never ship it
+    excludes=["pytest", "IPython", "matplotlib", "PIL", "pandas", "scipy", "piper", "lameenc", "onnxruntime", "espeakbridge"],
     noarchive=False,
 )
 pyz = PYZ(a.pure)
