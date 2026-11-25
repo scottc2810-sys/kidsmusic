@@ -86,7 +86,7 @@ def main() -> int:
         c = Client(base)
         assert b"root" in c.req("GET", "/")
         ok("web app served")
-        c.req("POST", "/api/auth/register", {"email": "smoke@example.com", "password": "correct-horse-1"})
+        c.req("POST", "/api/auth/register", {"email": "smoke@example.com", "password": "correct-horse-1", "agree": True})
         kid = c.req("POST", "/api/children", {"name": "Asha", "age": 3, "language": "en"})
         cid = kid["id"]
         ok("parent account and child created")
@@ -96,6 +96,19 @@ def main() -> int:
         start = c.req("POST", f"/api/children/{cid}/songs/{songs[0]['id']}/start")
         assert start["song"]["notes"]
         ok(f"{len(songs)} songs; song school starts")
+
+        # Note Rain, alphabets, and the Listening room's recordings and videos ship inside the app
+        r = c.req("POST", f"/api/children/{cid}/note-rain", {"song_id": songs[0]["id"], "hits": 8, "total": 8, "wrong": 0, "mode": "wait", "speed": "turtle"})
+        assert r["stars"] == 3
+        for code in ("hi", "ta", "ja", "ar", "en"):
+            abc = c.req("GET", f"/api/learn/alphabet/{code}")
+            assert len(abc["letters"]) >= 26, code
+        assert c.req("GET", "/api/learn/alphabet-compare?langs=hi,ta,en")["rows"]
+        assert c.req("POST", f"/api/children/{cid}/alphabet/hi/round", {"skill": "read", "results": [{"i": 0, "ok": True}]})["right"] == 1
+        for f in ("listen/mozart-k448-1.mp3", "listen/chants/gayatri.mp3", "listen/chants/ramayana_sundara.mp3", "listen/video/aurora.webm"):
+            body = c.req("GET", "/" + f)
+            assert len(body) > 50_000, f
+        ok("Note Rain, alphabets (20 languages) and Listening room recordings and videos")
 
         inst = c.req("PUT", f"/api/children/{cid}/instrument", {"kind": "toy_keyboard", "keys": 37, "first_key": "F", "labels": "numbers",
                                                                  "notes": "37 keys kids keyboard with microphone and recording"})
