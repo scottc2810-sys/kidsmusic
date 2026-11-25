@@ -518,3 +518,14 @@ Tests: 232 backend (`test_note_rain.py`, Piper licence, order and credit tests i
 
 Tests: 232 backend, 212 frontend (`listening.test.ts`: every task present, Hindi and Hinglish everywhere, no big brain claims, pieces loop in whole bars with their chords).
 
+### Update 2026-11-24 (night, later): real recordings and binaural beats in the Listening room
+
+| Change | Detail |
+|---|---|
+| 🎼 **Real recordings** (`frontend/public/listen/`, credits in `CREDITS.md`) | **Mozart, Sonata for Two Pianos K. 448, 1st movement** (the movement used in the 1993 study): a real two-piano performance from Wikimedia Commons (user Alton and a friend, 2005), **CC BY-SA 3.0**, credited on screen with a link. **Beethoven, Moonlight Sonata, 1st movement**: Paul Pitman for Musopen, **public domain**. Both converted from Ogg Vorbis to MP3 (128 kbps; Safari cannot play Ogg), with the peak set to -1 dB and nothing else changed. Tasks: "two pianos talking" for K. 448, "imagine moonlight on a lake" for the Moonlight. Melo explains first, then the recording plays (no talking over it), looped for the chosen 1 to 10 minutes, and fades out. |
+| Honest K. 448 text | It says what the 1993 study found (a slightly better puzzle score for about 15 minutes) and what later studies found: enjoyable music lifts mood and alertness, and that helps thinking. It never says Mozart makes children smarter. |
+| 🎧 **Binaural beats** (`audio/binaural.ts`) | A 200 Hz sine tone in the left ear and 200 Hz + the beat in the right ear, over very soft brown noise, with a 4-second fade in and 3-second fade out. Five bands: 😴 2 Hz delta (sleep), 🌙 6 Hz theta (daydream), 🍃 10 Hz alpha (calm and ready), ⚡ 15 Hz beta (alert), ✨ 40 Hz gamma (sharp attention). Each one says headphones are needed and that the research is mixed. The parent note says: headphones, low volume, at most 10 minutes, ask a doctor first if the child has epilepsy. **Nothing on screen flashes at the beat rate** (15 to 40 Hz flicker can trigger seizures); only the slow 10-second breathing circle moves. |
+| Listening room layout | Three groups: 🦉 Melo plays, 🎼 Real recordings, 🎧 Binaural beats. |
+
+Verified in the built app (headless Edge): both recordings load from `/listen/` (range requests, 206), play and pause on Stop; the binaural tracks run with no errors. Tests: 232 backend, 215 frontend (the recordings are shipped with licence, performer and Commons source; beat frequencies and the tone in each ear; the binaural text mentions headphones and the mixed evidence; nothing flashes).
+

@@ -108,4 +108,6 @@ Workflow: **Architect** (docs/ARCHITECTURE.md) → **Engineer** (implementation)
 19. **Note Rain** checks the timing on the device. The server trusts the hits, total and wrong counts it receives (validated and capped, and only the best stars are kept), as with the other rounds.
 20. **Piper voices** are pre-recorded by the owner (build time). Live lessons use Piper only when its models are already on the computer (the owner's copy). Installed copies never contain Piper or eSpeak-NG (GPL), only the MP3 clips, each with its voice and data licence. CC BY / CC BY-SA voices need that credit to stay visible (shown under each clip).
 21. **Stories** are recorded as `vedas` rounds with `story_` topic ids. They do not appear in the Vedas topic list, but they count in the Vedas & wisdom results.
+22. **Recordings in the Listening room** keep their licences: K. 448 is CC BY-SA 3.0 (the credit on screen and `frontend/public/listen/CREDITS.md` must stay); Moonlight is public domain. Add new recordings only with a licence that allows commercial use (CC0, PD, CC BY, CC BY-SA), never NC or ND.
+23. **Binaural beats** must never be paired with a visual that flickers at the beat rate. The volume is capped at 0.25 in `startBinaural`.
 

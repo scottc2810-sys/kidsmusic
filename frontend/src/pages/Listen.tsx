@@ -5,11 +5,12 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { api, type Child } from "../api";
 import { onMusicEvent, playMusic, stopMusic } from "../audio/bgm";
+import { startBinaural, stopBinaural } from "../audio/binaural";
 import { primeSpeech, speak, stopSpeaking } from "../audio/speech";
 import { playSfx, unlockAudio } from "../audio/synth";
 import { Melo } from "../components/Melo";
 import { L, type Text } from "../i18n";
-import { DANCE_MOVES, MOODS_FACES, TRACKS, type Track } from "../subjects/listening";
+import { DANCE_MOVES, GROUPS, MOODS_FACES, TRACKS, type Track } from "../subjects/listening";
 import { KidShell, useChild } from "./KidHome";
 
 const S = {
@@ -32,6 +33,10 @@ const S = {
   same: { en: "Thanks for listening. Some days other music helps more: try another one next time.", hi: "सुनने के लिए धन्यवाद। कभी-कभी दूसरा संगीत ज़्यादा मदद करता है: अगली बार कोई और आज़माओ।", hinglish: "Sunne ke liye dhanyavaad. Kabhi-kabhi doosra sangeet zyada madad karta hai: agli baar koi aur aazmaao." },
   more: { en: "More music", hi: "और संगीत", hinglish: "Aur sangeet" },
   home: { en: "Home", hi: "घर", hinglish: "Ghar" },
+  headphones: { en: "Binaural beats only work with headphones. Keep the volume low and sessions short (up to 10 minutes). Ask a doctor first if your child has epilepsy. The screen never flashes.", hi: "बाइनॉरल बीट्स सिर्फ़ हेडफ़ोन से काम करती हैं। आवाज़ धीमी और समय कम रखें (10 मिनट तक)। बच्चे को मिर्गी हो तो पहले डॉक्टर से पूछें। स्क्रीन कभी नहीं चमकती।", hinglish: "Binaural beats sirf headphone se kaam karti hain. Awaaz dheemi aur samay kam rakhein (10 minute tak). Bachche ko mirgi ho toh pehle doctor se poochhein. Screen kabhi nahi chamakti." },
+  pianoOne: { en: "Piano 1", hi: "पियानो 1", hinglish: "Piano 1" },
+  pianoTwo: { en: "Piano 2", hi: "पियानो 2", hinglish: "Piano 2" },
+  performed: { en: "Recording", hi: "रिकॉर्डिंग", hinglish: "Recording" },
   parentNote: { en: "For grown-ups: music can change mood, breathing and attention for a while. It is not a treatment, and it does not make children smarter by itself; listening actively (noticing, counting, moving) is what trains attention.", hi: "बड़ों के लिए: संगीत कुछ समय के लिए मूड, साँस और ध्यान बदल सकता है। यह इलाज नहीं है और अपने-आप बच्चों को होशियार नहीं बनाता; ध्यान से सुनना (गिनना, पहचानना, हिलना) ही ध्यान को मज़बूत करता है।", hinglish: "Badon ke liye: sangeet kuch samay ke liye mood, saans aur dhyaan badal sakta hai. Yeh ilaaj nahi hai aur apne-aap bachchon ko hoshiyaar nahi banaata; dhyaan se sunna (ginna, pehchaanna, hilna) hi dhyaan ko mazboot karta hai." },
 } satisfies Record<string, Text>;
 
@@ -50,15 +55,21 @@ export function ListenRoom() {
       <div className="lesson listen-room">
         <h1>🎧 {L(S.title, lang)}</h1>
         <Melo mood="happy" size={90} say={L(S.pick, lang)} />
-        <div className="listen-grid">
-          {TRACKS.map((t) => (
-            <button key={t.id} className={`listen-card task-${t.task}`} onClick={async () => { primeSpeech(); await unlockAudio(); playSfx("pop"); setTrack(t); }}>
-              <span className="listen-icon" aria-hidden>{t.icon}</span>
-              <strong>{L(t.title, lang)}</strong>
-              <span className="listen-goal">{L(t.goal, lang)}</span>
-            </button>
-          ))}
-        </div>
+        {GROUPS.map((g) => (
+          <section key={g.id} className="listen-group">
+            <h2>{g.icon} {L(g.title, lang)}</h2>
+            {g.id === "binaural" && <p className="small listen-note">🎧 {L(S.headphones, lang)}</p>}
+            <div className="listen-grid">
+              {TRACKS.filter((t) => t.group === g.id).map((t) => (
+                <button key={t.id} className={`listen-card task-${t.task} group-${t.group}`} onClick={async () => { primeSpeech(); await unlockAudio(); playSfx("pop"); setTrack(t); }}>
+                  <span className="listen-icon" aria-hidden>{t.icon}</span>
+                  <strong>{L(t.title, lang)}</strong>
+                  <span className="listen-goal">{L(t.goal, lang)}</span>
+                </button>
+              ))}
+            </div>
+          </section>
+        ))}
         <p className="muted small listen-note">{L(S.parentNote, lang)}</p>
         <button className="btn ghost" onClick={() => nav(`/play/${id}`)}>🏠 {L(S.home, lang)}</button>
       </div>
@@ -78,9 +89,23 @@ function Session({ child, track, onDone }: { child: Child; track: Track; onDone:
   const [bar, setBar] = useState(0);
   const [bellGuess, setBellGuess] = useState<number | null>(null);
   const bells = useRef(0);
+  const audio = useRef<HTMLAudioElement | null>(null);
+  const sound = useRef(false); // is something of this session playing?
+  const stopSound = () => {
+    if (!sound.current) return;
+    sound.current = false;
+    stopMusic(`listen_${track.id}`);
+    stopBinaural();
+    const a = audio.current;
+    if (a) { // fade the recording out instead of cutting it
+      const v0 = a.volume;
+      let k = 0;
+      const t = window.setInterval(() => { k++; a.volume = Math.max(0, v0 * (1 - k / 15)); if (k >= 15) { window.clearInterval(t); a.pause(); } }, 100);
+    }
+  };
   const say = (t: Text) => { stopSpeaking(); void speak(L(t, lang), lang); };
 
-  useEffect(() => { say(S.before); return () => { stopMusic(`listen_${track.id}`); stopSpeaking(); }; }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { say(S.before); return () => { stopSound(); audio.current?.pause(); stopSpeaking(); }; }, []); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => onMusicEvent((e) => {
     if (e.kind === "bar") setBar(e.index);
     if (e.kind === "bell") bells.current = e.index;
@@ -99,11 +124,23 @@ function Session({ child, track, onDone }: { child: Child; track: Track; onDone:
     bells.current = 0;
     setLeft(minutes * 60);
     setStep("playing");
-    say(track.how);
-    playMusic(`listen_${track.id}`, track.def, { level: 0.5, force: true });
+    sound.current = true;
+    if (track.def) { say(track.how); playMusic(`listen_${track.id}`, track.def, { level: 0.5, force: true }); return; }
+    // a recording or binaural beats: Melo explains first, then the music starts (no talking over it)
+    stopSpeaking();
+    await speak(L(track.how, lang), lang);
+    if (!sound.current) return; // stopped while Melo was talking
+    if (track.binaural) startBinaural(track.binaural);
+    if (track.recording) {
+      const a = new Audio(track.recording.src);
+      a.loop = true;
+      a.volume = 0.9;
+      audio.current = a;
+      void a.play().catch(() => {});
+    }
   };
   const finish = () => {
-    stopMusic(`listen_${track.id}`);
+    stopSound();
     playSfx("sparkle");
     if (track.task === "bells") { setStep("bells"); say(S.howManyBells); } else { setStep("after"); say(S.after); }
   };
@@ -125,14 +162,19 @@ function Session({ child, track, onDone }: { child: Child; track: Track; onDone:
   );
 
   const mm = `${Math.floor(left / 60)}:${String(left % 60).padStart(2, "0")}`;
-  const perCycle = track.def.piece ? 8 : 4;
+  const perCycle = track.def?.piece ? 8 : 4;
   const bellChoices = Array.from(new Set([bells.current, Math.max(0, bells.current - 1), bells.current + 1, bells.current + 2])).sort((a, b) => a - b);
 
   return (
     <KidShell child={child}>
-      <div className={`lesson listen-session task-${track.task}`} style={{ ["--bpm" as string]: String(track.def.bpm) }}>
+      <div className={`lesson listen-session task-${track.task}`} style={{ ["--bpm" as string]: String(track.def?.bpm ?? 60) }}>
         <div className="row center wrap"><span className="listen-icon" aria-hidden>{track.icon}</span><h1>{L(track.title, lang)}</h1></div>
         <p className="listen-goal">{L(track.goal, lang)}</p>
+        {track.recording && (
+          <p className="muted small listen-credit">🎼 {L(S.performed, lang)}: {track.recording.performer} · {track.recording.licence} ·{" "}
+            <a href={track.recording.source} target="_blank" rel="noreferrer">Wikimedia Commons</a></p>
+        )}
+        {track.binaural && <p className="small listen-note">🎧 {L(S.headphones, lang)}</p>}
 
         {step === "before" && (
           <div className="card listen-panel">
@@ -166,6 +208,12 @@ function Session({ child, track, onDone }: { child: Child; track: Track; onDone:
               </div>
             )}
             {(track.task === "bells" || track.task === "hum") && <div className="listen-pulse" aria-hidden>{track.task === "bells" ? "🔔" : "🎶"}</div>}
+            {track.task === "duet" && (
+              <div className="duet" aria-hidden>
+                <span>🎹<small>{L(S.pianoOne, lang)}</small></span><span className="duet-talk">💬</span><span>🎹<small>{L(S.pianoTwo, lang)}</small></span>
+              </div>
+            )}
+            {track.task === "imagine" && <div className="imagine-scene" aria-hidden>🌕<br />🌊🌲🦉🌲🌊</div>}
             <p className="listen-timer">⏳ {mm}</p>
             <button className="btn ghost" onClick={finish}>⏹ {L(S.stop, lang)}</button>
           </div>
