@@ -11,6 +11,8 @@ import { playSfx, unlockAudio } from "../audio/synth";
 import { Melo } from "../components/Melo";
 import { L, type Text } from "../i18n";
 import { DANCE_MOVES, GROUPS, MOODS_FACES, TRACKS, type Track } from "../subjects/listening";
+import { VIDEOS } from "../subjects/videos";
+import { RECORDING_REPEATS, recordingRepeats } from "../audio/repeat";
 import { KidShell, useChild } from "./KidHome";
 
 const S = {
@@ -19,6 +21,9 @@ const S = {
   before: { en: "How do you feel right now?", hi: "अभी तुम कैसा महसूस कर रहे हो?", hinglish: "Abhi tum kaisa mehsoos kar rahe ho?" },
   after: { en: "And how do you feel now?", hi: "और अब कैसा महसूस कर रहे हो?", hinglish: "Aur ab kaisa mehsoos kar rahe ho?" },
   howLong: { en: "How long?", hi: "कितनी देर?", hinglish: "Kitni der?" },
+  howMany: { en: "How many times?", hi: "कितनी बार?", hinglish: "Kitni baar?" },
+  untilTimer: { en: "Until the timer ends", hi: "टाइमर ख़त्म होने तक", hinglish: "Timer khatam hone tak" },
+  times: { en: "times", hi: "बार", hinglish: "baar" },
   min: { en: "min", hi: "मिनट", hinglish: "min" },
   play: { en: "Play", hi: "चलाओ", hinglish: "Chalaao" },
   stop: { en: "Stop", hi: "रोको", hinglish: "Roko" },
@@ -85,6 +90,8 @@ function Session({ child, track, onDone }: { child: Child; track: Track; onDone:
   const [before, setBefore] = useState<number | null>(null);
   const [after, setAfter] = useState<number | null>(null);
   const [minutes, setMinutes] = useState(3);
+  const [repeats, setRepeats] = useState(track.recording ? recordingRepeats() : 0); // 0 = loop until the timer ends
+  const [played, setPlayed] = useState(0);
   const [left, setLeft] = useState(0);
   const [bar, setBar] = useState(0);
   const [bellGuess, setBellGuess] = useState<number | null>(null);
@@ -111,7 +118,7 @@ function Session({ child, track, onDone }: { child: Child; track: Track; onDone:
     if (e.kind === "bell") bells.current = e.index;
   }), []);
   useEffect(() => {
-    if (step !== "playing") return;
+    if (step !== "playing" || (track.recording && repeats > 0)) return; // counted plays: no timer
     const t = window.setInterval(() => setLeft((s) => {
       if (s <= 1) { window.clearInterval(t); finish(); return 0; }
       return s - 1;
@@ -133,7 +140,17 @@ function Session({ child, track, onDone }: { child: Child; track: Track; onDone:
     if (track.binaural) startBinaural(track.binaural);
     if (track.recording) {
       const a = new Audio(track.recording.src);
-      a.loop = true;
+      a.loop = repeats === 0;
+      setPlayed(1);
+      if (repeats > 0) {
+        let n = 1;
+        a.onended = () => {
+          if (!sound.current) return;
+          if (n >= repeats) { finish(); return; }
+          n += 1; setPlayed(n);
+          window.setTimeout(() => { if (sound.current) { a.currentTime = 0; void a.play().catch(() => {}); } }, 1200); // a breath between rounds
+        };
+      }
       a.volume = 0.9;
       audio.current = a;
       void a.play().catch(() => {});
@@ -150,7 +167,8 @@ function Session({ child, track, onDone }: { child: Child; track: Track; onDone:
     const better = before !== null && a > before;
     say(better ? S.better : S.same);
     const bellTxt = track.task === "bells" ? `, counted ${bellGuess ?? "?"} of ${bells.current} bells` : "";
-    void api.addNote(child.id, `Listening room · ${L(track.title, "en")} (${L(track.goal, "en")}), ${minutes} min: felt ${MOODS_FACES[before ?? 2]} before, ${MOODS_FACES[a]} after${bellTxt}`).catch(() => {});
+    const howLong = track.recording && repeats > 0 ? `${played} of ${repeats} times` : `${minutes} min`;
+    void api.addNote(child.id, `Listening room · ${L(track.title, "en")} (${L(track.goal, "en")}), ${howLong}: felt ${MOODS_FACES[before ?? 2]} before, ${MOODS_FACES[a]} after${bellTxt}`).catch(() => {});
   };
 
   const Faces = ({ onPick, chosen }: { onPick: (i: number) => void; chosen: number | null }) => (
@@ -175,17 +193,32 @@ function Session({ child, track, onDone }: { child: Child; track: Track; onDone:
             <a href={track.recording.source} target="_blank" rel="noreferrer">Wikimedia Commons</a></p>
         )}
         {track.binaural && <p className="small listen-note">🎧 {L(S.headphones, lang)}</p>}
+        {track.hook && step === "before" && <p className="listen-hook">✨ {L(track.hook, lang)}</p>}
 
         {step === "before" && (
           <div className="card listen-panel">
             <h2>{L(S.before, lang)}</h2>
             <Faces chosen={before} onPick={setBefore} />
-            <h3>{L(S.howLong, lang)}</h3>
-            <div className="row center wrap">
-              {[1, 3, 5, 10].map((m) => (
-                <button key={m} className={`chip${minutes === m ? " on" : ""}`} onClick={() => setMinutes(m)}>{m} {L(S.min, lang)}</button>
-              ))}
-            </div>
+            {track.recording && (
+              <>
+                <h3>🔁 {L(S.howMany, lang)}</h3>
+                <div className="row center wrap">
+                  {RECORDING_REPEATS.map((n) => (
+                    <button key={n} className={`chip${repeats === n ? " on" : ""}`} onClick={() => setRepeats(n)}>{n === 0 ? `⏳ ${L(S.untilTimer, lang)}` : `${n}×`}</button>
+                  ))}
+                </div>
+              </>
+            )}
+            {!(track.recording && repeats > 0) && (
+              <>
+                <h3>{L(S.howLong, lang)}</h3>
+                <div className="row center wrap">
+                  {[1, 3, 5, 10].map((m) => (
+                    <button key={m} className={`chip${minutes === m ? " on" : ""}`} onClick={() => setMinutes(m)}>{m} {L(S.min, lang)}</button>
+                  ))}
+                </div>
+              </>
+            )}
             <details className="listen-why"><summary>🤔 {L(S.why, lang)}</summary><p>{L(track.why, lang)}</p></details>
             <button className="btn primary big" disabled={before === null} onClick={() => void begin()}>▶ {L(S.play, lang)}</button>
           </div>
@@ -193,8 +226,22 @@ function Session({ child, track, onDone }: { child: Child; track: Track; onDone:
 
         {step === "playing" && (
           <div className="listen-stage">
+            {track.video && VIDEOS[track.video] && (
+              <>
+                <video className="listen-video" src={VIDEOS[track.video].src} autoPlay muted loop playsInline preload="auto" aria-label={VIDEOS[track.video].title} />
+                <p className="listen-video-credit">🎬 {VIDEOS[track.video].title} · {VIDEOS[track.video].author} · {VIDEOS[track.video].licence} ·{" "}
+                  <a href={VIDEOS[track.video].page} target="_blank" rel="noreferrer">Wikimedia Commons</a></p>
+              </>
+            )}
+            {track.words && (
+              <div className="chant-words">
+                <p className="dev" lang="sa">{track.words.dev}</p>
+                <p className="iast">{track.words.iast}</p>
+                <p>💡 {L(track.words.meaning, lang)}</p>
+              </div>
+            )}
             <p className="listen-how">{L(track.how, lang)}</p>
-            {track.task === "breathe" && (
+            {track.task === "breathe" && !track.video && (
               <div className="breath-wrap" aria-live="polite">
                 <div className="breath-circle" />
                 <BreathWords lang={lang} />
@@ -208,13 +255,15 @@ function Session({ child, track, onDone }: { child: Child; track: Track; onDone:
               </div>
             )}
             {(track.task === "bells" || track.task === "hum") && <div className="listen-pulse" aria-hidden>{track.task === "bells" ? "🔔" : "🎶"}</div>}
-            {track.task === "duet" && (
+            {track.task === "duet" && !track.video && (
               <div className="duet" aria-hidden>
                 <span>🎹<small>{L(S.pianoOne, lang)}</small></span><span className="duet-talk">💬</span><span>🎹<small>{L(S.pianoTwo, lang)}</small></span>
               </div>
             )}
-            {track.task === "imagine" && <div className="imagine-scene" aria-hidden>🌕<br />🌊🌲🦉🌲🌊</div>}
-            <p className="listen-timer">⏳ {mm}</p>
+
+            {track.recording && repeats > 0
+              ? <p className="listen-timer" aria-live="polite">🔁 {played} / {repeats} {L(S.times, lang)}</p>
+              : <p className="listen-timer">⏳ {mm}</p>}
             <button className="btn ghost" onClick={finish}>⏹ {L(S.stop, lang)}</button>
           </div>
         )}

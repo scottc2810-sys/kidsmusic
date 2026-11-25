@@ -25,6 +25,13 @@ MAX_CLIP = 1_500_000  # about 45 s of 16 kHz WAV; a spoken word is far shorter
 _job: dict = {"running": False, "done": {}, "error": None}
 
 
+def known(lang: str, item: str) -> bool:
+    """A built-in word or phrase, or a letter of the alphabet (abc00 ...)."""
+    from ..lang import alphabet
+
+    return (lang in ITEMS and item in ITEMS[lang]) or alphabet.is_item(lang, item)
+
+
 def public_refs(lang: str, item: str | None) -> list[dict]:
     """What the app may show and play: no file system paths, the attribution kept."""
     if not item:
@@ -34,7 +41,7 @@ def public_refs(lang: str, item: str | None) -> list[dict]:
         out.append({"url": f"/api/learn/native-file/{'b' if r.get('bundled') else 'd'}/{r['file']}", "gender": r["gender"],
                     "speaker": r.get("speaker"), "license": r.get("license"), "source": r.get("source"), "family": bool(r.get("family")),
                     "origin": r.get("origin", "family" if r.get("family") else "lingualibre")})
-    if not out and lang in ITEMS and item in ITEMS[lang]:
+    if not out and known(lang, item):
         # no human recording yet: a pretrained neural voice (female and male), so the word is never silent
         for t in tts.slots(get_settings().data_dir, lang, item):
             url = f"/api/learn/tts/{lang}/{item}/{t['gender']}" if t["live"] else f"/api/learn/native-file/{'b' if t.get('bundled') else 'd'}/{t['file']}"
@@ -47,7 +54,7 @@ def public_refs(lang: str, item: str | None) -> list[dict]:
 def tts_clip(lang: str, item: str, gender: str, request: Request, parent: Parent = Depends(current_parent)) -> FileResponse:
     """A neural-voice clip of a built-in word, recorded on first play and cached (about 1 s the first time)."""
     rate_limiter.check(f"tts:{client_ip(request)}", 120)
-    if lang not in ITEMS or item not in ITEMS[lang] or gender not in tts.GENDERS or tts.is_custom(item):
+    if not known(lang, item) or gender not in tts.GENDERS or tts.is_custom(item):
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Unknown word")
     try:
         entry = tts.ensure(get_settings().data_dir, lang, item, gender)
@@ -70,7 +77,7 @@ def native_file(where: str, lang: str, name: str, parent: Parent = Depends(curre
 
 @router.get("/learn/native/{lang}/{item}")
 def native_refs(lang: str, item: str, parent: Parent = Depends(current_parent)) -> list[dict]:
-    if lang not in ITEMS or item not in ITEMS[lang]:
+    if not known(lang, item):
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Unknown word")
     return public_refs(lang, item)
 

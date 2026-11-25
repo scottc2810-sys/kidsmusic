@@ -340,8 +340,11 @@ def _record(data_dir: Path, lang: str, item: str, gender: str, entry: dict) -> N
 
 
 def _text(lang: str, item: str) -> str:
+    from . import alphabet
     from .phrases import ITEMS
 
+    if alphabet.is_item(lang, item):  # a letter of the alphabet: what the voice reads for it
+        return alphabet.say_text(lang, item)
     w = ITEMS.get(lang, {}).get(item)
     if w is None:
         raise KeyError(item)
@@ -497,13 +500,14 @@ def slots(data_dir: Path, lang: str, item: str) -> list[dict]:
 def prerecord(data_dir: Path, langs: list[str] | None = None, use_parler: bool = False, only_missing_native: bool = True,
               progress=None, use_piper: bool = False) -> dict:
     """Record every built-in word and phrase ahead of time (so lessons also work offline)."""
+    from . import alphabet
     from . import native_audio as na
     from .phrases import ITEMS
 
     stats: dict[str, dict] = {}
     for lang in langs or list(VOICES):
         made = failed = skipped = 0
-        for item in ITEMS.get(lang, {}):
+        for item in list(ITEMS.get(lang, {})) + alphabet.item_ids(lang):
             shippable = [r for r in na.references(data_dir, lang, item)
                          if not (r.get("family") or r.get("noncommercial") or r.get("noshare"))]
             # recordings that cannot ship in the installers (non-commercial, Common Voice, family) don't count:

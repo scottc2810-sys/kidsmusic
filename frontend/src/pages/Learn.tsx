@@ -14,6 +14,7 @@ import { playSequence, playSfx, unlockAudio, type Sfx } from "../audio/synth";
 import { Confetti, Melo, type MeloMood } from "../components/Melo";
 import { isEmotion, MOOD, type Emotion } from "../emotion";
 import { L, t, topicTitle, type StrKey, type Text } from "../i18n";
+import { repeatTimes, wordRepeats } from "../audio/repeat";
 import { KidShell, useChild } from "./KidHome";
 import { ShlokaOfTheDay } from "../components/ShlokaCard";
 import { useTeacher } from "../teaching/persona";
@@ -55,7 +56,10 @@ export function LanguageList() {
       <div className="lesson learn wide">
         <Melo mood="happy" size={110} say={t("pickLanguage", lang)} />
         <ShlokaOfTheDay subject="languages" lang={lang} />
-        <button className="btn big" onClick={() => nav(`/play/${id}/learn-compare`)}>🔀 {t("compare", lang)}</button>
+        <div className="row center wrap">
+          <button className="btn big primary" onClick={() => nav(`/play/${id}/alphabet`)}>🔤 {L({ en: "Alphabets: read, write, listen, speak", hi: "वर्णमाला: पढ़ो, लिखो, सुनो, बोलो", hinglish: "Varnmaala: padho, likho, suno, bolo" }, lang)}</button>
+          <button className="btn big" onClick={() => nav(`/play/${id}/learn-compare`)}>🔀 {t("compare", lang)}</button>
+        </div>
         <div className="lang-grid">
           {[...langs].sort((a, b) => Number(b.started) - Number(a.started)).map((s) => (
             <button key={s.language.code} className={`lang-card${s.started ? " started" : ""}`} onClick={() => void open(s.language.code)}>
@@ -165,7 +169,7 @@ function Runner({ child, code, startTopic }: { child: Child; code: string; start
       setAct(a); setPhase("activity");
       nudges.current = 0;
       await talk(a.say, "listening", isEmotion(a.emotion) ? a.emotion : undefined);
-      await sayWord(modelOf(a), false, refsOf(a), romanOf(a));
+      await repeatTimes(wordRepeats(), () => sayWord(modelOf(a), false, refsOf(a), romanOf(a)), () => alive.current);
       touched.current = Date.now();
     } catch (e) { setProblem((e as Error).message); setPhase("error"); }
   }, [child.id, code, canSpeak, talk, sayWord]);
@@ -456,7 +460,7 @@ export function traceScore(mask: Uint8Array, tolerant: Uint8Array, strokes: Uint
 }
 
 /** Trace a letter with a finger or the mouse. The letter is drawn faintly underneath as the guide. */
-function TracePad({ glyph, guide, emoji, busy, ui, onDone }: {
+export function TracePad({ glyph, guide, emoji, busy, ui, onDone }: {
   glyph: string; guide: boolean; emoji?: string; busy: boolean; ui: Child["language"];
   onDone: (r: { strokes: number; coverage: number; spill: number }) => void;
 }) {

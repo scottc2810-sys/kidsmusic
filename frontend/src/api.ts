@@ -210,6 +210,13 @@ export interface BrainsFound {
 }
 export type SongTag = "celebration" | "indian" | "nursery" | "alankar" | "claude";
 export interface SongProgress { phrases_learned: number[]; completed: boolean; plays: number }
+export type AbcSkill = "read" | "write" | "listen" | "speak";
+export interface AbcCell { tries: number; right: number; streak: number }
+export interface AbcLetter { i: number; item: string; char: string; group: string; sound: string; roman: string; say: string; name: string;
+  example: { word: string; roman: string | null; emoji: string; meaning: string } | null }
+export interface AlphabetData { code: string; name: string; native: string; locale: string; rtl: boolean; flag: string; letters: AbcLetter[] }
+export interface AlphabetCompare { langs: { code: string; name: string; native: string; flag: string; locale: string }[];
+  rows: { sound: string; hint: string; cells: Record<string, { char: string; roman: string; item: string; say: string }[]> }[] }
 export interface CatalogSong { title: string; ease: number; notes: [number, number][]; bpm?: number | null; tag?: SongTag }
 export interface NoteRainBest { stars: number; best_accuracy: number; plays: number; fastest: string | null }
 export interface SongCard { id: string; title: string; tag: SongTag; ease: number; phrase_count: number; progress: SongProgress; locked?: boolean }
@@ -395,6 +402,11 @@ export const api = {
   setFocus: (childId: string, skill: string | null) => request<{ focus_skill: string | null }>(`/api/children/${childId}/memory/focus`, { method: "PUT", body: json({ skill }) }),
   rebuildMemory: (childId: string) => request<{ nodes: number; edges: number; events: number }>(`/api/children/${childId}/memory/rebuild`, { method: "POST" }),
   catalog: () => request<{ songs: Record<string, CatalogSong> }>("/api/catalog"),
+  alphabet: (code: string) => request<AlphabetData>(`/api/learn/alphabet/${encodeURIComponent(code)}`),
+  alphabetCompare: (langs: string[]) => request<AlphabetCompare>(`/api/learn/alphabet-compare?langs=${encodeURIComponent(langs.join(","))}`),
+  alphabetProgress: (childId: string, code: string) => request<{ letters: Record<string, Partial<Record<AbcSkill, AbcCell>>> }>(`/api/children/${childId}/alphabet/${encodeURIComponent(code)}`),
+  alphabetRound: (childId: string, code: string, skill: AbcSkill, results: { i: number; ok: boolean }[]) =>
+    request<{ right: number; total: number; newly_learned: number[]; known: number; of: number; stars: number }>(`/api/children/${childId}/alphabet/${encodeURIComponent(code)}/round`, { method: "POST", body: json({ skill, results }) }),
   noteRain: (childId: string) => request<{ songs: Record<string, NoteRainBest> }>(`/api/children/${childId}/note-rain`),
   noteRainResult: (childId: string, body: { song_id: string; hits: number; total: number; wrong: number; mode: "wait" | "play"; speed: string }) =>
     request<{ stars: number; best: number; accuracy: number; new_best: boolean }>(`/api/children/${childId}/note-rain`, { method: "POST", body: json(body) }),

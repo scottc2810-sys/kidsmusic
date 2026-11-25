@@ -929,5 +929,51 @@ pre.tech { white-space: pre-wrap; font-size: 0.8rem; background: var(--surface-2
 .duet span { display: flex; flex-direction: column; align-items: center; }
 .duet small { font-size: 0.9rem; font-weight: 800; }
 .duet-talk { animation: dance-pop 1.2s ease-in-out infinite alternate; }
-.imagine-scene { font-size: 3.4rem; line-height: 1.3; text-align: center; padding: 18px 26px; border-radius: 28px; background: linear-gradient(180deg, #1d2450, #3b4a8c); }
 @media (prefers-reduced-motion: reduce) { .duet-talk { animation: none; } }
+
+/* ---- Alphabets ---- */
+.abc-skills { display: grid; grid-template-columns: repeat(4, minmax(120px, 1fr)); gap: 12px; width: 100%; max-width: 760px; }
+.abc-skill { min-height: 110px; font-size: 1.15rem; background: var(--brand-soft); color: var(--ink); }
+.abc-skill small { font-size: 0.85rem; color: var(--muted); }
+.abc-group { width: 100%; }
+.abc-chart { display: grid; grid-template-columns: repeat(auto-fill, minmax(78px, 1fr)); gap: 8px; }
+.abc-tile { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 4px; border-radius: 16px; border: 2px solid var(--line); background: var(--surface); color: var(--ink); font: inherit; cursor: pointer; box-shadow: 0 3px 0 var(--shadow); }
+.abc-tile:hover, .abc-tile:focus-visible { border-color: var(--brand); }
+.abc-tile.big { min-width: 110px; padding: 14px; }
+.abc-tile.right { border-color: var(--ok); background: #e3f7ec; }
+.abc-tile.wrong { border-color: #f0b4bf; }
+.abc-char { font-size: 2rem; line-height: 1.2; font-weight: 700; }
+.abc-tile.big .abc-char { font-size: 3rem; }
+.abc-tile small { color: var(--muted); font-size: 0.8rem; }
+.abc-dots { display: flex; gap: 3px; }
+.abc-dots i { width: 7px; height: 7px; border-radius: 50%; background: var(--line); }
+.abc-dots i.on { background: var(--ok); }
+.abc-card { text-align: center; display: grid; gap: 6px; justify-items: center; max-width: 520px; margin: 0 auto; }
+.abc-big { font-size: clamp(4rem, 16vw, 7rem); line-height: 1.1; font-weight: 700; color: var(--brand); }
+.abc-roman { font-size: 1.3rem; font-weight: 800; }
+.abc-example { font-size: 1.15rem; }
+.abc-example span[aria-hidden] { font-size: 2rem; vertical-align: middle; }
+.abc-choices { display: grid; gap: 10px; width: 100%; max-width: 420px; }
+.abc-choices.letters { grid-template-columns: repeat(3, 1fr); max-width: 460px; }
+.abc-practice, .abc-summary { max-width: 700px; margin: 0 auto; display: grid; gap: 12px; justify-items: center; text-align: center; }
+.abc-new { font-size: 2rem; font-weight: 800; color: var(--brand); }
+.compare-scroll { width: 100%; overflow-x: auto; }
+.abc-table { border-collapse: separate; border-spacing: 4px; margin: 0 auto; }
+.abc-table th { font-size: 0.95rem; white-space: nowrap; padding: 4px 8px; }
+.abc-table th[scope="row"] { text-align: start; max-width: 190px; white-space: normal; color: var(--muted); position: sticky; left: 0; background: var(--bg); }
+.abc-table td { text-align: center; vertical-align: top; }
+.abc-cell { display: inline-flex; flex-direction: column; align-items: center; min-width: 56px; padding: 4px 6px; margin: 2px; border-radius: 12px; border: 2px solid var(--line); background: var(--surface); color: var(--ink); font: inherit; cursor: pointer; }
+.abc-cell span { font-size: 1.7rem; line-height: 1.2; }
+.abc-cell small { color: var(--muted); font-size: 0.75rem; }
+@media (max-width: 640px) { .abc-skills { grid-template-columns: repeat(2, 1fr); } }
+
+.chant-words { text-align: center; max-width: 620px; }
+.chant-words .dev { font-size: 1.5rem; line-height: 1.6; font-weight: 700; color: var(--brand); }
+.chant-words .iast { font-style: italic; color: var(--muted); }
+.listen-card.group-chants { background: linear-gradient(135deg, #ffe9c7, #ffd6a0); }
+.listen-hook { font-weight: 800; max-width: 600px; text-align: center; }
+.abc-only { color: var(--warn); font-weight: 800; }
+
+/* ---- Listening videos (real, openly licensed footage, muted: the music is the sound) ---- */
+.listen-video { width: 100%; max-width: 640px; aspect-ratio: 16 / 9; object-fit: cover; border-radius: 22px; background: #000; box-shadow: 0 8px 24px var(--shadow); }
+.listen-video-credit { font-size: 0.75rem; color: var(--muted); text-align: center; max-width: 640px; }

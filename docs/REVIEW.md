@@ -110,4 +110,6 @@ Workflow: **Architect** (docs/ARCHITECTURE.md) → **Engineer** (implementation)
 21. **Stories** are recorded as `vedas` rounds with `story_` topic ids. They do not appear in the Vedas topic list, but they count in the Vedas & wisdom results.
 22. **Recordings in the Listening room** keep their licences: K. 448 is CC BY-SA 3.0 (the credit on screen and `frontend/public/listen/CREDITS.md` must stay); Moonlight is public domain. Add new recordings only with a licence that allows commercial use (CC0, PD, CC BY, CC BY-SA), never NC or ND.
 23. **Binaural beats** must never be paired with a visual that flickers at the beat rate. The volume is capped at 0.25 in `startBinaural`.
+24. **Alphabet letter ids** (`abc00`...) follow the teaching order. Adding a letter in the middle shifts the ids after it; cached voice clips are re-recorded automatically because the manifest stores the spoken text, but children's per-letter progress is stored by index. Add new letters at the end of a script's list.
+25. **Chant recordings and videos** are third-party files. Keep `CREDITS.md` and the on-screen credit for every CC BY / CC BY-SA / Free Art Licence file; never add NC or ND material.
 

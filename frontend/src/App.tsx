@@ -8,6 +8,7 @@ import { ParentChat } from "./pages/ParentChat";
 import { StarMap } from "./pages/StarMap";
 import { StoryList, StoryPage } from "./pages/Stories";
 import { ListenRoom } from "./pages/Listen";
+import { AlphabetCompareView, AlphabetHome, AlphabetPage } from "./pages/Alphabet";
 import { NoteRain, NoteRainList } from "./pages/NoteRain";
 import { createContext, useCallback, useContext, useEffect, useState } from "react";
 import { Navigate, Route, Routes, useLocation } from "react-router-dom";
@@ -94,6 +95,9 @@ export function App() {
         <Route path="/play/:id/talk" element={<RequireAuth><TalkToMelo /></RequireAuth>} />
         <Route path="/play/:id/stories" element={<RequireAuth><StoryList /></RequireAuth>} />
         <Route path="/play/:id/listen" element={<RequireAuth><ListenRoom /></RequireAuth>} />
+        <Route path="/play/:id/alphabet" element={<RequireAuth><AlphabetHome /></RequireAuth>} />
+        <Route path="/play/:id/alphabet/:code" element={<RequireAuth><AlphabetPage /></RequireAuth>} />
+        <Route path="/play/:id/alphabet-compare" element={<RequireAuth><AlphabetCompareView /></RequireAuth>} />
         <Route path="/play/:id/stories/:storyId" element={<RequireAuth><StoryPage /></RequireAuth>} />
         <Route path="/play/:id/note-rain" element={<RequireAuth><NoteRainList /></RequireAuth>} />
         <Route path="/play/:id/note-rain/:songId" element={<RequireAuth><NoteRain /></RequireAuth>} />

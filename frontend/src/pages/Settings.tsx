@@ -10,6 +10,7 @@ import { getNoteNames, L, noteLabel, setNoteNames, sungName, t, type NoteNames, 
 import { isMusicOn, musicVolume, setMusicOn, setMusicVolume, startMusic, stopMusic } from "../audio/bgm";
 import { midiDevice, midiEcho, midiStatus, onMidiStatus, setMidiEcho, startMidi, type MidiStatus } from "../audio/midi";
 import { getPalette, KEY_COLORS, setPalette, type Palette } from "../components/Piano";
+import { RECORDING_REPEATS, recordingRepeatLabel, recordingRepeats, setRecordingRepeats, setWordRepeats, WORD_REPEATS, wordRepeats } from "../audio/repeat";
 import { CameraObserver, loadCalibration, saveCalibration, type KeyboardCalibration } from "../vision/camera";
 import { AVATARS, ParentShell, Toast } from "./ParentShell";
 
@@ -196,6 +197,8 @@ function KidScreen({ lang }: { lang: Language }) {
   const [midi, setMidi] = useState<MidiStatus>(midiStatus());
   const [device, setDevice] = useState<string | null>(midiDevice());
   const [echo, setEcho] = useState(midiEcho());
+  const [recRepeat, setRecRepeat] = useState(recordingRepeats());
+  const [wordRepeat, setWordRepeat] = useState(wordRepeats());
   useEffect(() => onMidiStatus((st, name) => { setMidi(st); setDevice(name); }), []);
   const preview = async () => { await unlockAudio(); startMusic("home"); window.setTimeout(() => stopMusic("home"), 6000); };
   return (
@@ -221,6 +224,20 @@ function KidScreen({ lang }: { lang: Language }) {
             <option value="rainbow">Rainbow</option>
             <option value="colourblind">Colour-blind safe (Okabe-Ito)</option>
           </select>
+        </label>
+      </div>
+      <div className="row">
+        <label>🔁 Listening room: play each recording (mantras, shlokas, music)
+          <select value={recRepeat} onChange={(e) => { const v = Number(e.target.value); setRecRepeat(v); setRecordingRepeats(v); }}>
+            {RECORDING_REPEATS.map((n) => <option key={n} value={n}>{recordingRepeatLabel(n)}</option>)}
+          </select>
+          <span className="muted small">Mantras are traditionally recited 3, 11, 21 or 108 times. Your child can still change it before pressing Play.</span>
+        </label>
+        <label>🔁 Letters and words: say each one
+          <select value={wordRepeat} onChange={(e) => { const v = Number(e.target.value); setWordRepeat(v); setWordRepeats(v); }}>
+            {WORD_REPEATS.map((n) => <option key={n} value={n}>{n === 1 ? "Once" : `${n} times in a row`}</option>)}
+          </select>
+          <span className="muted small">Hearing a new sound several times helps young children copy it.</span>
         </label>
       </div>
       <div className="row" aria-hidden>{[60, 62, 64, 65, 67, 69, 71].map((m) => (

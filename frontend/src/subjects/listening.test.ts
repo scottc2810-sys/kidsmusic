@@ -33,16 +33,19 @@ describe("Listening room", () => {
 import { earFrequencies } from "../audio/binaural";
 import { GROUPS } from "./listening";
 
-const SHIPPED = import.meta.glob("../../public/listen/*.mp3");
+const SHIPPED = import.meta.glob(["../../public/listen/*.mp3", "../../public/listen/chants/*.mp3"]);
+const CLIPS = import.meta.glob("../../public/listen/video/*.webm");
 
 describe("real recordings and binaural beats", () => {
   it("ships every recording with its file, licence, performer and source", () => {
     const recs = TRACKS.filter((t) => t.recording);
-    expect(recs.map((t) => t.id).sort()).toEqual(["moonlight", "mozart_k448"]);
+    expect(recs.filter((t) => t.group === "recordings").map((t) => t.id).sort()).toEqual(["moonlight", "mozart_k448"]);
+    expect(recs.filter((t) => t.group === "chants").length).toBeGreaterThanOrEqual(10);
     for (const t of recs) {
       const r = t.recording!;
       expect(Object.keys(SHIPPED)).toContain(`../../public${r.src}`);
-      expect(["Public domain", "CC BY-SA 3.0"]).toContain(r.licence);
+      expect(r.licence).toMatch(/^(Public domain|CC BY-SA|CC BY |Free Art Licence)/); // never NC or ND
+      expect(r.licence).not.toMatch(/NC|ND/);
       expect(r.performer.length).toBeGreaterThan(5);
       expect(r.source).toMatch(/^https:\/\/commons\.wikimedia\.org\/wiki\/File:/);
     }
@@ -62,5 +65,34 @@ describe("real recordings and binaural beats", () => {
   it("puts every track in a group", () => {
     for (const g of GROUPS) expect(TRACKS.some((t) => t.group === g.id)).toBe(true);
     TRACKS.forEach((t) => expect(!!(t.def || t.recording || t.binaural)).toBe(true));
+  });
+});
+
+import { VIDEOS } from "./videos";
+
+describe("shlokas and videos", () => {
+  it("has 10 or more shlokas and mantras by real reciters, each with a hook, a reason and a video", () => {
+    const chants = TRACKS.filter((t) => t.group === "chants");
+    expect(chants.length).toBeGreaterThanOrEqual(10);
+    for (const t of chants) {
+      expect(t.hook?.en.length).toBeGreaterThan(10);
+      expect(t.hook?.hi).toMatch(/[ऀ-ॿ]/);
+      expect(t.video && VIDEOS[t.video], t.id).toBeTruthy();
+    }
+    expect(chants.find((t) => t.id === "ramayana_bala")?.recording?.performer).toMatch(/Ghanap/);
+    expect(chants.find((t) => t.id === "gayatri")?.words?.dev).toContain("तत्सवितुर्वरेण्यं");
+  });
+
+  it("only uses real, openly licensed videos that ship with the app", () => {
+    for (const [k, v] of Object.entries(VIDEOS)) {
+      expect(Object.keys(CLIPS)).toContain(`../../public${v.src}`);
+      expect(v.licence, k).toMatch(/^(Public domain|CC0|CC BY)/);
+      expect(v.licence, k).not.toMatch(/NC|ND/);
+      expect(v.page).toMatch(/^https:\/\/commons\.wikimedia\.org\/wiki\//);
+    }
+    for (const t of TRACKS.filter((x) => x.video)) expect(VIDEOS[t.video!], t.id).toBeTruthy();
+    expect(TRACKS.find((t) => t.id === "mozart_k448")?.video).toBe("piano");
+    expect(TRACKS.find((t) => t.id === "moonlight")?.video).toBe("moonrise");
+    expect(TRACKS.filter((t) => t.binaural).every((t) => t.video === "aurora")).toBe(true);
   });
 });
