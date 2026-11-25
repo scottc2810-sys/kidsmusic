@@ -15,3 +15,6 @@ gTTS>=2.5,<3.0  # Punjabi voice, which edge-tts lacks (online; MIT)
 # Optional, offline Sanskrit / Punjabi pre-recording (heavy: torch, ~4 GB model, accept the licence on Hugging Face first):
 #   pip install torch transformers accelerate soundfile git+https://github.com/huggingface/parler-tts.git
 #   python -m app.lang.tts --parler sa pa
+# Optional, offline licensed voices, build time only (Piper bundles eSpeak-NG, GPL: never ship it in the installer):
+#   pip install piper-tts lameenc
+#   python -m app.lang.tts --piper en de es fr ru te mr bn

@@ -8,7 +8,7 @@
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
-VERSION="1.5.0"
+VERSION="1.6.0"
 PY="${PYTHON:-python3}"
 
 echo "==> Python environment"

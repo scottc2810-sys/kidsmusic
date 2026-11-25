@@ -1,5 +1,6 @@
 // Native-speaker recordings: play them (female and male voices take turns), and record short voice clips
 // (the child's spoken word, or a family member recording a reference) as 16 kHz WAV for the server.
+import { holdMusic } from "./hold";
 import type { NativeRef } from "../api";
 import { pulseMouth } from "./mouth";
 import { toWav16k } from "./recorder";
@@ -43,7 +44,10 @@ export const stopNative = () => { stopped = true; const a = current; current = n
 
 /** Record from the microphone until `stop()` is called (or maxMs). Resolves with a 16 kHz mono WAV. */
 export async function recordClip(maxMs = 8000): Promise<{ stop: () => void; result: Promise<Blob | null> }> {
-  const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } });
+  holdMusic(true);
+  let stream: MediaStream;
+  try { stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } }); }
+  catch (e) { holdMusic(false); throw e; }
   const rec = new MediaRecorder(stream);
   const chunks: Blob[] = [];
   rec.ondataavailable = (e) => { if (e.data.size) chunks.push(e.data); };
@@ -51,6 +55,7 @@ export async function recordClip(maxMs = 8000): Promise<{ stop: () => void; resu
   const result = new Promise<Blob | null>((resolve) => {
     rec.onstop = async () => {
       clearTimeout(stopper);
+      holdMusic(false);
       stream.getTracks().forEach((t) => t.stop());
       try { resolve(chunks.length ? (await toWav16k(new Blob(chunks, { type: rec.mimeType }))).wav : null); } catch { resolve(null); }
     };

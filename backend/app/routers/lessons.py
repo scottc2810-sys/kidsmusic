@@ -78,7 +78,8 @@ def catalog() -> dict:
     return {
         "levels": {k: {"name": v["name"], "core_skills": list(v["core_skills"])} for k, v in LEVELS.items()},
         "activities": {k: {"skill": a.skill, "min_level": a.min_level, "modes": list(a.modes), "is_game": a.is_game} for k, a in ACTIVITIES.items()},
-        "songs": {k: {"title": s["title"], "ease": s["ease"], "notes": s["notes"]} for k, s in SONGS.items()},
+        "songs": {k: {"title": s["title"], "ease": s["ease"], "notes": s["notes"], "bpm": s.get("bpm"), "tag": s.get("tag", "nursery")}
+                  for k, s in SONGS.items()},
     }
 
 

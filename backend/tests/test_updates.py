@@ -37,9 +37,9 @@ def test_versions_compare_as_numbers():
 
 def test_newer_release_is_reported_and_prereleases_ignored(release_server):
     state, url = release_server
-    state["body"] = {"tag_name": "v1.6.0", "name": "Melo 1.6.0", "html_url": "https://github.com/x/y/releases/tag/v1.6.0", "prerelease": False}
+    state["body"] = {"tag_name": "v1.7.0", "name": "Melo 1.7.0", "html_url": "https://github.com/x/y/releases/tag/v1.7.0", "prerelease": False}
     got = updates.check(url, force=True)
-    assert got["newer"] and got["latest"] == "1.6.0" and got["url"].startswith("https://")
+    assert got["newer"] and got["latest"] == "1.7.0" and got["url"].startswith("https://")
     state["body"] = {"tag_name": "voices", "prerelease": True}
     assert updates.check(url, force=True) == {"current": updates.APP_VERSION, "latest": None, "newer": False, "url": None, "name": None}
     assert updates.check("http://127.0.0.1:9/nothing", force=True, timeout=0.5)["latest"] is None  # offline: quiet

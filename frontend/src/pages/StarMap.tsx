@@ -32,7 +32,7 @@ export function StarMap() {
   useEffect(() => { if (t && child) void speak(line, child.language, "proud"); }, [t, child]); // eslint-disable-line react-hooks/exhaustive-deps
   if (!child) return <div className="center-screen"><div className="spinner" /></div>;
   return (
-    <KidShell child={child}>
+    <KidShell child={child} music="home">
       <div className="lesson wide">
         <h1>✨ {L(TITLE, lang)}</h1>
         <Melo mood={best.length ? "proud" : "happy"} size={110} say={line} />

@@ -64,5 +64,5 @@ coll = COLLECT(exe, a.binaries, a.datas, name="Melo", upx=False)
 if sys.platform == "darwin":
     app = BUNDLE(
         coll, name="Melo.app", icon=icon, bundle_identifier="app.melo.teacher",
-        info_plist={"CFBundleShortVersionString": "1.5.0", "NSHighResolutionCapable": True, "LSMinimumSystemVersion": "11.0"},
+        info_plist={"CFBundleShortVersionString": "1.6.0", "NSHighResolutionCapable": True, "LSMinimumSystemVersion": "11.0"},
     )

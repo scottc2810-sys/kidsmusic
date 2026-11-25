@@ -41,7 +41,7 @@ export function SongList() {
   if (!child || !songs) return <div className="center-screen"><div className="spinner" /></div>;
   const lang = child.language;
   return (
-    <KidShell child={child}>
+    <KidShell child={child} music="home">
       <div className="lesson song-school">
         <Melo mood="happy" size={120} say={t("pickSong", lang)} />
         <ShlokaOfTheDay subject="music" lang={lang} />

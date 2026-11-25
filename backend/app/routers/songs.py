@@ -19,7 +19,7 @@ from ..languages import note_name as _lang_note_name
 from ..config import get_settings
 from ..curriculum import LEVELS, SONGS
 from ..db import get_db
-from ..models import Attempt, Child, LessonSession
+from ..models import Attempt, Child, ChildPrefs, LessonSession
 from ..scoring import NotesResponse, score_sequence
 from ..security import owned_child
 from ..teacher.service import get_teacher
@@ -304,3 +304,80 @@ def song_phrase(body: PhraseIn, session: LessonSession = Depends(owned_session),
         "drill": drill,  # {"start", "end"}: notes inside the phrase to practise on their own before trying again
         "stats": coaching.stats,
     }
+
+
+# --- Note Rain: the falling-notes game -------------------------------------------------------------------
+# The game itself runs on the device (it needs 60 frames a second); the server keeps each child's best stars per
+# song (so worlds stay open on every device) and writes every game to the learning graph for the AI teacher.
+NOTE_RAIN = "note_rain"
+SPEEDS = ("turtle", "normal", "rabbit", "rocket")
+
+
+class NoteRainIn(BaseModel):
+    song_id: str = Field(min_length=1, max_length=40)
+    hits: int = Field(ge=0, le=500)
+    total: int = Field(ge=1, le=500)
+    wrong: int = Field(default=0, ge=0, le=2000)
+    mode: str = Field(pattern="^(wait|play)$")
+    speed: str = Field(pattern="^(turtle|normal|rabbit|rocket)$")
+
+
+def note_rain_stars(accuracy: float) -> int:
+    """The same bands as every other round in Melo: 90 % = 3 stars, 70 % = 2, 40 % = 1."""
+    return 3 if accuracy >= 0.9 else 2 if accuracy >= 0.7 else 1 if accuracy >= 0.4 else 0
+
+
+def note_rain_accuracy(body: NoteRainIn) -> float:
+    """Play-along: notes caught on time out of all notes. Wait mode: every note is caught in the end, so the
+    wrong keys pressed on the way are what count."""
+    hits = min(body.hits, body.total)
+    if body.mode == "wait":
+        return hits / (hits + min(body.wrong, 4 * body.total)) if hits else 0.0
+    return hits / body.total
+
+
+def _note_rain_data(db: Session, child: Child) -> dict:
+    p = db.get(ChildPrefs, child.id)
+    return dict(((p.data if p else None) or {}).get(NOTE_RAIN) or {})
+
+
+@router.get("/children/{child_id}/note-rain")
+def note_rain_progress(child: Child = Depends(owned_child), db: Session = Depends(get_db)) -> dict:
+    return {"songs": _note_rain_data(db, child)}
+
+
+@router.post("/children/{child_id}/note-rain")
+def note_rain_result(body: NoteRainIn, child: Child = Depends(owned_child), db: Session = Depends(get_db)) -> dict:
+    if body.song_id not in SONGS:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Unknown song")
+    licence.require(get_settings(), body.song_id not in _locked(_all_songs(db, child)))
+    acc = note_rain_accuracy(body)
+    stars = note_rain_stars(acc)
+    p = db.get(ChildPrefs, child.id)
+    if p is None:
+        p = ChildPrefs(child_id=child.id, data={})
+        db.add(p)
+    data = dict(p.data or {})
+    games = dict(data.get(NOTE_RAIN) or {})
+    old = dict(games.get(body.song_id) or {})
+    best = max(int(old.get("stars", 0)), stars)
+    games[body.song_id] = {"stars": best, "best_accuracy": round(max(float(old.get("best_accuracy", 0)), acc), 3),
+                           "plays": int(old.get("plays", 0)) + 1, "fastest": _faster(old.get("fastest"), body.speed, stars)}
+    data[NOTE_RAIN] = games
+    p.data = data  # a new dict, so the JSON column is saved
+    title = SONGS[body.song_id]["title"]
+    memory._event(db, child.id, "song_game",
+                  f"Note Rain · {title} ({'waits for each note' if body.mode == 'wait' else 'play along'}, {body.speed} speed): "
+                  f"{min(body.hits, body.total)}/{body.total} notes, {body.wrong} wrong keys, {stars} stars",
+                  memory.nid_song(child.id, body.song_id))
+    db.commit()
+    return {"stars": stars, "best": best, "accuracy": round(acc, 3), "new_best": stars > int(old.get("stars", 0))}
+
+
+def _faster(old: str | None, speed: str, stars: int) -> str | None:
+    """The fastest speed this song has been played at with at least 2 stars."""
+    if stars < 2:
+        return old
+    if old not in SPEEDS:
+        return speed
+    return speed if SPEEDS.index(speed) > SPEEDS.index(old) else old

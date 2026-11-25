@@ -8,6 +8,10 @@ the gap with pretrained neural voices, one female and one male per language wher
 * ``edge``   - Microsoft neural voices through the ``edge-tts`` package (online, about 1 s per phrase,
                native accent for 18 of the 20 languages). Generated on first use and cached.
 * ``gtts``   - Google Translate voice through ``gTTS`` (online): only for Punjabi, which edge lacks.
+* ``piper``  - Piper neural voices (offline, fast on a CPU), only voices whose training data is openly licensed for
+               commercial use (CC0, public domain, CC BY, CC BY-SA, Apache): several speakers per language so
+               children hear different people. Build-time only (Piper bundles eSpeak-NG, GPL), never in the installer:
+               ``pip install piper-tts lameenc`` then ``python -m app.lang.tts --piper``. Only the clips ship.
 * ``parler`` - AI4Bharat Indic-Parler-TTS (offline, Apache-2.0), the only pretrained model that officially
                speaks Sanskrit ("Aryan"); also Punjabi. Heavy (torch, about 4 GB, slow on a CPU), so it is used
                only for pre-recording:  ``python -m app.lang.tts --parler sa pa``. Never generated during a lesson.
@@ -47,11 +51,44 @@ class Voice:
     gender: str  # female | male
     rate: str = "-10%"  # a little slower than conversation: these are learners
     sanskrit: bool = False  # Hindi voice reading Sanskrit: apply the spelling fixes
+    speaker: int | None = None  # speaker number inside a multi-speaker Piper model
+    licence: str = ""  # licence of the voice's training data (Piper voices: shown with every clip)
 
 
 def _edge(f: str, m: str, rate: str = "-10%") -> list[Voice]:
     return [Voice("edge", f, "female", rate), Voice("edge", m, "male", rate)]
 
+
+def _piper(model: str, gender: str, licence: str, speaker: int | None = None) -> Voice:
+    return Voice("piper", model, gender, licence=licence, speaker=speaker)
+
+
+# Openly licensed Piper voices (model cards checked 2026-11-24 on huggingface.co/rhasspy/piper-voices). Excluded on
+# purpose: non-commercial (hfc_*, ryan, semaine, pratham, priyamvada, dfki, kss, hi_fi_captain, ruslan, xiao_ya),
+# unknown or "see URL" (amy, alan, kusal, irina, huayan, kareem), IIT Madras IndicTTS (rohan, maya), AGPL (tom).
+# Several voices per gender: each word gets one of them (by its id), so a lesson is read by different people.
+PIPER: dict[str, list[Voice]] = {
+    "en": [_piper("en_US-kathleen-medium", "female", "CC0"), _piper("en_US-ljspeech-medium", "female", "public domain"),
+           _piper("en_US-kristin-medium", "female", "public domain (LibriVox)"), _piper("en_GB-alba-medium", "female", "CC BY 4.0 (University of Edinburgh)"),
+           _piper("en_US-joe-medium", "male", "CC0"), _piper("en_US-mike-medium", "male", "CC0"),
+           _piper("en_US-john-medium", "male", "public domain (LibriVox)"), _piper("en_US-norman-medium", "male", "public domain (LibriVox)")],
+    "de": [_piper("de_DE-kerstin-medium", "female", "CC0"), _piper("de_DE-thorsten-medium", "male", "CC0 (Thorsten-Voice)")],
+    "es": [_piper("es_AR-daniela-high", "female", "CC BY-SA 4.0 (Google / OpenSLR 61)"), _piper("es_ES-davefx-medium", "male", "CC0"),
+           _piper("es_MX-ald-medium", "male", "Unlicense")],
+    "fr": [_piper("fr_FR-siwis-medium", "female", "CC BY 4.0 (SIWIS, University of Edinburgh)"),
+           _piper("fr_FR-upmc-medium", "female", "CC BY-SA 4.0 (UPMC)", 0), _piper("fr_FR-upmc-medium", "male", "CC BY-SA 4.0 (UPMC)", 1)],
+    "ru": [_piper("ru_RU-denis-medium", "male", "CC0"), _piper("ru_RU-dmitri-medium", "male", "CC0")],
+    "te": [_piper("te_IN-padmavathi-medium", "female", "CC BY 4.0 (AI4Bharat IndicVoices-R)"),
+           _piper("te_IN-venkatesh-medium", "male", "CC BY 4.0 (AI4Bharat IndicVoices-R)")],
+    "mr": [_piper("mr_IN-google-medium", "female", "CC BY-SA 4.0 (Google / OpenSLR 64)", 0),
+           _piper("mr_IN-google-medium", "female", "CC BY-SA 4.0 (Google / OpenSLR 64)", 3),
+           _piper("mr_IN-google-medium", "female", "CC BY-SA 4.0 (Google / OpenSLR 64)", 6)],
+    # speakers chosen by measured pitch (12, 15 clearly female; 0, 9 clearly male); the rest are ambiguous
+    "bn": [_piper("bn_BD-google-medium", "female", "CC BY-SA 4.0 (Google / OpenSLR 37)", 12),
+           _piper("bn_BD-google-medium", "female", "CC BY-SA 4.0 (Google / OpenSLR 37)", 15),
+           _piper("bn_BD-google-medium", "male", "CC BY-SA 4.0 (Google / OpenSLR 37)", 0),
+           _piper("bn_BD-google-medium", "male", "CC BY-SA 4.0 (Google / OpenSLR 37)", 9)],
+}
 
 # Best first per gender. The first voice that is available (or already recorded) is used.
 VOICES: dict[str, list[Voice]] = {
@@ -85,8 +122,10 @@ VOICES: dict[str, list[Voice]] = {
         Voice("gtts", "pa", "female"),
     ],
 }
+for _lang, _vs in PIPER.items():
+    VOICES[_lang] = _vs + VOICES.get(_lang, [])
 GENDERS = ("female", "male")
-CREDIT = {"edge": "Microsoft neural voice (synthetic)", "gtts": "Google voice (synthetic)",
+CREDIT = {"piper": "Piper neural voice (synthetic)", "edge": "Microsoft neural voice (synthetic)", "gtts": "Google voice (synthetic)",
           "parler": "AI4Bharat Indic-Parler-TTS (synthetic, Apache-2.0)"}
 
 # --- Sanskrit read by a Hindi voice ---------------------------------------------------------------------
@@ -137,11 +176,94 @@ def engine_ready(engine: str) -> bool:
             import gtts  # noqa: F401
         elif engine == "parler":
             import parler_tts  # noqa: F401
+        elif engine == "piper":
+            import piper  # noqa: F401
         else:
             return False
     except ImportError:
         return False
-    return engine == "parler" or _online_allowed()
+    return engine in ("parler", "piper") or _online_allowed()
+
+
+def credit(v: Voice) -> str:
+    if v.engine == "piper":
+        who = v.name.split("-")[1].replace("_", " ").title() + (f" {v.speaker + 1}" if v.speaker is not None else "")
+        return f"Piper voice {who} (synthetic; voice data {v.licence})"
+    return CREDIT[v.engine]
+
+
+PIPER_URL = "https://huggingface.co/rhasspy/piper-voices/resolve/main/"
+_piper_models: dict = {}
+
+
+def piper_dir() -> Path:
+    from ..config import get_settings
+
+    return get_settings().data_dir / "piper_voices"  # downloaded models: never bundled, never committed
+
+
+def piper_model_path(model: str, download: bool = False) -> Path | None:
+    """The .onnx file of a Piper voice; downloaded once (about 60 MB) only when ``download`` is set."""
+    if not re.fullmatch(r"[a-z]{2}_[A-Z]{2}-[a-z_]+-(low|medium|high|x_low)", model):
+        return None
+    onnx = piper_dir() / f"{model}.onnx"
+    if onnx.is_file() and onnx.with_suffix(".onnx.json").is_file():
+        return onnx
+    if not download:
+        return None
+    import urllib.request
+
+    lang_region, name, quality = model.split("-")
+    base = f"{PIPER_URL}{lang_region.split('_')[0]}/{lang_region}/{name}/{quality}/{model}"
+    onnx.parent.mkdir(parents=True, exist_ok=True)
+    for suffix in (".onnx.json", ".onnx"):
+        dest = piper_dir() / f"{model}{suffix}"
+        tmp = dest.with_suffix(dest.suffix + ".part")
+        with urllib.request.urlopen(base + suffix, timeout=120) as r, tmp.open("wb") as f:  # noqa: S310 (fixed https host)
+            while chunk := r.read(1 << 20):
+                f.write(chunk)
+        tmp.replace(dest)
+    return onnx
+
+
+def _say_piper(text: str, v: Voice, out: Path, download: bool = False) -> str:
+    """Write the clip (MP3 when lameenc is installed, else WAV) and return the extension written."""
+    import numpy as np
+    from piper import PiperVoice, SynthesisConfig
+
+    path = piper_model_path(v.name, download=download)
+    if path is None:
+        raise Unavailable(f"Piper voice {v.name} is not downloaded")
+    if v.name not in _piper_models:
+        _piper_models[v.name] = PiperVoice.load(path)
+    voice = _piper_models[v.name]
+    cfg = SynthesisConfig(speaker_id=v.speaker, length_scale=1.12)  # a little slower: these are learners
+    chunks = list(voice.synthesize(text, syn_config=cfg))
+    if not chunks:
+        raise Unavailable("the voice returned no audio")
+    rate = chunks[0].sample_rate
+    pcm = np.concatenate([c.audio_int16_array for c in chunks]).astype(np.int16)
+    pad = np.zeros(int(rate * 0.12), dtype=np.int16)
+    pcm = np.concatenate([pad, pcm, pad])
+    try:
+        import lameenc
+
+        enc = lameenc.Encoder()
+        enc.set_bit_rate(48)
+        enc.set_in_sample_rate(rate)
+        enc.set_channels(1)
+        enc.set_quality(2)
+        out.write_bytes(enc.encode(pcm.tobytes()) + enc.flush())
+        return "mp3"
+    except ImportError:
+        from .native_audio import encode_wav
+
+        out.write_bytes(encode_wav(pcm.astype(np.float32) / 32768.0, rate))
+        return "wav"
+
+
+def piper_ready(v: Voice) -> bool:
+    return v.engine != "piper" or piper_model_path(v.name) is not None
 
 
 def _say_edge(text: str, v: Voice, out: Path) -> None:
@@ -259,24 +381,47 @@ def cached(data_dir: Path, lang: str, item: str, gender: str) -> dict | None:
     return None
 
 
-def _live_voices(lang: str, gender: str) -> list[Voice]:
+def _stable(item: str) -> int:
+    import zlib
+
+    return zlib.crc32(item.encode("utf-8"))
+
+
+def voice_order(lang: str, gender: str, item: str, use_parler: bool = False) -> list[Voice]:
+    """Voices for one word, best first. Piper voices come first and take turns by word, so a topic is read by
+    several different people; then the other engines in their fixed order."""
+    vs = [v for v in VOICES.get(lang, []) if v.gender == gender and (use_parler or v.engine != "parler")]
+    pip = [v for v in vs if v.engine == "piper"]
+    if pip:
+        k = _stable(item) % len(pip)
+        pip = pip[k:] + pip[:k]
+    return pip + [v for v in vs if v.engine != "piper"]
+
+
+def _live_voices(lang: str, gender: str, item: str = "") -> list[Voice]:
     """Voices that can record right now, during a lesson (fast engines only, never Parler), best first."""
-    return [v for v in VOICES.get(lang, []) if v.gender == gender and v.engine != "parler" and engine_ready(v.engine)]
+    return [v for v in voice_order(lang, gender, item) if engine_ready(v.engine) and piper_ready(v)]
 
 
-def _live_voice(lang: str, gender: str) -> Voice | None:
-    return next(iter(_live_voices(lang, gender)), None)
+def _live_voice(lang: str, gender: str, item: str = "") -> Voice | None:
+    return next(iter(_live_voices(lang, gender, item)), None)
 
 
-def ensure(data_dir: Path, lang: str, item: str, gender: str, voice: Voice | None = None) -> dict:
+def _same(entry: dict, v: Voice) -> bool:
+    if entry.get("engine") != v.engine:
+        return False
+    return v.engine != "piper" or (entry.get("voice") == v.name and entry.get("speaker") == v.speaker)
+
+
+def ensure(data_dir: Path, lang: str, item: str, gender: str, voice: Voice | None = None, download: bool = False) -> dict:
     """Record (once) and return the clip's manifest entry. Raises Unavailable when no engine can."""
     if is_custom(item):
         raise Unavailable("a parent's own phrase is never sent to an online voice")
     have = cached(data_dir, lang, item, gender)
-    if have and (voice is None or have.get("engine") == voice.engine):
+    if have and (voice is None or _same(have, voice)):
         return have
     if voice is None:  # try each voice in turn: a service may drop one voice without notice
-        candidates = _live_voices(lang, gender)
+        candidates = _live_voices(lang, gender, item)
         if not candidates:
             raise Unavailable(f"no synthetic {gender} voice for {lang} on this computer")
         last: Unavailable | None = None
@@ -292,7 +437,7 @@ def ensure(data_dir: Path, lang: str, item: str, gender: str, voice: Voice | Non
         lock = _locks.setdefault(key, threading.Lock())
     with lock:
         have = cached(data_dir, lang, item, gender)
-        if have and have.get("engine") == v.engine:
+        if have and _same(have, v):
             return have
         text = _text(lang, item)
         spoken = sanskrit_for_hindi_voice(text) if v.sanskrit else text
@@ -310,6 +455,9 @@ def ensure(data_dir: Path, lang: str, item: str, gender: str, voice: Voice | Non
                 _say_gtts(spoken, v, tmp)
             elif v.engine == "parler":
                 _say_parler(spoken, v, tmp, lang)
+            elif v.engine == "piper":
+                if _say_piper(spoken, v, tmp, download=download) == "wav":
+                    name, out = name[:-4] + ".wav", out.with_suffix(".wav")
             if not tmp.is_file() or tmp.stat().st_size < 500:
                 raise Unavailable("the voice returned no audio")
             tmp.replace(out)
@@ -321,7 +469,9 @@ def ensure(data_dir: Path, lang: str, item: str, gender: str, voice: Voice | Non
         finally:
             tmp.unlink(missing_ok=True)
         entry = {"file": f"{lang}/{name}", "engine": v.engine, "voice": v.name, "gender": gender, "text": text,
-                 "license": CREDIT[v.engine], "approx": "Hindi voice reading Sanskrit" if v.sanskrit else None}
+                 "license": credit(v), "approx": "Hindi voice reading Sanskrit" if v.sanskrit else None}
+        if v.speaker is not None:
+            entry["speaker"] = v.speaker
         _record(data_dir, lang, item, gender, entry)
         return entry
 
@@ -337,15 +487,15 @@ def slots(data_dir: Path, lang: str, item: str) -> list[dict]:
             continue
         if is_custom(item):
             continue
-        v = _live_voice(lang, g)
+        v = _live_voice(lang, g, item)
         if v:
-            out.append({"gender": g, "engine": v.engine, "voice": v.name, "license": CREDIT[v.engine],
+            out.append({"gender": g, "engine": v.engine, "voice": v.name, "license": credit(v),
                         "approx": "Hindi voice reading Sanskrit" if v.sanskrit else None, "live": True})
     return out
 
 
 def prerecord(data_dir: Path, langs: list[str] | None = None, use_parler: bool = False, only_missing_native: bool = True,
-              progress=None) -> dict:
+              progress=None, use_piper: bool = False) -> dict:
     """Record every built-in word and phrase ahead of time (so lessons also work offline)."""
     from . import native_audio as na
     from .phrases import ITEMS
@@ -362,10 +512,11 @@ def prerecord(data_dir: Path, langs: list[str] | None = None, use_parler: bool =
                 skipped += 1
                 continue
             for g in GENDERS:
-                order = [v for v in VOICES.get(lang, []) if v.gender == g and (use_parler or v.engine != "parler") and engine_ready(v.engine)]
+                order = [v for v in voice_order(lang, g, item, use_parler)
+                         if engine_ready(v.engine) and (use_piper or v.engine != "piper")]
                 for v in order:
                     try:
-                        ensure(data_dir, lang, item, g, v)
+                        ensure(data_dir, lang, item, g, v, download=use_piper)
                         made += 1
                         break
                     except Unavailable as e:
@@ -378,7 +529,7 @@ def prerecord(data_dir: Path, langs: list[str] | None = None, use_parler: bool =
     return stats
 
 
-if __name__ == "__main__":  # python -m app.lang.tts [--parler] [--all] [langs...]
+if __name__ == "__main__":  # python -m app.lang.tts [--piper] [--parler] [--all] [langs...]
     import sys
 
     from ..config import get_settings
@@ -386,5 +537,5 @@ if __name__ == "__main__":  # python -m app.lang.tts [--parler] [--all] [langs..
     sys.stdout.reconfigure(encoding="utf-8")
     logging.basicConfig(level=logging.WARNING)
     args = [a for a in sys.argv[1:] if not a.startswith("--")]
-    res = prerecord(get_settings().data_dir, args or None, use_parler="--parler" in sys.argv,
+    res = prerecord(get_settings().data_dir, args or None, use_parler="--parler" in sys.argv, use_piper="--piper" in sys.argv,
                     only_missing_native="--all" not in sys.argv, progress=lambda lang, s: print(lang, s, flush=True))

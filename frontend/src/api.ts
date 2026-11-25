@@ -210,6 +210,8 @@ export interface BrainsFound {
 }
 export type SongTag = "celebration" | "indian" | "nursery" | "alankar" | "claude";
 export interface SongProgress { phrases_learned: number[]; completed: boolean; plays: number }
+export interface CatalogSong { title: string; ease: number; notes: [number, number][]; bpm?: number | null; tag?: SongTag }
+export interface NoteRainBest { stars: number; best_accuracy: number; plays: number; fastest: string | null }
 export interface SongCard { id: string; title: string; tag: SongTag; ease: number; phrase_count: number; progress: SongProgress; locked?: boolean }
 export type PlanLimits = { children: number | null; songs: number | null; languages: number | null; topics_per_strand: number | null };
 export interface PlanStatus { plan: "free" | "family"; edition: "dev" | "retail"; limits: PlanLimits; licence: { id: string; to: string; expires: string | null } | null }
@@ -392,5 +394,8 @@ export const api = {
     request<{ id: string }>(`/api/children/${childId}/memory/notes`, { method: "POST", body: json({ note, about_skill: about_skill || null }) }),
   setFocus: (childId: string, skill: string | null) => request<{ focus_skill: string | null }>(`/api/children/${childId}/memory/focus`, { method: "PUT", body: json({ skill }) }),
   rebuildMemory: (childId: string) => request<{ nodes: number; edges: number; events: number }>(`/api/children/${childId}/memory/rebuild`, { method: "POST" }),
-  catalog: () => request<{ songs: Record<string, { title: string; ease: number; notes: [number, number][] }> }>("/api/catalog"),
+  catalog: () => request<{ songs: Record<string, CatalogSong> }>("/api/catalog"),
+  noteRain: (childId: string) => request<{ songs: Record<string, NoteRainBest> }>(`/api/children/${childId}/note-rain`),
+  noteRainResult: (childId: string, body: { song_id: string; hits: number; total: number; wrong: number; mode: "wait" | "play"; speed: string }) =>
+    request<{ stars: number; best: number; accuracy: number; new_best: boolean }>(`/api/children/${childId}/note-rain`, { method: "POST", body: json(body) }),
 };

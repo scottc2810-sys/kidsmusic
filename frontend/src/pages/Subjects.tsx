@@ -85,7 +85,7 @@ function Home({ child, subject }: { child: Child; subject: Subj }) {
   useEffect(() => { if (teacher.prefs && !said.current) { said.current = true; void speak(teacher.hello(child.name, lang), lang); } }, [teacher.prefs]); // eslint-disable-line react-hooks/exhaustive-deps
   const open = async (path: string) => { primeSpeech(); await unlockAudio(); nav(path); };
   return (
-    <KidShell child={child}>
+    <KidShell child={child} music="calm">
       <div className="lesson subject-home">
         <div className="row center wrap"><h1>{SUBJECT_INFO[subject].icon} {L(SUBJECT_INFO[subject].title, lang)}</h1><PersonaBadge name={teacher.persona.name} emoji={teacher.persona.emoji} />
           <span className="help-badge">{grade ? `${L(S.forClass, lang)} ${grade}` : L(S.preschool, lang)}</span></div>
@@ -306,7 +306,7 @@ function TopicRunner({ child, subject, topic }: { child: Child; subject: Subj; t
 
   const c = topic.cards[card];
   return (
-    <KidShell child={child}>
+    <KidShell child={child} music="calm">
       <div className="lesson subject-topic">
         <Confetti burst={party} />
         <div className="row center wrap">

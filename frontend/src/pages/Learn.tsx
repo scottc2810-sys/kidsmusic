@@ -51,7 +51,7 @@ export function LanguageList() {
   const lang = child.language;
   const open = async (code: string) => { primeSpeech(); await unlockAudio(); nav(`/play/${id}/learn/${code}`); };
   return (
-    <KidShell child={child}>
+    <KidShell child={child} music="home">
       <div className="lesson learn wide">
         <Melo mood="happy" size={110} say={t("pickLanguage", lang)} />
         <ShlokaOfTheDay subject="languages" lang={lang} />

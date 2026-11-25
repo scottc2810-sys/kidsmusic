@@ -1,6 +1,7 @@
 // Microphone note input: getUserMedia → AnalyserNode → YIN → NoteTracker.
 // Ignores frames while the app itself is playing sound (so Melo's demo isn't "heard" as the child).
 
+import { holdMusic } from "./hold";
 import { DetectedNote, NoteTracker, rms, yin } from "./pitch";
 import { audioContext, isBusy } from "./synth";
 import { isSpeaking } from "./speech";
@@ -21,9 +22,12 @@ export class MicNoteInput {
 
   async start(): Promise<void> {
     if (this.stream) return;
-    this.stream = await navigator.mediaDevices.getUserMedia({
-      audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false },
-    });
+    holdMusic(true); // background music off while Melo listens
+    try {
+      this.stream = await navigator.mediaDevices.getUserMedia({
+        audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false },
+      });
+    } catch (e) { holdMusic(false); throw e; }
     const ctx = audioContext();
     if (ctx.state !== "running") await ctx.resume().catch(() => {}); // a suspended context reads silence
     const src = ctx.createMediaStreamSource(this.stream);
@@ -55,6 +59,7 @@ export class MicNoteInput {
   stop() {
     if (this.timer) clearInterval(this.timer);
     this.timer = null;
+    if (this.stream) holdMusic(false);
     this.stream?.getTracks().forEach((t) => t.stop());
     this.stream = null;
     this.analyser = null;

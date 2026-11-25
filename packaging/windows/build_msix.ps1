@@ -7,7 +7,7 @@
 $ErrorActionPreference = "Stop"
 $Root = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
 Set-Location $Root
-$Version = "1.5.0"
+$Version = "1.6.0"
 $Py = if (Test-Path "backend\.venv\Scripts\python.exe") { "backend\.venv\Scripts\python.exe" } else { "python" }
 if (-not (Test-Path "dist\Melo\Melo.exe")) { throw "dist\Melo\Melo.exe is missing: run packaging\windows\build.ps1 first" }
 

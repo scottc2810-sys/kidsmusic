@@ -3,7 +3,8 @@ import { useNavigate, useParams } from "react-router-dom";
 import { api, type Chapter, type Child, type LearningPath } from "../api";
 import { langInfo } from "../languages";
 import { speak } from "../audio/speech";
-import { unlockAudio } from "../audio/synth";
+import { playSfx, unlockAudio } from "../audio/synth";
+import { setMusicOn, useBackgroundMusic, useMusicOn, type MusicMood } from "../audio/bgm";
 import { Melo } from "../components/Melo";
 import { ParentGate } from "../components/ParentGate";
 import { L, t, tr } from "../i18n";
@@ -15,11 +16,22 @@ export function useChild(id: string) {
   return { child, error };
 }
 
-export function KidShell({ child, children, onExit }: { child: Child; children: React.ReactNode; onExit?: () => void }) {
+const MUSIC_LABEL = { en: "Music", hi: "संगीत", hinglish: "Music" };
+
+/** `music`: soft background music for this page (menus, stories, subjects); never on pages that listen. */
+export function KidShell({ child, children, onExit, music }: { child: Child; children: React.ReactNode; onExit?: () => void; music?: MusicMood }) {
   const [gate, setGate] = useState(false);
   const nav = useNavigate();
+  const musicOn = useMusicOn();
+  useBackgroundMusic(music ?? null);
   return (
     <div className="kid" lang={langInfo(child.language).htmlLang} dir={langInfo(child.language).rtl ? "rtl" : "ltr"}>
+      {music && (
+        <button className={`music-toggle${musicOn ? " on" : ""}`} onClick={() => { void unlockAudio(); setMusicOn(!musicOn); }}
+          aria-pressed={musicOn} aria-label={L(MUSIC_LABEL, child.language)} title={L(MUSIC_LABEL, child.language)}>
+          {musicOn ? "🎵" : "🔇"}
+        </button>
+      )}
       <button className="grownups" onClick={() => setGate(true)}>🔒 {t("grownUps", child.language)}</button>
       {children}
       {gate && <ParentGate onCancel={() => setGate(false)} onPass={() => { onExit?.(); nav("/parent"); }} />}
@@ -36,13 +48,13 @@ export function KidHome() {
   if (error) return <div className="center-screen"><p className="error">{error}</p></div>;
   if (!child) return <div className="center-screen"><div className="spinner" /></div>;
   const lang = child.language;
-  const go = async (path: string) => { await unlockAudio(); nav(path); };
+  const go = async (path: string) => { await unlockAudio(); playSfx("pop"); nav(path); };
   const chapterRoute = (c: Chapter) => c.kind === "topic" ? `/play/${id}/lesson?topic=${c.target}` : c.kind === "song" ? `/play/${id}/songs/${c.target}`
     : c.kind === "compose" ? `/play/${id}/piano` : `/play/${id}/lesson?focus=${c.target}`;
   const next = path?.chapters.find((c) => c.status === "current") ?? null;
   const hello = t("helloName", lang).replace("{name}", child.name);
   return (
-    <KidShell child={child}>
+    <KidShell child={child} music="home">
       <div className="kid-home">
         <button className="melo-btn" onClick={() => { void unlockAudio(); void speak(hello, lang); }} aria-label="Say hello to Melo">
           <Melo mood="happy" size={180} say={hello} />
@@ -73,6 +85,9 @@ export function KidHome() {
           <button className="big-choice bc-yellow" onClick={() => go(`/play/${id}/lesson`)}><span>🎹</span>{t("lesson", lang)}</button>
           <button className="big-choice bc-blue" onClick={() => go(`/play/${id}/basics`)}><span>📚</span>{t("basics", lang)}</button>
           <button className="big-choice bc-pink" onClick={() => go(`/play/${id}/songs`)}><span>🎂</span>{t("songs", lang)}</button>
+          <button className="big-choice bc-purple" onClick={() => go(`/play/${id}/note-rain`)}><span>🌧️</span>{L({ en: "Note rain", hi: "सुरों की बारिश", hinglish: "Suron ki baarish" }, lang)}</button>
+          <button className="big-choice bc-green" onClick={() => go(`/play/${id}/stories`)}><span>📖</span>{L({ en: "Stories", hi: "कहानियाँ", hinglish: "Kahaaniyaan" }, lang)}</button>
+          <button className="big-choice bc-blue" onClick={() => go(`/play/${id}/listen`)}><span>🎧</span>{L({ en: "Listen & feel", hi: "सुनो और महसूस करो", hinglish: "Suno aur mehsoos karo" }, lang)}</button>
           <button className="big-choice bc-orange" onClick={() => go(`/play/${id}/learn`)}><span>🗣️</span>{t("languages", lang)}</button>
           <button className="big-choice bc-blue" onClick={() => go(`/play/${id}/maths`)}><span>🔢</span>{L({ en: "Maths", hi: "गणित", hinglish: "Maths" }, lang)}</button>
           <button className="big-choice bc-green" onClick={() => go(`/play/${id}/science`)}><span>🔬</span>{L({ en: "Science", hi: "विज्ञान", hinglish: "Science" }, lang)}</button>

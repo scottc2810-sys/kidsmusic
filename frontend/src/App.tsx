@@ -6,6 +6,9 @@ import { SubjectHome, SubjectTopic } from "./pages/Subjects";
 import { ShapeLab } from "./pages/ShapeLab";
 import { ParentChat } from "./pages/ParentChat";
 import { StarMap } from "./pages/StarMap";
+import { StoryList, StoryPage } from "./pages/Stories";
+import { ListenRoom } from "./pages/Listen";
+import { NoteRain, NoteRainList } from "./pages/NoteRain";
 import { createContext, useCallback, useContext, useEffect, useState } from "react";
 import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { api, type Parent } from "./api";
@@ -89,6 +92,11 @@ export function App() {
         <Route path="/play/:id/finance" element={<RequireAuth><SubjectHome subject="finance" /></RequireAuth>} />
         <Route path="/play/:id/finance/:topic" element={<RequireAuth><SubjectTopic subject="finance" /></RequireAuth>} />
         <Route path="/play/:id/talk" element={<RequireAuth><TalkToMelo /></RequireAuth>} />
+        <Route path="/play/:id/stories" element={<RequireAuth><StoryList /></RequireAuth>} />
+        <Route path="/play/:id/listen" element={<RequireAuth><ListenRoom /></RequireAuth>} />
+        <Route path="/play/:id/stories/:storyId" element={<RequireAuth><StoryPage /></RequireAuth>} />
+        <Route path="/play/:id/note-rain" element={<RequireAuth><NoteRainList /></RequireAuth>} />
+        <Route path="/play/:id/note-rain/:songId" element={<RequireAuth><NoteRain /></RequireAuth>} />
         <Route path="*" element={<Navigate to="/parent" replace />} />
       </Routes>
     </Auth.Provider>

@@ -197,6 +197,8 @@ Done in code (tested):
 - [x] #8 Microsoft Store package (MSIX) built in CI; the Store signs it on upload.
 - [x] #13 Update check: a banner when a newer release is out.
 - [x] #21 (part) Help and feedback page.
+- [~] #2 Licensed voices: 2,318 clips re-recorded with openly licensed Piper voices (commercial use allowed: CC0, public domain, CC BY, CC BY-SA) in English, German, Spanish, French, Russian (male), Telugu, Marathi (female) and Bengali. Still edge-tts: Hindi, Tamil, Gujarati, Kannada, Punjabi and the other non-Indian languages (see PROGRESS.md).
+- [x] Engagement: Note Rain falling-notes game (worlds, stars, USB keyboards), soft background music, 16 life-skills stories.
 
 Only you can do these (launch checklist):
 

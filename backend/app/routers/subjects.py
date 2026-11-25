@@ -78,7 +78,8 @@ def get_prefs(child: Child = Depends(owned_child), db: Session = Depends(get_db)
 @router.put("/children/{child_id}/prefs")
 def save_prefs(body: PrefsIn, child: Child = Depends(owned_child), db: Session = Depends(get_db)) -> dict:
     p = _prefs(db, child)
-    p.data = {"grade": body.grade, "teachers": {k: v.model_dump() for k, v in body.teachers.items()}}
+    # keep what other pages store here (Note Rain best stars ...): only these two keys are the parent's form
+    p.data = {**(p.data or {}), "grade": body.grade, "teachers": {k: v.model_dump() for k, v in body.teachers.items()}}
     db.commit()
     return public_prefs(child, p)
 

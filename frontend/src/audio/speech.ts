@@ -1,4 +1,5 @@
 // Text-to-speech (Web Speech API) and optional speech-to-text for talking to Melo.
+import { holdMusic } from "./hold";
 import { voiceFor, type Emotion } from "../emotion";
 import { langInfo, type Language } from "../languages";
 import { onMouth, pulseMouth } from "./mouth";
@@ -208,10 +209,13 @@ export function listenOnce(lang: Language): Promise<string> {
     r.lang = langInfo(lang).listen;
     r.interimResults = false;
     r.maxAlternatives = 1;
-    r.onresult = (e: any) => resolve(String(e.results[0][0].transcript || ""));
-    r.onerror = (e: any) => reject(new Error(e.error || "speech error"));
-    r.onend = () => resolve("");
-    r.start();
+    let held = true;
+    holdMusic(true);
+    const release = () => { if (held) { held = false; holdMusic(false); } };
+    r.onresult = (e: any) => { release(); resolve(String(e.results[0][0].transcript || "")); };
+    r.onerror = (e: any) => { release(); reject(new Error(e.error || "speech error")); };
+    r.onend = () => { release(); resolve(""); };
+    try { r.start(); } catch (e) { release(); reject(e); }
   });
 }
 
@@ -268,11 +272,14 @@ export function listenIn(locale: string, maxMs = 8000): Promise<string[]> {
     const r = new SR();
     r.lang = locale; r.interimResults = false; r.maxAlternatives = 5;
     let settled = false;
-    const finish = (out: string[]) => { if (!settled) { settled = true; clearTimeout(timer); resolve(out); } };
+    holdMusic(true);
+    let held = true;
+    const release = () => { if (held) { held = false; holdMusic(false); } };
+    const finish = (out: string[]) => { release(); if (!settled) { settled = true; clearTimeout(timer); resolve(out); } };
     const timer = window.setTimeout(() => { try { r.stop(); } catch { /* already stopped */ } finish([]); }, maxMs);
     r.onresult = (e: any) => finish(Array.from(e.results[0] as ArrayLike<{ transcript: string }>).map((a) => String(a.transcript || "")).filter(Boolean));
     r.onerror = (e: any) => {
-      if (e.error === "not-allowed" || e.error === "service-not-allowed") { settled = true; clearTimeout(timer); reject(new Error(e.error)); }
+      if (e.error === "not-allowed" || e.error === "service-not-allowed") { release(); settled = true; clearTimeout(timer); reject(new Error(e.error)); }
       else finish([]); // no-speech, network...: nothing heard
     };
     r.onend = () => finish([]);

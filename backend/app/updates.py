@@ -9,7 +9,7 @@ import threading
 import time
 import urllib.request
 
-APP_VERSION = "1.5.0"  # keep in step with melo_app.VERSION and the installers (tests check it)
+APP_VERSION = "1.6.0"  # keep in step with melo_app.VERSION and the installers (tests check it)
 _CACHE: dict = {"at": 0.0, "data": None}
 _LOCK = threading.Lock()
 TTL = 12 * 3600

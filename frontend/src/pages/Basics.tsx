@@ -96,7 +96,7 @@ export function Basics() {
   if (!child) return <div className="center-screen"><div className="spinner" /></div>;
   const lang = child.language;
   return (
-    <KidShell child={child}>
+    <KidShell child={child} music="home">
       <div className="lesson basics wide">
         <div className="basics-head">
           <button className="btn ghost small" onClick={() => nav(`/play/${id}`)}>🏠</button>

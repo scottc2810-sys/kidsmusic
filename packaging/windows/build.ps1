@@ -9,7 +9,7 @@ param([switch]$InstallerOnly)
 $ErrorActionPreference = "Stop"
 $Root = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
 Set-Location $Root
-$Version = "1.5.0"
+$Version = "1.6.0"
 $Py = "backend\.venv\Scripts\python.exe"
 
 if (-not $InstallerOnly) {

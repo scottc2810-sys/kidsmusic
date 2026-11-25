@@ -6,7 +6,10 @@ import { micErrorMessage, micPermission, requestMic, watchMicPermission, type Mi
 import { chooseVoice, chosenVoiceName, previewVoice, speak, voicesFor } from "../audio/speech";
 import { getTeacherTimbre, getTuning, isSinging, playSequence, setSinging, setTeacherTimbre, setTuning, unlockAudio, type Timbre, type Tuning } from "../audio/synth";
 import { LANGS, LANGUAGE_CODES, langInfo } from "../languages";
-import { L, noteLabel, sungName, t, type Text } from "../i18n";
+import { getNoteNames, L, noteLabel, setNoteNames, sungName, t, type NoteNames, type Text } from "../i18n";
+import { isMusicOn, musicVolume, setMusicOn, setMusicVolume, startMusic, stopMusic } from "../audio/bgm";
+import { midiDevice, midiEcho, midiStatus, onMidiStatus, setMidiEcho, startMidi, type MidiStatus } from "../audio/midi";
+import { getPalette, KEY_COLORS, setPalette, type Palette } from "../components/Piano";
 import { CameraObserver, loadCalibration, saveCalibration, type KeyboardCalibration } from "../vision/camera";
 import { AVATARS, ParentShell, Toast } from "./ParentShell";
 
@@ -129,6 +132,7 @@ export function Settings() {
       </section>
 
       <TeacherSound lang={child.language} />
+      <KidScreen lang={child.language} />
       <SoundCheck lang={child.language} />
       {child.consent_microphone && <MicTest />}
       {child.consent_camera && <CameraSetup childId={child.id} />}
@@ -179,6 +183,61 @@ function TeacherSound({ lang }: { lang: Language }) {
       </div>
       <Toggle label="🎤 Melo also sings the note names while playing (experimental synthetic voice)" on={sing} set={(v) => { setSing(v); setSinging(v); }} />
       <button className="btn ghost" onClick={() => void demo()}>▶ Hear Melo play the scale</button>
+    </section>
+  );
+}
+
+/** This device: background music, note names, key colours and a USB / Bluetooth MIDI keyboard. */
+function KidScreen({ lang }: { lang: Language }) {
+  const [music, setMusic] = useState(isMusicOn());
+  const [vol, setVol] = useState(musicVolume());
+  const [names, setNames] = useState<NoteNames>(getNoteNames());
+  const [palette, setPal] = useState<Palette>(getPalette());
+  const [midi, setMidi] = useState<MidiStatus>(midiStatus());
+  const [device, setDevice] = useState<string | null>(midiDevice());
+  const [echo, setEcho] = useState(midiEcho());
+  useEffect(() => onMidiStatus((st, name) => { setMidi(st); setDevice(name); }), []);
+  const preview = async () => { await unlockAudio(); startMusic("home"); window.setTimeout(() => stopMusic("home"), 6000); };
+  return (
+    <section className="card form">
+      <h2>🎵 Music, keys and colours (this device)</h2>
+      <Toggle label="Soft background music on menus, stories and subjects (never while Melo listens or plays notes)" on={music} set={(v) => { setMusic(v); setMusicOn(v); }} />
+      <label>Background music volume
+        <input type="range" min={0} max={1} step={0.05} value={vol} disabled={!music}
+          onChange={(e) => { const v = Number(e.target.value); setVol(v); setMusicVolume(v); }} />
+      </label>
+      <button className="btn ghost small" onClick={() => void preview()} disabled={!music}>▶ Hear the background music</button>
+      <div className="row">
+        <label>Note names on the keys
+          <select value={names} onChange={(e) => { const v = e.target.value as NoteNames; setNames(v); setNoteNames(v); }}>
+            <option value="auto">From the child's language ({noteLabel(60, lang)} {noteLabel(62, lang)} {noteLabel(64, lang)})</option>
+            <option value="letters">Letters: C D E</option>
+            <option value="solfege">Do Re Mi</option>
+            <option value="sargam">Sa Re Ga</option>
+          </select>
+        </label>
+        <label>Key colours
+          <select value={palette} onChange={(e) => { const v = e.target.value as Palette; setPal(v); setPalette(v); }}>
+            <option value="rainbow">Rainbow</option>
+            <option value="colourblind">Colour-blind safe (Okabe-Ito)</option>
+          </select>
+        </label>
+      </div>
+      <div className="row" aria-hidden>{[60, 62, 64, 65, 67, 69, 71].map((m) => (
+        <span key={`${m}${palette}`} className="chip" style={{ background: KEY_COLORS[m % 12], color: "#1b1b1b", fontWeight: 800 }}>{noteLabel(m, lang)}</span>
+      ))}</div>
+      <p className="small">
+        <strong>🎹 Real keyboard (USB or Bluetooth MIDI):</strong>{" "}
+        {midi === "unsupported" ? "this browser cannot read MIDI keyboards; use Chrome or Edge (or the microphone in Songs)."
+          : midi === "connected" ? `connected${device ? `: ${device}` : ""}. Every key your child presses is heard exactly, in every piano game.`
+          : midi === "denied" ? "access was refused. Allow MIDI for this site in the browser settings, then try again."
+          : midi === "waiting" ? "allowed, but no keyboard found yet: plug in its USB cable (or pair it) and switch it on."
+          : "plug the keyboard into this computer with a USB cable, then:"}{" "}
+        {midi !== "unsupported" && midi !== "connected" && <button className="btn ghost small" onClick={() => void startMidi().then(setMidi)}>Connect keyboard</button>}
+      </p>
+      {midi === "connected" && (
+        <Toggle label="Melo also plays the sound (switch off for a digital piano with its own speakers, so notes don't sound twice)" on={echo} set={(v) => { setEcho(v); setMidiEcho(v); }} />
+      )}
     </section>
   );
 }

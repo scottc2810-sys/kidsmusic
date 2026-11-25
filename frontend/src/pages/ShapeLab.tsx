@@ -76,7 +76,7 @@ export function ShapeLab() {
   for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) dots.push([x, y] as Pt);
   const poly = pts.map(([x, y]) => `${20 + x * S},${20 + y * S}`).join(" ");
   return (
-    <KidShell child={child}>
+    <KidShell child={child} music="calm">
       <div className="lesson shape-lab">
         <Confetti burst={party} />
         <div className="row center wrap"><h1>🧪 Shape Lab</h1><span className="help-badge full">{teacher.persona.emoji} {teacher.persona.name}</span></div>

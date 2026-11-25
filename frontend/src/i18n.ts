@@ -209,9 +209,15 @@ const SOLFEGE = ["Do", "Do♯", "Re", "Re♯", "Mi", "Fa", "Fa♯", "Sol", "Sol�
 const SOLFEGE_AR = ["دو", "دو♯", "ري", "ري♯", "مي", "فا", "فا♯", "صول", "صول♯", "لا", "لا♯", "سي"];
 const pc = (midi: number) => ((midi % 12) + 12) % 12;
 
+/** Note names chosen by the parent on this device ("auto" = the child's language decides). */
+export type NoteNames = "auto" | "letters" | "sargam" | "solfege";
+let noteNames: NoteNames = (() => { try { return (localStorage.getItem("melo.noteNames") as NoteNames) || "auto"; } catch { return "auto"; } })();
+export const getNoteNames = () => noteNames;
+export function setNoteNames(n: NoteNames) { noteNames = n; try { localStorage.setItem("melo.noteNames", n); } catch { /* private mode */ } }
+
 /** Key label in the language's note names: C D E, Sa Re Ga (C = Sa) or Do Re Mi (C = Do). */
 export function noteLabel(midi: number, lang: Language): string {
-  const system = langInfo(lang).notes;
+  const system = noteNames === "auto" ? langInfo(lang).notes : noteNames;
   if (system === "sargam") return (lang === "hi" ? SARGAM_DEV : SARGAM_LATIN)[pc(midi)];
   if (system === "solfege") return (lang === "ar" ? SOLFEGE_AR : SOLFEGE)[pc(midi)];
   return WESTERN[pc(midi)];

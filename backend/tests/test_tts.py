@@ -86,3 +86,44 @@ def test_offline_means_no_voice_not_an_error(client, monkeypatch):
     assert public_refs("kn", "p_bye") == []  # the page then uses the device voice, then Melo's own voice
     register(client)
     assert client.get("/api/learn/tts/kn/p_bye/female").status_code == 503
+
+
+# --- Piper: openly licensed offline voices -------------------------------------------------------------
+NON_COMMERCIAL = ("NC", "non-commercial", "Non-commercial", "unknown", "Unknown", "See URL", "AGPL")
+
+
+def test_piper_voices_are_only_openly_licensed_ones():
+    for lang, voices in tts.PIPER.items():
+        for v in voices:
+            assert v.engine == "piper" and v.licence, (lang, v)
+            assert not any(bad in v.licence for bad in NON_COMMERCIAL), (lang, v)
+            assert any(ok in v.licence for ok in ("CC0", "CC BY", "public domain", "Unlicense", "Apache")), (lang, v)
+            assert tts.piper_model_path(v.name) is None or tts.piper_model_path(v.name).suffix == ".onnx"
+    # excluded on purpose (non-commercial or unclear data licences)
+    names = {v.name for vs in tts.PIPER.values() for v in vs}
+    assert not names & {"hi_IN-pratham-medium", "hi_IN-priyamvada-medium", "en_US-ryan-medium", "en_US-amy-medium", "tr_TR-dfki-medium"}
+
+
+def test_piper_comes_first_and_takes_turns_between_speakers():
+    order = tts.voice_order("en", "female", "p_hello")
+    assert order[0].engine == "piper" and order[-1].engine == "edge"
+    firsts = {tts.voice_order("en", "male", f"w{i}")[0].name for i in range(40)}
+    assert len(firsts) >= 3  # different words are read by different people
+    assert tts.voice_order("en", "male", "w1")[0] == tts.voice_order("en", "male", "w1")[0]  # but always the same one per word
+    assert tts.voice_order("hi", "female", "x")[0].engine == "edge"  # no licensed Piper voice for Hindi yet
+
+
+def test_piper_credit_names_the_voice_and_its_licence():
+    v = tts.PIPER["fr"][2]
+    assert tts.credit(v) == "Piper voice Upmc 2 (synthetic; voice data CC BY-SA 4.0 (UPMC))"
+    assert tts.credit(tts.VOICES["hi"][0]).startswith("Microsoft")
+
+
+def test_piper_model_names_are_checked_before_any_download():
+    assert tts.piper_model_path("../../etc/passwd", download=True) is None
+    assert tts.piper_model_path("en_US-kathleen-medium") is None  # not downloaded in the test data folder
+
+
+def test_live_lessons_skip_piper_voices_that_are_not_downloaded(monkeypatch):
+    monkeypatch.setattr(tts, "engine_ready", lambda e: e in ("edge", "piper"))
+    assert all(v.engine == "edge" for v in tts._live_voices("en", "female", "p_hello"))

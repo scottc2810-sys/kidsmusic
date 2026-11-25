@@ -1,3 +1,4 @@
+import { holdMusic } from "./hold";
 // Practice recording: MediaRecorder (any codec) → decode → 16 kHz mono 16-bit PCM WAV.
 // Converting in the browser means the server needs no ffmpeg on Windows or Linux.
 
@@ -50,7 +51,9 @@ export class PracticeRecorder {
   startedAt = 0;
 
   async start(onAutoStop: () => void) {
-    this.stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: true } });
+    holdMusic(true);
+    try { this.stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: true } }); }
+    catch (e) { holdMusic(false); throw e; }
     this.chunks = [];
     this.rec = new MediaRecorder(this.stream);
     this.rec.ondataavailable = (e) => e.data.size && this.chunks.push(e.data);
@@ -66,7 +69,9 @@ export class PracticeRecorder {
     const stopped = new Promise<void>((r) => (rec.onstop = () => r()));
     rec.stop();
     await stopped;
+    if (this.stream) holdMusic(false);
     this.stream?.getTracks().forEach((t) => t.stop());
+    this.stream = null;
     this.rec = null;
     return toWav16k(new Blob(this.chunks, { type: rec.mimeType }));
   }
@@ -74,7 +79,9 @@ export class PracticeRecorder {
   cancel() {
     if (this.stopTimer) clearTimeout(this.stopTimer);
     try { this.rec?.stop(); } catch { /* already stopped */ }
+    if (this.stream) holdMusic(false);
     this.stream?.getTracks().forEach((t) => t.stop());
+    this.stream = null;
     this.rec = null;
   }
 }
