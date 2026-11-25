@@ -1058,3 +1058,4 @@ pre.tech { white-space: pre-wrap; font-size: 0.8rem; background: var(--surface-2
 .count-board i { position: absolute; width: 30px; height: 30px; margin: -15px 0 0 -15px; border-radius: 50%; background: var(--brand); }
 @media (prefers-reduced-motion: reduce) { .memory-card, .simon-pad { transition: none; } }
 .pattern-row + .abc-bubbles .abc-bubble { font-size: 3rem; }
+.abc-en { color: var(--muted); font-weight: 600; }

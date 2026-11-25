@@ -157,7 +157,7 @@ export function AlphabetPage() {
   return (
     <KidShell child={child} music="home">
       <div className="lesson learn wide abc-page" dir="ltr">
-        <h1>{abc.flag} <span dir="auto">{abc.native}</span> · {L(S.title, lang)}</h1>
+        <h1>{abc.flag} <span dir="auto">{abc.native}</span>{abc.native !== abc.name && <span className="abc-en"> ({abc.name})</span>} · {L(S.title, lang)}</h1>
         <p className="muted">{known}/{abc.letters.length} {L(S.known, lang)}</p>
         <h2 className="abc-play-title">🎮 {L(S.play, lang)}</h2>
         <div className="abc-games">
@@ -432,14 +432,14 @@ export function AlphabetCompareView() {
         <div className="chips">
           {all.map((s) => (
             <button key={s.language.code} className={`chip${chosen.includes(s.language.code) ? " on" : ""}`} onClick={() => toggle(s.language.code)} aria-pressed={chosen.includes(s.language.code)}>
-              {s.language.flag} <span dir="auto">{s.language.native}</span>
+              {s.language.flag} <span dir="auto">{s.language.native}</span>{s.language.native !== s.language.name && <small className="abc-en"> {s.language.name}</small>}
             </button>
           ))}
         </div>
         {data && (
           <div className="compare-scroll">
             <table className="abc-table">
-              <thead><tr><th>🔊</th>{data.langs.map((l) => <th key={l.code}>{l.flag} <span dir="auto">{l.native}</span></th>)}</tr></thead>
+              <thead><tr><th>🔊</th>{data.langs.map((l) => <th key={l.code}>{l.flag} <span dir="auto">{l.native}</span>{l.native !== l.name && <><br /><small className="abc-en">{l.name}</small></>}</th>)}</tr></thead>
               <tbody>
                 {data.rows.map((r) => (
                   <tr key={r.sound}>
