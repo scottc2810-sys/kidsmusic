@@ -242,6 +242,12 @@ function Runner({ child, code, startTopic }: { child: Child; code: string; start
           <h1><span aria-hidden>{lang.flag}</span> <span dir="auto">{lang.native}</span></h1>
           <span className="stars" aria-label={`${stars} stars`}>⭐ {stars}{streak >= 2 && <small className="streak"> · 🔥 {streak} {L(STREAK, ui)}</small>}</span>
         </div>
+        <button className="abc-entry" onClick={() => { playSfx("pop"); nav(`/play/${child.id}/alphabet/${code}`); }}>
+          <span aria-hidden>🔤</span>
+          <span><strong>{L({ en: "Alphabet games", hi: "वर्णमाला के खेल", hinglish: "Varnmaala ke khel" }, ui)}</strong>
+            <small>🎈 {L({ en: "listen", hi: "सुनो", hinglish: "suno" }, ui)} · 🫧 {L({ en: "read", hi: "पढ़ो", hinglish: "padho" }, ui)} · ✨ {L({ en: "write", hi: "लिखो", hinglish: "likho" }, ui)} · 🦜 {L({ en: "speak", hi: "बोलो", hinglish: "bolo" }, ui)}</small></span>
+          <span aria-hidden>▶</span>
+        </button>
         <div className="skill-chips" role="group" aria-label="Skills">
           <button className={`skill-chip${focus === null ? " sel" : ""}`} onClick={() => setFocus(null)}>🌈 {t("allSkills", ui)}</button>
           {SKILLS.map((s) => (

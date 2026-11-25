@@ -9,7 +9,7 @@ import { api, type AbcCell, type AbcLetter, type AbcSkill, type AlphabetCompare,
 import { listenIn, primeSpeech, sayIn, speak, speechRecognitionAvailable, stopSpeaking } from "../audio/speech";
 import { playNative } from "../audio/native";
 import { playSfx, unlockAudio } from "../audio/synth";
-import { Melo, type MeloMood } from "../components/Melo";
+import { Confetti, Melo, type MeloMood } from "../components/Melo";
 import { L, type Text } from "../i18n";
 import { KidShell, useChild } from "./KidHome";
 import { TracePad } from "./Learn";
@@ -23,6 +23,15 @@ const S = {
   compareWhy: T("Letters that make the same sound sit in the same row. Tap any letter to hear it!", "एक जैसी आवाज़ वाले अक्षर एक ही पंक्ति में हैं। किसी भी अक्षर को छूकर सुनो!", "Ek jaisi awaaz waale akshar ek hi line mein hain. Kisi bhi akshar ko chhookar suno!"),
   chart: T("Tap a letter to hear it and see a word that starts with it.", "किसी अक्षर को छूकर सुनो और उससे शुरू होने वाला शब्द देखो।", "Kisi akshar ko chhookar suno aur usse shuru hone waala shabd dekho."),
   read: T("Read", "पढ़ो", "Padho"), listen: T("Listen", "सुनो", "Suno"), write: T("Write", "लिखो", "Likho"), speak: T("Speak", "बोलो", "Bolo"),
+  play: T("Play & learn", "खेलो और सीखो", "Khelo aur seekho"),
+  game_listen: T("Balloon pop", "गुब्बारा फोड़ो", "Gubbaara phodo"), game_read: T("Sound bubbles", "आवाज़ के बुलबुले", "Awaaz ke bulbule"),
+  game_write: T("Magic tracing", "जादुई लिखावट", "Jaadui likhaawat"), game_speak: T("Parrot talk", "तोते की बातें", "Tote ki baatein"),
+  how_listen: T("Hear a letter, pop its balloon!", "अक्षर सुनो, उसका गुब्बारा फोड़ो!", "Akshar suno, uska gubbaara phodo!"),
+  how_read: T("See a letter, tap the bubble with its sound!", "अक्षर देखो, उसकी आवाज़ वाला बुलबुला छुओ!", "Akshar dekho, uski awaaz waala bulbula chhuo!"),
+  how_write: T("Trace the letter with your finger and watch it sparkle!", "उँगली से अक्षर पर लिखो और चमकते देखो!", "Ungli se akshar par likho aur chamakte dekho!"),
+  how_speak: T("Say it back like a parrot!", "तोते की तरह दोहराओ!", "Tote ki tarah dohraao!"),
+  start: T("Play", "खेलो", "Khelo"),
+  allLetters: T("All the letters (tap to hear)", "सारे अक्षर (छूकर सुनो)", "Saare akshar (chhookar suno)"),
   learnFirst: T("Learn this first", "पहले यह सीखो", "Pehle yeh seekho"),
   next: T("Next", "आगे", "Aage"),
   readQ: T("How does this letter sound?", "यह अक्षर कैसे बोलते हैं?", "Yeh akshar kaise bolte hain?"),
@@ -51,7 +60,9 @@ const S = {
   onlyHere: T("Only in", "सिर्फ़", "Sirf"),
 } satisfies Record<string, Text>;
 
-const SKILLS: { id: AbcSkill; icon: string }[] = [{ id: "read", icon: "📖" }, { id: "listen", icon: "👂" }, { id: "write", icon: "✍️" }, { id: "speak", icon: "🗣️" }];
+const SKILLS: { id: AbcSkill; icon: string; game: string }[] = [
+  { id: "listen", icon: "👂", game: "🎈" }, { id: "read", icon: "📖", game: "🫧" }, { id: "write", icon: "✍️", game: "✨" }, { id: "speak", icon: "🗣️", game: "🦜" }];
+const BALLOON = ["#ff6b8b", "#ffb703", "#4cc9f0", "#7ae582", "#a78bfa", "#ff9f1c"];
 type Prog = Record<string, Partial<Record<AbcSkill, AbcCell>>>;
 const learnedSkill = (p: Prog, i: number, s: AbcSkill) => (p[String(i)]?.[s]?.streak ?? 0) >= 2;
 const seenKey = (child: string, code: string) => `melo.abc.seen.${child}.${code}`;
@@ -148,14 +159,23 @@ export function AlphabetPage() {
       <div className="lesson learn wide abc-page" dir="ltr">
         <h1>{abc.flag} <span dir="auto">{abc.native}</span> · {L(S.title, lang)}</h1>
         <p className="muted">{known}/{abc.letters.length} {L(S.known, lang)}</p>
-        <div className="abc-skills">
-          {SKILLS.map((s) => (
-            <button key={s.id} className="big-choice abc-skill" onClick={async () => { primeSpeech(); await unlockAudio(); playSfx("pop"); setSkill(s.id); }}>
-              <span>{s.icon}</span>{L(S[s.id], lang)}
-              <small>{abc.letters.filter((l) => learnedSkill(prog, l.i, s.id)).length}/{abc.letters.length}</small>
-            </button>
-          ))}
+        <h2 className="abc-play-title">🎮 {L(S.play, lang)}</h2>
+        <div className="abc-games">
+          {SKILLS.map((s) => {
+            const done = abc.letters.filter((l) => learnedSkill(prog, l.i, s.id)).length;
+            return (
+              <button key={s.id} className={`abc-game game-${s.id}`} onClick={async () => { primeSpeech(); await unlockAudio(); playSfx("pop"); setSkill(s.id); }}>
+                <span className="abc-game-icon" aria-hidden>{s.game}</span>
+                <strong>{L(S[`game_${s.id}` as keyof typeof S], lang)}</strong>
+                <span className="abc-game-skill">{s.icon} {L(S[s.id], lang)}</span>
+                <small>{L(S[`how_${s.id}` as keyof typeof S], lang)}</small>
+                <span className="abc-game-bar" aria-label={`${done}/${abc.letters.length}`}><i style={{ width: `${(100 * done) / abc.letters.length}%` }} /></span>
+                <small className="muted">{done}/{abc.letters.length} · ▶ {L(S.start, lang)}</small>
+              </button>
+            );
+          })}
         </div>
+        <h2 className="abc-play-title">🔤 {L(S.allLetters, lang)}</h2>
         {open && <LetterCard abc={abc} letter={open} child={child} onClose={() => setOpen(null)} />}
         {groups.map((g) => (
           <section key={g} className="abc-group">
@@ -215,6 +235,8 @@ function Practice({ child, abc, prog, skill, onDone }: { child: Child; abc: Alph
   const [heard, setHeard] = useState<string | null>(null);
   const [selfCheck, setSelfCheck] = useState(false);
   const [mood, setMood] = useState<MeloMood>("talking");
+  const [streak, setStreak] = useState(0);
+  const [party, setParty] = useState(0);
   const step = steps[k];
   const letter = step ? abc.letters[step.i] : null;
   const choices = useMemo(() => {
@@ -251,13 +273,14 @@ function Practice({ child, abc, prog, skill, onDone }: { child: Child; abc: Alph
       const right = all.filter((x) => x.ok).length;
       setSummary({ right, total: all.length, newly: [], known: 0, of: abc.letters.length, stars: right === all.length ? 3 : 1 });
     }
-    playSfx("tada"); setMood("cheer");
+    playSfx("tada"); setMood("cheer"); setParty((p) => p + 1);
     void speak(L(S.done, lang), lang);
   };
   const judge = (ok: boolean) => {
     if (!letter) return;
     playSfx(ok ? "sparkle" : "oops");
     setMood(ok ? "cheer" : "encourage");
+    setStreak((n) => { const v = ok ? n + 1 : 0; if (ok && v > 0 && v % 3 === 0) setParty((p) => p + 1); return v; });
     void speak(ok ? L(S.right, lang) : `${L(S.wrong, lang)} ${letter.roman}`, lang);
     if (!ok) void sayLetter(abc.code, abc.locale, letter, lang);
     setResults((r) => [...r, { i: letter.i, ok }]);
@@ -301,6 +324,12 @@ function Practice({ child, abc, prog, skill, onDone }: { child: Child; abc: Alph
   return (
     <KidShell child={child}>
       <div className="lesson abc-practice">
+        <Confetti burst={party} />
+        <div className="abc-round-head">
+          <span className="abc-game-icon" aria-hidden>{SKILLS.find((x) => x.id === skill)?.game}</span>
+          <strong>{L(S[`game_${skill}` as keyof typeof S], lang)}</strong>
+          {streak >= 2 && <span className="rain-streak">🔥 {streak}</span>}
+        </div>
         <div className="story-progress">{steps.map((_, x) => <i key={x} className={x <= k ? "on" : ""} />)}</div>
         <Melo mood={mood} size={70} />
         {step.kind === "teach" && (
@@ -314,10 +343,10 @@ function Practice({ child, abc, prog, skill, onDone }: { child: Child; abc: Alph
           <>
             <h2>{L(S.readQ, lang)}</h2>
             <span className="abc-big" dir="auto">{display(letter)}</span>
-            <div className="abc-choices">
-              {choices.map((c) => (
-                <button key={c.i} className={`story-option${answer ? (c.i === letter.i ? " right" : answer === String(c.i) ? " wrong" : "") : ""}`} disabled={answered}
-                  onClick={() => { setAnswer(String(c.i)); judge(c.i === letter.i); }}>{c.roman}</button>
+            <div className="abc-bubbles">
+              {choices.map((c, x) => (
+                <button key={c.i} className={`abc-bubble${answer ? (c.i === letter.i ? " right" : answer === String(c.i) ? " wrong" : " fade") : ""}`} disabled={answered}
+                  style={{ animationDelay: `${x * 0.4}s` }} onClick={() => { setAnswer(String(c.i)); judge(c.i === letter.i); }}>{c.roman}</button>
               ))}
             </div>
           </>
@@ -326,10 +355,13 @@ function Practice({ child, abc, prog, skill, onDone }: { child: Child; abc: Alph
           <>
             <h2>{L(S.listenQ, lang)}</h2>
             <button className="btn big" onClick={() => void sayLetter(abc.code, abc.locale, letter, lang)}>🔊</button>
-            <div className="abc-choices letters">
-              {choices.map((c) => (
-                <button key={c.i} className={`abc-tile big${answer ? (c.i === letter.i ? " right" : answer === String(c.i) ? " wrong" : "") : ""}`} disabled={answered}
-                  onClick={() => { setAnswer(String(c.i)); judge(c.i === letter.i); }}><span className="abc-char" dir="auto">{display(c)}</span></button>
+            <div className="abc-balloons">
+              {choices.map((c, x) => (
+                <button key={c.i} className={`abc-balloon${answer ? (c.i === letter.i ? " popped" : answer === String(c.i) ? " wrong" : " fade") : ""}`} disabled={answered}
+                  style={{ ["--b" as string]: BALLOON[(c.i + x) % BALLOON.length], animationDelay: `${x * 0.5}s` }}
+                  onClick={() => { setAnswer(String(c.i)); judge(c.i === letter.i); }} aria-label={c.char}>
+                  <span className="abc-char" dir="auto">{c.i === letter.i && answer ? "💥" : display(c)}</span>
+                </button>
               ))}
             </div>
           </>
@@ -345,7 +377,7 @@ function Practice({ child, abc, prog, skill, onDone }: { child: Child; abc: Alph
         )}
         {step.kind === "ask" && skill === "speak" && (
           <>
-            <h2>{L(S.speakQ, lang)}</h2>
+            <h2>🦜 {L(S.speakQ, lang)}</h2>
             <span className="abc-big" dir="auto">{display(letter)}</span>
             <p className="abc-roman">{letter.roman}</p>
             <div className="row center wrap">

@@ -21,6 +21,7 @@ const S = {
   before: { en: "How do you feel right now?", hi: "अभी तुम कैसा महसूस कर रहे हो?", hinglish: "Abhi tum kaisa mehsoos kar rahe ho?" },
   after: { en: "And how do you feel now?", hi: "और अब कैसा महसूस कर रहे हो?", hinglish: "Aur ab kaisa mehsoos kar rahe ho?" },
   howLong: { en: "How long?", hi: "कितनी देर?", hinglish: "Kitni der?" },
+  tapFace: { en: "Tap a face if you like, then press Play.", hi: "चाहो तो एक चेहरा चुनो, फिर चलाओ दबाओ।", hinglish: "Chaaho toh ek chehra chuno, phir Chalaao dabaao." },
   howMany: { en: "How many times?", hi: "कितनी बार?", hinglish: "Kitni baar?" },
   untilTimer: { en: "Until the timer ends", hi: "टाइमर ख़त्म होने तक", hinglish: "Timer khatam hone tak" },
   times: { en: "times", hi: "बार", hinglish: "baar" },
@@ -168,7 +169,7 @@ function Session({ child, track, onDone }: { child: Child; track: Track; onDone:
     say(better ? S.better : S.same);
     const bellTxt = track.task === "bells" ? `, counted ${bellGuess ?? "?"} of ${bells.current} bells` : "";
     const howLong = track.recording && repeats > 0 ? `${played} of ${repeats} times` : `${minutes} min`;
-    void api.addNote(child.id, `Listening room · ${L(track.title, "en")} (${L(track.goal, "en")}), ${howLong}: felt ${MOODS_FACES[before ?? 2]} before, ${MOODS_FACES[a]} after${bellTxt}`).catch(() => {});
+    void api.addNote(child.id, `Listening room · ${L(track.title, "en")} (${L(track.goal, "en")}), ${howLong}: felt ${before === null ? "(not said)" : MOODS_FACES[before]} before, ${MOODS_FACES[a]} after${bellTxt}`).catch(() => {});
   };
 
   const Faces = ({ onPick, chosen }: { onPick: (i: number) => void; chosen: number | null }) => (
@@ -199,6 +200,7 @@ function Session({ child, track, onDone }: { child: Child; track: Track; onDone:
           <div className="card listen-panel">
             <h2>{L(S.before, lang)}</h2>
             <Faces chosen={before} onPick={setBefore} />
+            {before === null && <p className="muted small">{L(S.tapFace, lang)}</p>}
             {track.recording && (
               <>
                 <h3>🔁 {L(S.howMany, lang)}</h3>
@@ -220,7 +222,7 @@ function Session({ child, track, onDone }: { child: Child; track: Track; onDone:
               </>
             )}
             <details className="listen-why"><summary>🤔 {L(S.why, lang)}</summary><p>{L(track.why, lang)}</p></details>
-            <button className="btn primary big" disabled={before === null} onClick={() => void begin()}>▶ {L(S.play, lang)}</button>
+            <button className="btn primary big" onClick={() => void begin()}>▶ {L(S.play, lang)}</button>
           </div>
         )}
 
@@ -295,7 +297,7 @@ function Session({ child, track, onDone }: { child: Child; track: Track; onDone:
 
         {step === "done" && (
           <div className="card listen-panel" role="status">
-            <p className="listen-result">{MOODS_FACES[before ?? 2]} → {MOODS_FACES[after ?? 2]}</p>
+            <p className="listen-result">{before !== null ? `${MOODS_FACES[before]} → ` : ""}{MOODS_FACES[after ?? 2]}</p>
             <p className="story-feedback">{L(before !== null && after !== null && after > before ? S.better : S.same, lang)}</p>
             <p className="small">{L(track.why, lang)}</p>
             <button className="btn primary big" onClick={onDone}>🎧 {L(S.more, lang)}</button>

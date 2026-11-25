@@ -977,3 +977,38 @@ pre.tech { white-space: pre-wrap; font-size: 0.8rem; background: var(--surface-2
 /* ---- Listening videos (real, openly licensed footage, muted: the music is the sound) ---- */
 .listen-video { width: 100%; max-width: 640px; aspect-ratio: 16 / 9; object-fit: cover; border-radius: 22px; background: #000; box-shadow: 0 8px 24px var(--shadow); }
 .listen-video-credit { font-size: 0.75rem; color: var(--muted); text-align: center; max-width: 640px; }
+
+/* ---- Alphabet games ---- */
+.abc-entry { display: flex; align-items: center; gap: 12px; width: 100%; max-width: 620px; margin: 6px auto; padding: 12px 16px; border: 0; border-radius: 22px; background: linear-gradient(135deg, #ffe08a, #ffb3c7); color: #3b2140; font: inherit; text-align: start; cursor: pointer; box-shadow: 0 5px 0 rgba(0,0,0,0.1); }
+.abc-entry > span:first-child { font-size: 2.2rem; }
+.abc-entry > span:nth-child(2) { flex: 1; display: flex; flex-direction: column; }
+.abc-entry strong { font-size: 1.2rem; }
+.abc-play-title { margin: 14px 0 6px; }
+.abc-games { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; width: 100%; max-width: 900px; }
+.abc-game { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 14px 10px; border: 0; border-radius: 26px; font: inherit; color: #26203b; cursor: pointer; box-shadow: 0 6px 0 rgba(0,0,0,0.12); text-align: center; }
+.abc-game strong { font-size: 1.2rem; }
+.abc-game.game-listen { background: linear-gradient(135deg, #ffd6e0, #ffe8a3); }
+.abc-game.game-read { background: linear-gradient(135deg, #cdeffd, #d7f8e8); }
+.abc-game.game-write { background: linear-gradient(135deg, #ece2ff, #ffe3f5); }
+.abc-game.game-speak { background: linear-gradient(135deg, #d9f99d, #bbf7d0); }
+.abc-game-icon { font-size: 2.8rem; line-height: 1; animation: sc-bob 3s ease-in-out infinite; display: inline-block; }
+.abc-game-skill { font-weight: 800; font-size: 0.9rem; background: rgba(255,255,255,0.7); border-radius: 999px; padding: 2px 10px; }
+.abc-game-bar { width: 80%; height: 8px; border-radius: 999px; background: rgba(255,255,255,0.7); overflow: hidden; }
+.abc-game-bar i { display: block; height: 100%; background: var(--ok); }
+.abc-round-head { display: flex; align-items: center; gap: 10px; font-size: 1.2rem; }
+.abc-balloons { display: flex; gap: 18px; justify-content: center; flex-wrap: wrap; padding: 10px 0 30px; }
+.abc-balloon { position: relative; width: 110px; height: 132px; border: 0; border-radius: 50% 50% 48% 48%; background: radial-gradient(circle at 35% 30%, rgba(255,255,255,0.7), var(--b) 45%); color: #1d1b2c; font: inherit; cursor: pointer; animation: balloon-float 3.6s ease-in-out infinite; box-shadow: inset -8px -10px 0 rgba(0,0,0,0.08); }
+.abc-balloon::after { content: ""; position: absolute; left: 50%; bottom: -26px; width: 2px; height: 26px; background: #9a93b5; }
+.abc-balloon .abc-char { font-size: 2.6rem; }
+.abc-balloon.popped { animation: balloon-pop 0.5s ease-out forwards; }
+.abc-balloon.wrong { animation: wobble 0.5s ease-in-out; }
+.abc-balloon.fade, .abc-bubble.fade { opacity: 0.4; }
+.abc-bubbles { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; padding: 10px 0; }
+.abc-bubble { width: 120px; height: 120px; border-radius: 50%; border: 3px solid rgba(76, 201, 240, 0.7); background: radial-gradient(circle at 30% 28%, #ffffff, #c8f1ff 55%, #9fdcf5); color: #18324a; font: inherit; font-size: 1.6rem; font-weight: 900; cursor: pointer; animation: balloon-float 4s ease-in-out infinite; }
+.abc-bubble.right { border-color: var(--ok); background: radial-gradient(circle at 30% 28%, #ffffff, #c9f5d9 60%); }
+.abc-bubble.wrong { animation: wobble 0.5s ease-in-out; border-color: #f0b4bf; }
+@keyframes balloon-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-12px); } }
+@keyframes balloon-pop { 0% { transform: scale(1); } 40% { transform: scale(1.25); } 100% { transform: scale(1.1); } }
+@keyframes wobble { 0%, 100% { transform: rotate(0); } 25% { transform: rotate(-8deg); } 75% { transform: rotate(8deg); } }
+@keyframes sc-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+@media (prefers-reduced-motion: reduce) { .abc-balloon, .abc-bubble, .abc-game-icon { animation: none !important; } }
